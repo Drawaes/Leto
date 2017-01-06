@@ -30,6 +30,7 @@ namespace Leto.Tls13
         }
 
         public IHashProvider HashProvider => _hashProvider;
+        public IKeyShareProvider KeyShareProvider => _keyShareProvider;
 
         public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer)
         {

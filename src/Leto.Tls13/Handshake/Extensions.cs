@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.KeyExchange;
 
 namespace Leto.Tls13.Handshake
 {
@@ -34,6 +35,8 @@ namespace Leto.Tls13.Handshake
                 switch(extensionType)
                 {
                     case ExtensionType.key_share:
+                        ProcessKeyshare(extensionBuffer, connectionState);
+                        break;
                     case ExtensionType.pre_shared_key:
                     case ExtensionType.supported_groups:
                     case ExtensionType.signature_algorithms:
@@ -45,6 +48,23 @@ namespace Leto.Tls13.Handshake
             if(buffer.Length != 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+            }
+        }
+
+        private static void ProcessKeyshare(ReadableBuffer buffer, State.ConnectionState connectionState)
+        {
+            buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
+            while(buffer.Length > 1)
+            {
+                NamedGroup group;
+                buffer = buffer.SliceBigEndian(out group);
+                var keyData = BufferExtensions.SliceVector<ushort>(ref buffer);
+                connectionState.KeyShare = connectionState.CryptoProvider.KeyShareProvider.GetKeyShareInstance(group);
+                if(connectionState.KeyShare != null)
+                {
+                    connectionState.KeyShare.SetPeerKey(keyData);
+                    return;
+                }
             }
         }
     }

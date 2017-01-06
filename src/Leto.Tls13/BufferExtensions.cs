@@ -10,6 +10,12 @@ namespace Leto.Tls13
 {
     public static class BufferExtensions
     {
+        public static ReadableBuffer SliceBigEndian<[Primitive] T>(this ReadableBuffer buffer, out T value) where T : struct
+        {
+            value = buffer.ReadBigEndian<T>();
+            return buffer.Slice(Unsafe.SizeOf<T>());
+        }
+
         public static unsafe void* GetPointer(this Memory<byte> buffer, out GCHandle handle)
         {
             void* ptr;
