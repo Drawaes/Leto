@@ -1,0 +1,22 @@
+﻿{
+  "version": "1.0.0-*",
+  "buildOptions": {
+  },
+  "testRunner": "xunit",
+  "dependencies": {
+    "Leto.Tls13": { "target": "project" },
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "System.IO.Pipelines": "0.1.0-e161227-1",
+    "System.IO.Pipelines.Networking.Sockets": "0.1.0-e161227-1",
+    "xunit": "2.2.0-beta2-build3300",
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.1"
+    }
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+    }
+  }
+}
