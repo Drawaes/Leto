@@ -12,5 +12,7 @@ namespace Leto.Tls13.KeyExchange
         void SetPeerKey(ReadableBuffer peerKey);
         int KeyExchangeSize { get;}
         void WritePublicKey(ref WritableBuffer keyBuffer);
+        NamedGroup  NamedGroup { get;}
+        byte[] DeriveSecret();
     }
 }

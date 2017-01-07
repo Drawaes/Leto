@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Leto.Tls13;
 using Xunit;
@@ -15,17 +16,25 @@ namespace Leto.Tls13Facts
         public void WaitForConnectionFact()
         {
             using (var factory = new PipelineFactory())
-            using (var serverContext = new SecurePipelineListener(factory))
-            using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
+            //using (var cert = new X509Certificate2(CertificateFacts._certificatePath, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
+            //using (var cert2 = new X509Certificate2(CertificateFacts._ecdsaCertificate, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
+            using (var list = new CertificateList())
             {
-                var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 443);
-                socketClient.OnConnection(async s =>
+                //list.AddCertificate(cert);
+                //list.AddCertificate(cert2);
+                list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
+                using (var serverContext = new SecurePipelineListener(factory, list))
+                using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
-                    var sp = serverContext.CreateSecurePipeline(s);
-                    await Echo(sp);
-                });
-                socketClient.Start(ipEndPoint);
-                Console.ReadLine();
+                    var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 443);
+                    socketClient.OnConnection(async s =>
+                    {
+                        var sp = serverContext.CreateSecurePipeline(s);
+                        await Echo(sp);
+                    });
+                    socketClient.Start(ipEndPoint);
+                    Console.ReadLine();
+                }
             }
         }
 

@@ -8,12 +8,12 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.Hash.OpenSsl11
 {
-    public class HashInstance:IHashInstance
+    public class HashInstance : IHashInstance
     {
         private EVP_MD_CTX _ctx;
         private int _size;
         private HashType _hashType;
-        
+
         internal HashInstance(EVP_MD_CTX ctx, int size, HashType hashType)
         {
             _hashType = hashType;
@@ -51,6 +51,25 @@ namespace Leto.Tls13.Hash.OpenSsl11
         public unsafe void HashData(byte* buffer, int bufferLength)
         {
             ThrowOnError(EVP_DigestUpdate(_ctx, buffer, bufferLength));
+        }
+
+        public void InterimHash(Span<byte> span)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe void InterimHash(byte* buffer, int length)
+        {
+            var ctx = EVP_MD_CTX_new();
+            try
+            {
+                ThrowOnError(EVP_MD_CTX_copy_ex(ctx, _ctx));
+                ThrowOnError(EVP_DigestFinal_ex(ctx, buffer, ref length));
+            }
+            finally
+            {
+                ctx.Free();
+            }
         }
 
         public void Dispose()

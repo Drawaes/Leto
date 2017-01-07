@@ -9,11 +9,14 @@ namespace Leto.Tls13.BulkCipher
 {
     public interface IBulkCipherInstance
     {
-        int Overhead { get; set; }
-
+        int Overhead { get; }
+        int KeyLength { get; }
+        int IVLength { get; }
+        void SetKey(Span<byte> key, KeyMode decrypt);
+        void SetIV(Span<byte> iv);
         void Decrypt(ref ReadableBuffer messageBuffer);
         void IncrementSequence();
-        void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText);
         void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType);
+        void WithPadding(int paddingSize);
     }
 }

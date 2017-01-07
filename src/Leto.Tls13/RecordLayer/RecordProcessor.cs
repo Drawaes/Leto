@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.BulkCipher;
 
 namespace Leto.Tls13.RecordLayer
 {
     public class RecordProcessor
     {
-        private const int RecordHeaderLength = 5;
-        private const int PlainTextMaxSize = 2 >> 14;
+        public const int RecordHeaderLength = 5;
+        public const int PlainTextMaxSize = 2 << 14;
         private const ushort TlsRecordVersion = 0x0301;
         private State.ConnectionState _state;
-
+        
         public RecordProcessor(State.ConnectionState state)
         {
             _state = state;
@@ -20,7 +21,7 @@ namespace Leto.Tls13.RecordLayer
 
         public RecordType ReadRecord(ref ReadableBuffer messageBuffer)
         {
-            if(messageBuffer.Length < 5)
+            if (messageBuffer.Length < 5)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
             }
@@ -28,7 +29,7 @@ namespace Leto.Tls13.RecordLayer
             var version = messageBuffer.Slice(sizeof(RecordType)).ReadBigEndian<ushort>();
             var size = messageBuffer.Slice(sizeof(RecordType) + sizeof(ushort)).ReadBigEndian<ushort>();
             messageBuffer = messageBuffer.Slice(RecordHeaderLength);
-            if(_state.ReadKey == null)
+            if (_state.ReadKey == null)
             {
                 return recordType;
             }
@@ -40,30 +41,23 @@ namespace Leto.Tls13.RecordLayer
             return recordType;
         }
 
-        public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer inData)
+        public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer plainText)
         {
-            while (inData.Length > 0)
+            buffer.Ensure(RecordHeaderLength);
+            if (_state.WriteKey == null)
             {
-                var currentRecordLength = Math.Min(inData.Length, PlainTextMaxSize);
-                buffer.Ensure(RecordHeaderLength);
-                var plainText = inData.Slice(0, currentRecordLength);
-                inData = inData.Slice(currentRecordLength);
-
-                if (_state.WriteKey == null)
-                {
-                    buffer.WriteBigEndian(recordType);
-                    buffer.WriteBigEndian(TlsRecordVersion);
-                    buffer.WriteBigEndian((ushort)plainText.Length);
-                    buffer.Append(plainText);
-                    continue;
-                }
-                buffer.WriteBigEndian(RecordType.Application);
+                buffer.WriteBigEndian(recordType);
                 buffer.WriteBigEndian(TlsRecordVersion);
-                var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
-                buffer.WriteBigEndian((ushort)totalSize);
-                _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
-                _state.WriteKey.IncrementSequence();
+                buffer.WriteBigEndian((ushort)plainText.Length);
+                buffer.Append(plainText);
+                return;
             }
+            buffer.WriteBigEndian(RecordType.Application);
+            buffer.WriteBigEndian(TlsRecordVersion);
+            var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
+            buffer.WriteBigEndian((ushort)totalSize);
+            _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            //_state.WriteKey.IncrementSequence();
         }
 
         public bool TryGetFrame(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer)

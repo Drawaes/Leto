@@ -10,5 +10,8 @@ namespace Leto.Tls13.Hash
     {
         void HashData(ReadableBuffer buffer);
         int HashSize { get; }
+
+        void InterimHash(Span<byte> span);
+        unsafe void InterimHash(byte* hash, int hashSize);
     }
 }

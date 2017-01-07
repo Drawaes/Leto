@@ -15,9 +15,11 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         private int _nid;
         private EVP_PKEY _peerKey;
         private EVP_PKEY _publicPrivateKey;
+        private NamedGroup _namedGroup;
         
         public ECFunctionInstance(NamedGroup namedGroup)
         {
+            _namedGroup = namedGroup;
             switch(namedGroup)
             {
                 case NamedGroup.x25519:
@@ -31,6 +33,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
         }
 
+        public NamedGroup NamedGroup => _namedGroup;
         public bool HasPeerKey => _hasPeerKey;
         public int KeyExchangeSize => _keyExchangeSize;
 
@@ -61,7 +64,6 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             {
                 GenerateKeyset();
             }
-
             _hasPeerKey = true;
         }
 
@@ -95,6 +97,29 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             finally
             {
                 CRYPTO_clear_free(ptr, (UIntPtr)buffSize, "ECFunctionInstance.cs", 97);
+            }
+        }
+
+        public unsafe byte[] DeriveSecret()
+        {
+            var ctx = EVP_PKEY_CTX_new(_publicPrivateKey, IntPtr.Zero);
+            try
+            {
+                ThrowOnError(EVP_PKEY_derive_init(ctx));
+                ThrowOnError(EVP_PKEY_derive_set_peer(ctx, _peerKey));
+                var length = IntPtr.Zero;
+                ThrowOnError(EVP_PKEY_derive(ctx, null, ref length));
+                var secret = new byte[length.ToInt32()];
+                fixed(void* sPtr = secret)
+                {
+                    ThrowOnError(EVP_PKEY_derive( ctx, sPtr, ref length));
+                }
+                return secret;
+            }
+            finally
+            {
+                ctx.Free();
+                Dispose();
             }
         }
 

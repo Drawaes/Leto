@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.State;
 
 namespace Leto.Tls13.Handshake
 {
@@ -39,26 +40,42 @@ namespace Leto.Tls13.Handshake
             {
                 connectionState.HandshakeHash.HashData(readable);
             }
-
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref buffer);
             if(buffer.Length == 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
             }
-            Extensions.ProcessExtensionList(buffer, connectionState);
-            if(connectionState.KeyShare == null)
+            Extensions.ReadExtensionList(buffer, connectionState);
+            if(connectionState.KeyShare == null || connectionState.Certificate == null)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
             }
             if(connectionState.KeyShare.HasPeerKey)
             {
-                connectionState.State = State.StateType.SendServerFlightOne;
+                connectionState.SetState(StateType.SendServerHello);
             }
             else
             {
-                connectionState.State = State.StateType.SendHelloRetry;
+                connectionState.SetState(StateType.SendHelloRetry);
             }
+        }
+
+        public static WritableBuffer SendServerHello(WritableBuffer buffer, ConnectionState connectionState)
+        {
+            buffer.Ensure(RandomLength + sizeof(ushort));
+            buffer.WriteBigEndian(connectionState.Version);
+            var memoryToFill = buffer.Memory.Slice(0,RandomLength);
+            connectionState.CryptoProvider.FillWithRandom(memoryToFill);
+            buffer.Advance(RandomLength);
+            buffer.WriteBigEndian(connectionState.CipherSuite.CipherCode);
+            BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
+            return buffer;
+        }
+
+        public static void SendHelloRetry(ref WritableBuffer writer, ConnectionState connectionState)
+        {
+            throw new NotImplementedException();
         }
     }
 }

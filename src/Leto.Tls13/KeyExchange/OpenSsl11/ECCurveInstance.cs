@@ -14,6 +14,19 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         public bool HasPeerKey => _hasPeerKey;
         public int KeyExchangeSize => _keyExchangeSize;
 
+        public NamedGroup NamedGroup
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public byte[] DeriveSecret()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
             throw new NotImplementedException();

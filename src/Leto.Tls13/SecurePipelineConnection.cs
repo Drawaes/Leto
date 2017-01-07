@@ -14,20 +14,23 @@ namespace Leto.Tls13
         private readonly Pipe _outputPipe;
         private readonly Pipe _inputPipe;
         private readonly Pipe _handshakePipe;
+        private readonly Pipe _handshakeOutpipe;
         private CryptoProvider _cryptoProvider;
         private State.ConnectionState _state;
-
-        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, CryptoProvider provider)
+        
+        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, CryptoProvider provider, CertificateList certificateList)
         {
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
+            _handshakeOutpipe = factory.Create();
             _cryptoProvider = provider;
-            _state = new State.ConnectionState(provider);
+            _state = new State.ConnectionState(provider, certificateList);
             _recordHandler = new RecordProcessor(_state);
             StartReading();
             HandshakeReading();
+            HandshakeWriting();
         }
 
         public IPipelineReader Input => _outputPipe;
@@ -37,7 +40,7 @@ namespace Leto.Tls13
         {
             while (true)
             {
-                var result = await _lowerConnection.Input.ReadAsync();
+               var result = await _lowerConnection.Input.ReadAsync();
                 var buffer = result.Buffer;
                 try
                 {
@@ -97,11 +100,73 @@ namespace Leto.Tls13
                                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                                 break;
                         }
+                        var writer = _handshakeOutpipe.Alloc();
+                        while(_state.TryToDoAnyWriters(ref writer))
+                        {
+                            await writer.FlushAsync();
+                            writer = _handshakeOutpipe.Alloc();
+                        }
+                        if(writer.BytesWritten == 0)
+                        {
+                            writer.Commit();
+                        }
+                        else
+                        {
+                            await writer.FlushAsync();
+                        }
                     }
                 }
                 finally
                 {
                     _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
+                }
+            }
+        }
+
+        private async void HandshakeWriting()
+        {
+            while(true)
+            {
+                try
+                {
+                    while(true)
+                    {
+                        var result = await _handshakeOutpipe.ReadAsync();
+                        var buffer = result.Buffer;
+                        if(result.IsCompleted && result.Buffer.IsEmpty)
+                        {
+                            break;
+                        }
+                        try
+                        {
+                            while(buffer.Length > 0)
+                            {
+                                ReadableBuffer messageBuffer;
+                                if(buffer.Length <= RecordProcessor.PlainTextMaxSize)
+                                {
+                                    messageBuffer = buffer;
+                                    buffer = buffer.Slice(buffer.End);
+                                }
+                                else
+                                {
+                                    messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
+                                    buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
+                                }
+                                var writer = _lowerConnection.Output.Alloc();
+                                _recordHandler.WriteRecord(ref writer, RecordType.Handshake, messageBuffer);
+                                await writer.FlushAsync();
+                            }
+                            _state.ResetEvent.Set();
+                        }
+                        finally
+                        {
+                            _handshakeOutpipe.AdvanceReader(buffer.Start, buffer.End);
+                        }
+                    }
+                }
+                finally
+                {
+
                 }
             }
         }

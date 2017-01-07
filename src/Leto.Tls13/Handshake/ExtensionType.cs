@@ -17,5 +17,6 @@ namespace Leto.Tls13.Handshake
         psk_key_exchange_modes = 45,
         certificate_authorities = 47,
         oid_filters = 48,
+        application_layer_protocol_negotiation = 16
     }
 }

@@ -1,6 +1,8 @@
-﻿{
+{
   "version": "1.0.0-*",
   "buildOptions": {
+    "allowUnsafe": true,
+    "copyToOutput": "../../data/*.pfx"
   },
   "testRunner": "xunit",
   "dependencies": {
@@ -12,7 +14,8 @@
     "Microsoft.NETCore.App": {
       "type": "platform",
       "version": "1.0.1"
-    }
+    },
+    "Microsoft.Extensions.PlatformAbstractions": "1.1.0"
   },
 
   "frameworks": {

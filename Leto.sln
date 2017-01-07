@@ -17,6 +17,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7904A9D2-4
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Leto.Tls13Facts", "test\Leto.Tls13Facts\Leto.Tls13Facts.xproj", "{6DF43444-225D-4654-A2C7-3B1DF9AC161C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{68DDD23B-403A-40D7-B508-FDFBDFE4A03B}"
+	ProjectSection(SolutionItems) = preProject
+		data\certificate.pfx = data\certificate.pfx
+		data\secp384r1-key.pem = data\secp384r1-key.pem
+		data\secp384r1.pem = data\secp384r1.pem
+		data\server.pem = data\server.pem
+		data\TestCert.pfx = data\TestCert.pfx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

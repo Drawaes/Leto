@@ -10,16 +10,20 @@ namespace Leto.Tls13
     {
         private CryptoProvider _cryptoProvider;
         private PipelineFactory _factory;
+        private CertificateList _certificateList;
 
-        public SecurePipelineListener(PipelineFactory factory)
+        public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList)
         {
             _factory = factory;
             _cryptoProvider = new CryptoProvider();
+            _certificateList = certificateList;
         }
         
+        public CertificateList CertificateList => _certificateList;
+
         public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
         {
-            return new SecurePipelineConnection(pipeline, _factory, _cryptoProvider);
+            return new SecurePipelineConnection(pipeline, _factory, _cryptoProvider, _certificateList);
         }
 
         public void Dispose()
