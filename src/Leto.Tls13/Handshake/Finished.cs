@@ -54,8 +54,7 @@ namespace Leto.Tls13.Handshake
                 }
                 //So thats the end of the handshake. A number of house keeping items need to take place
                 //such as changing the keys and scrubbing excess handshake data
-
-                throw new NotImplementedException("As far as I got!!");
+                
             }
             finally
             {

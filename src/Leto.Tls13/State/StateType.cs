@@ -8,11 +8,11 @@ namespace Leto.Tls13.State
     public enum StateType
     {
         None,
-        SendHelloRetry,
         WaitHelloRetry,
-        SendServerFlightOne,
         WaitClientFinished,
         SendServerHello,
-        SendServerFinished
+        SendServerFinished,
+        ServerAuthentication,
+        HandshakeComplete
     }
 }

@@ -14,6 +14,8 @@ namespace Leto.Tls13.KeyExchange
         private const string Prefix = "TLS 1.3, ";
         private static readonly byte[] s_clientHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client handshake traffic secret");
         private static readonly byte[] s_serverHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server handshake traffic secret");
+        private static readonly byte[] s_clientApplicationTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client application traffic secret");
+        private static readonly byte[] s_serverApplicationTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server application traffic secret");
         private static readonly byte[] s_serverFinishedKey = Encoding.ASCII.GetBytes(Prefix + "finished");
         public static readonly byte[] s_trafficKey = Encoding.ASCII.GetBytes(Prefix + "key");
         public static readonly byte[] s_trafficIv = Encoding.ASCII.GetBytes(Prefix + "iv");
@@ -85,6 +87,19 @@ namespace Leto.Tls13.KeyExchange
             hkdfSpan = new Span<byte>(hkdfLabel, hkdfSize);
 
             HkdfExpand(provider, hashType, secret, secretLength, hkdfSpan,  output);
+        }
+
+        public static unsafe Tuple<byte[],byte[]> ClientServerApplicationTrafficSecret(IHashProvider provider, HashType hashType, byte[] masterSecret, Span<byte> hash)
+        {
+            var hashSize = hash.Length;
+            var clientSecret = new byte[hashSize];
+            var serverSecret = new byte[hashSize];
+            fixed(byte* sPtr = masterSecret)
+            {
+                HkdfExpandLabel(provider, hashType, sPtr, masterSecret.Length, s_clientApplicationTrafficSecret, hash, clientSecret);
+                HkdfExpandLabel(provider, hashType, sPtr, masterSecret.Length, s_serverApplicationTrafficSecret, hash, serverSecret);
+            }
+            return Tuple.Create(clientSecret,serverSecret);
         }
 
         public static unsafe byte[] ServerHandshakeTrafficSecret(IHashProvider provider, HashType hashType, byte[] handshakeSecret,Span<byte> hash)

@@ -47,18 +47,6 @@ namespace Leto.Tls13.Handshake
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
             }
             Extensions.ReadExtensionList(buffer, connectionState);
-            if(connectionState.KeyShare == null || connectionState.Certificate == null)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
-            }
-            if(connectionState.KeyShare.HasPeerKey)
-            {
-                connectionState.SetState(StateType.SendServerHello);
-            }
-            else
-            {
-                connectionState.SetState(StateType.SendHelloRetry);
-            }
         }
 
         public static WritableBuffer SendServerHello(WritableBuffer buffer, ConnectionState connectionState)

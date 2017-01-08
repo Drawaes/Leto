@@ -30,6 +30,7 @@ namespace Leto.Tls13Facts
         static byte[] message1 = HkdfFacts.StringToByteArray(ciphertext1Hex);
         static byte[] message2 = HkdfFacts.StringToByteArray(ciphertext2Hex);
         static byte[] plainText = HkdfFacts.StringToByteArray(plaintextHex);
+        private static SecurePipelineListener _listener = new SecurePipelineListener(null, null);
 
         [Fact]
         public void TestRecordDecrypt()
@@ -46,7 +47,7 @@ namespace Leto.Tls13Facts
                 buffer.FlushAsync().Wait();
                 var reader = pipe.ReadAsync();
                 var result = reader.GetResult().Buffer;
-                var state = new ConnectionState(new CryptoProvider(),null);
+                var state = new ConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.ReadKey = bKey;
                 var header = recordHandler.ReadRecord(ref result);
@@ -66,7 +67,7 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(new CryptoProvider(),null);
+                var state = new ConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();
@@ -92,7 +93,7 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(new CryptoProvider(),null);
+                var state = new ConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();
@@ -122,7 +123,7 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(new CryptoProvider(),null);
+                var state = new ConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();

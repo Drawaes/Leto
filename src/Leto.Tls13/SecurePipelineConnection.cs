@@ -15,20 +15,17 @@ namespace Leto.Tls13
         private readonly Pipe _inputPipe;
         private readonly Pipe _handshakePipe;
         private readonly Pipe _handshakeOutpipe;
-        private CryptoProvider _cryptoProvider;
         private State.ConnectionState _state;
-        
-        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, CryptoProvider provider, CertificateList certificateList)
+
+        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
             _handshakeOutpipe = factory.Create();
-            _cryptoProvider = provider;
-            _state = new State.ConnectionState(provider, certificateList);
+            _state = new State.ConnectionState(listener);
             _recordHandler = new RecordProcessor(_state);
-            HandshakeReading();
             HandshakeWriting();
             StartReading();
         }
@@ -40,7 +37,7 @@ namespace Leto.Tls13
         {
             while (true)
             {
-               var result = await _lowerConnection.Input.ReadAsync();
+                var result = await _lowerConnection.Input.ReadAsync();
                 var buffer = result.Buffer;
                 try
                 {
@@ -53,6 +50,11 @@ namespace Leto.Tls13
                             var writer = _handshakePipe.Alloc();
                             writer.Append(messageBuffer);
                             await writer.FlushAsync();
+                            await HandshakeReading();
+                            if(_state.State == State.StateType.HandshakeComplete)
+                            {
+                                ApplicationWriting();
+                            }
                             continue;
                         }
                         if (recordType == RecordType.Alert)
@@ -79,73 +81,93 @@ namespace Leto.Tls13
             }
         }
 
-        private async void HandshakeReading()
+        private async Task HandshakeReading()
+        {
+            var result = await _handshakePipe.ReadAsync();
+            var buffer = result.Buffer;
+            try
+            {
+                ReadableBuffer messageBuffer;
+                Handshake.HandshakeType handshakeType;
+                while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, _state, out messageBuffer, out handshakeType))
+                {
+                    await _state.HandleMessage(handshakeType, messageBuffer, _handshakeOutpipe);
+                }
+            }
+            finally
+            {
+                _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
+            }
+        }
+
+        private async void ApplicationWriting()
         {
             while (true)
             {
-                var result = await _handshakePipe.ReadAsync();
-                var buffer = result.Buffer;
                 try
                 {
-                    ReadableBuffer messageBuffer;
-                    Handshake.HandshakeType handshakeType;
-                    while(Handshake.HandshakeProcessor.TryGetFrame(ref buffer, _state, out messageBuffer, out handshakeType))
+                    while (true)
                     {
-                        switch(handshakeType)
+                        var result = await _inputPipe.ReadAsync();
+                        var buffer = result.Buffer;
+                        if (result.IsCompleted && result.Buffer.IsEmpty)
                         {
-                            case Handshake.HandshakeType.client_hello:
-                                Handshake.Hello.ReadClientHello(messageBuffer, _state);
-                                break;
-                            case Handshake.HandshakeType.finished:
-                                Handshake.Finished.ReadClientFinished(messageBuffer, _state);
-                                break;
-                            default:
-                                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
-                                break;
+                            break;
                         }
-                        var writer = _handshakeOutpipe.Alloc();
-                        while(_state.TryToDoAnyWriters(ref writer))
+                        try
                         {
-                            await writer.FlushAsync();
-                            writer = _handshakeOutpipe.Alloc();
+                            while (buffer.Length > 0)
+                            {
+                                ReadableBuffer messageBuffer;
+                                if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
+                                {
+                                    messageBuffer = buffer;
+                                    buffer = buffer.Slice(buffer.End);
+                                }
+                                else
+                                {
+                                    messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
+                                    buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
+                                }
+                                var writer = _lowerConnection.Output.Alloc();
+                                _recordHandler.WriteRecord(ref writer, RecordType.Application, messageBuffer);
+                                await writer.FlushAsync();
+                            }
+                            _state.DataForCurrentScheduleSent.Set();
                         }
-                        if(writer.BytesWritten == 0)
+                        finally
                         {
-                            writer.Commit();
-                        }
-                        else
-                        {
-                            await writer.FlushAsync();
+                            _inputPipe.AdvanceReader(buffer.Start, buffer.End);
                         }
                     }
                 }
                 finally
                 {
-                    _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
+
                 }
             }
         }
 
         private async void HandshakeWriting()
         {
-            while(true)
+            while (true)
             {
                 try
                 {
-                    while(true)
+                    while (true)
                     {
                         var result = await _handshakeOutpipe.ReadAsync();
                         var buffer = result.Buffer;
-                        if(result.IsCompleted && result.Buffer.IsEmpty)
+                        if (result.IsCompleted && result.Buffer.IsEmpty)
                         {
                             break;
                         }
                         try
                         {
-                            while(buffer.Length > 0)
+                            while (buffer.Length > 0)
                             {
                                 ReadableBuffer messageBuffer;
-                                if(buffer.Length <= RecordProcessor.PlainTextMaxSize)
+                                if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
                                 {
                                     messageBuffer = buffer;
                                     buffer = buffer.Slice(buffer.End);
@@ -159,7 +181,7 @@ namespace Leto.Tls13
                                 _recordHandler.WriteRecord(ref writer, RecordType.Handshake, messageBuffer);
                                 await writer.FlushAsync();
                             }
-                            _state.ResetEvent.Set();
+                            _state.DataForCurrentScheduleSent.Set();
                         }
                         finally
                         {
@@ -173,7 +195,7 @@ namespace Leto.Tls13
                 }
             }
         }
-
+        
         public void Dispose()
         {
             throw new NotImplementedException();

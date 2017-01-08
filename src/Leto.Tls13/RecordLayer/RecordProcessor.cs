@@ -21,7 +21,7 @@ namespace Leto.Tls13.RecordLayer
 
         public RecordType ReadRecord(ref ReadableBuffer messageBuffer)
         {
-            if (messageBuffer.Length < 5)
+            if (messageBuffer.Length < RecordHeaderLength)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
             }
