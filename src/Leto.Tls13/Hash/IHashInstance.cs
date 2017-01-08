@@ -9,9 +9,10 @@ namespace Leto.Tls13.Hash
     public interface IHashInstance
     {
         void HashData(ReadableBuffer buffer);
+        void HashData(byte[] data);
         int HashSize { get; }
 
-        void InterimHash(Span<byte> span);
         unsafe void InterimHash(byte* hash, int hashSize);
+        unsafe void HashData(byte* message, int messageLength);
     }
 }

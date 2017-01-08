@@ -16,12 +16,13 @@ namespace Leto.Tls13Facts
         public void WaitForConnectionFact()
         {
             using (var factory = new PipelineFactory())
-            //using (var cert = new X509Certificate2(CertificateFacts._certificatePath, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
-            //using (var cert2 = new X509Certificate2(CertificateFacts._ecdsaCertificate, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
+            using (var cert = new X509Certificate2(CertificateFacts._certificatePath, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
+            using (var cert2 = new X509Certificate2(CertificateFacts._ecdsaCertificate, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
             using (var list = new CertificateList())
             {
                 //list.AddCertificate(cert);
                 //list.AddCertificate(cert2);
+                //list.AddPEMCertificate(CertificateFacts.rsaCertPEM, CertificateFacts.rsaKeyPEM);
                 list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))

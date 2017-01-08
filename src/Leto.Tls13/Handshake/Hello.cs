@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         private const int RandomLength = 32;
 
-        public static void ProcessClientHello(ReadableBuffer readable, State.ConnectionState connectionState)
+        public static void ReadClientHello(ReadableBuffer readable, State.ConnectionState connectionState)
         {
             var buffer = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
             var version = buffer.ReadBigEndian<ushort>();
@@ -38,7 +38,7 @@ namespace Leto.Tls13.Handshake
             }
             else
             {
-                connectionState.HandshakeHash.HashData(readable);
+                connectionState.HandshakeContext(readable);
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref buffer);

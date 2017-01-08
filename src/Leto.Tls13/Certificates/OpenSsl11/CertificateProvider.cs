@@ -25,7 +25,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                 X509 x509;
                 ThrowOnError(PKCS12_parse(pk12Pointer, "", out key, out x509, IntPtr.Zero));
                 var altString = GetNameString(x509);
-                return GetCertificate(key, x509, certificate.Export(X509ContentType.SerializedCert),altString);
+                return GetCertificate(key, x509, certificate.RawData,altString);
             }
             finally
             {

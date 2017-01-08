@@ -27,6 +27,7 @@ namespace Leto.Tls13.State
         }
 
         public IKeyShareInstance KeyShare { get; set; }
+        public KeySchedule KeySchedule => _keySchedule;
         public IHashInstance HandshakeHash { get; set; }
         public CryptoProvider CryptoProvider { get; set; }
         public IBulkCipherInstance ReadKey { get; set; }
@@ -43,6 +44,11 @@ namespace Leto.Tls13.State
         internal void StartHandshakeHash(ReadableBuffer readable)
         {
             HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
+            HandshakeHash.HashData(readable);
+        }
+
+        internal void HandshakeContext(ReadableBuffer readable)
+        {
             HandshakeHash.HashData(readable);
         }
 
@@ -93,11 +99,11 @@ namespace Leto.Tls13.State
                     GenerateHandshakeKeys();
                     ServerHandshake.SendFlightOne(ref writer, this);
                     _resetEvent.Reset();
-                    _state = StateType.SendServerCertificate;
+                    _state = StateType.SendServerFinished;
                     return true;
-                case StateType.SendServerCertificate:
-                    ServerHandshake.SendServerCertificate(ref writer, this);
-                    _state = StateType.WaitClientFlightOne;
+                case StateType.SendServerFinished:
+                    ServerHandshake.ServerFinished(ref writer, this, _keySchedule.GenerateServerFinishKey());
+                    _state = StateType.WaitClientFinished;
                     return false;
             }
             return false;
@@ -116,9 +122,11 @@ namespace Leto.Tls13.State
 
         public void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, ConnectionState, WritableBuffer> contentWriter)
         {
+            var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
             BufferExtensions.WriteVector24Bit(ref writer, contentWriter, this);
-            HandshakeHash.HashData(writer.AsReadableBuffer());
+            var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
+            HandshakeHash.HashData(hashBuffer);
         }
     }
 }

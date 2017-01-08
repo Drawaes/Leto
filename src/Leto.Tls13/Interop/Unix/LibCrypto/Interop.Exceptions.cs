@@ -7,6 +7,7 @@ internal partial class Interop
 {
     internal partial class LibCrypto
     {
+        [System.Diagnostics.DebuggerHidden()]
 		internal unsafe static int ThrowOnError(int returnCode)
         {
 			if(returnCode != 1)

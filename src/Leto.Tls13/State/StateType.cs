@@ -11,8 +11,8 @@ namespace Leto.Tls13.State
         SendHelloRetry,
         WaitHelloRetry,
         SendServerFlightOne,
-        WaitClientFlightOne,
+        WaitClientFinished,
         SendServerHello,
-        SendServerCertificate
+        SendServerFinished
     }
 }

@@ -40,6 +40,16 @@ namespace Leto.Tls13.State
             }
         }
 
+        public byte[] GenerateServerFinishKey()
+        {
+            return HkdfFunctions.FinishedKey(_provider.HashProvider, _cipherSuite.HashType, _serverHandshakeTrafficSecret);
+        }
+
+        public byte[] GenerateClientFinishedKey()
+        {
+            return HkdfFunctions.FinishedKey(_provider.HashProvider, _cipherSuite.HashType, _clientHandshakeTrafficSecret);
+        }
+
         public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash, ConnectionState state)
         {
             _clientHandshakeTrafficSecret = HkdfFunctions.ClientHandshakeTrafficSecret(_provider.HashProvider, _cipherSuite.HashType, _handshakeSecret, hash);

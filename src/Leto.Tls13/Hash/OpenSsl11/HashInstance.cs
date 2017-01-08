@@ -52,12 +52,7 @@ namespace Leto.Tls13.Hash.OpenSsl11
         {
             ThrowOnError(EVP_DigestUpdate(_ctx, buffer, bufferLength));
         }
-
-        public void InterimHash(Span<byte> span)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public unsafe void InterimHash(byte* buffer, int length)
         {
             var ctx = EVP_MD_CTX_new();
@@ -76,6 +71,14 @@ namespace Leto.Tls13.Hash.OpenSsl11
         {
             _ctx.Free();
             GC.SuppressFinalize(this);
+        }
+
+        public unsafe void HashData(byte[] data)
+        {
+            fixed(byte* prt = data)
+            {
+                HashData(prt, data.Length);
+            }
         }
 
         ~HashInstance()

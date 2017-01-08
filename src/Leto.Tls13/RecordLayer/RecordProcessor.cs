@@ -57,7 +57,7 @@ namespace Leto.Tls13.RecordLayer
             var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
             buffer.WriteBigEndian((ushort)totalSize);
             _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
-            //_state.WriteKey.IncrementSequence();
+            _state.WriteKey.IncrementSequence();
         }
 
         public bool TryGetFrame(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer)

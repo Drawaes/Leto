@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Hash;
 
 namespace Leto.Tls13.Certificates
 {
@@ -11,5 +12,7 @@ namespace Leto.Tls13.Certificates
         CertificateType CertificateType { get; }
         string HostName { get;}
         bool SupportsSignatureScheme(SignatureScheme scheme);
+        int SignatureSize(SignatureScheme scheme);
+        unsafe Span<byte> SignHash(IHashProvider provider, SignatureScheme scheme, byte* message, int messageLength);
     }
 }

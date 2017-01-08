@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Hash;
 using static Interop.LibCrypto;
 
 namespace Leto.Tls13.Certificates.OpenSsl11
@@ -42,6 +43,16 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                 default:
                     return false;
             }
+        }
+
+        public int SignatureSize(SignatureScheme scheme)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe Span<byte> SignHash(IHashProvider provider, SignatureScheme scheme, byte* message, int messageLength)
+        {
+            throw new NotImplementedException();
         }
 
         ~RsaCertificate()

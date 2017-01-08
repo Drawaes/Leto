@@ -28,9 +28,9 @@ namespace Leto.Tls13
             _cryptoProvider = provider;
             _state = new State.ConnectionState(provider, certificateList);
             _recordHandler = new RecordProcessor(_state);
-            StartReading();
             HandshakeReading();
             HandshakeWriting();
+            StartReading();
         }
 
         public IPipelineReader Input => _outputPipe;
@@ -94,7 +94,10 @@ namespace Leto.Tls13
                         switch(handshakeType)
                         {
                             case Handshake.HandshakeType.client_hello:
-                                Handshake.Hello.ProcessClientHello(messageBuffer, _state);
+                                Handshake.Hello.ReadClientHello(messageBuffer, _state);
+                                break;
+                            case Handshake.HandshakeType.finished:
+                                Handshake.Finished.ReadClientFinished(messageBuffer, _state);
                                 break;
                             default:
                                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);

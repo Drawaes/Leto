@@ -14,6 +14,7 @@ namespace Leto.Tls13.KeyExchange
         private const string Prefix = "TLS 1.3, ";
         private static readonly byte[] s_clientHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client handshake traffic secret");
         private static readonly byte[] s_serverHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server handshake traffic secret");
+        private static readonly byte[] s_serverFinishedKey = Encoding.ASCII.GetBytes(Prefix + "finished");
         public static readonly byte[] s_trafficKey = Encoding.ASCII.GetBytes(Prefix + "key");
         public static readonly byte[] s_trafficIv = Encoding.ASCII.GetBytes(Prefix + "iv");
         private const int HkdfLabelHeaderSize = 4;
@@ -23,8 +24,6 @@ namespace Leto.Tls13.KeyExchange
             var emptyArray = new byte[1024 / 8];
             s_zeroArray = Marshal.AllocHGlobal(emptyArray.Length);
             Marshal.Copy(emptyArray, 0, s_zeroArray, emptyArray.Length);
-
-            
         }
 
         public static unsafe void HkdfExtract(IHashProvider provider, HashType hashType, byte* salt, int saltLength, byte* ikm, int ikmLength, byte* output, int outputLength)
@@ -108,5 +107,14 @@ namespace Leto.Tls13.KeyExchange
             return output;
         }
 
+        public unsafe static byte[] FinishedKey(IHashProvider provider, HashType hashType, byte[] handshakeTrafficSecret)
+        {
+            var output = new byte[provider.HashSize(hashType)];
+            fixed(byte* sPtr = handshakeTrafficSecret)
+            {
+                HkdfExpandLabel(provider, hashType, sPtr, handshakeTrafficSecret.Length, s_serverFinishedKey, new Span<byte>(), output);
+            }
+            return output;
+        }
     }
 }

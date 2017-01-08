@@ -23,6 +23,12 @@ namespace Leto.Tls13.Handshake
                     {
                         return false;
                     }
+                case HandshakeType.finished:
+                    if(state.State == State.StateType.WaitClientFinished)
+                    {
+                        return true;
+                    }
+                    return false;
             }
             return false;
         }

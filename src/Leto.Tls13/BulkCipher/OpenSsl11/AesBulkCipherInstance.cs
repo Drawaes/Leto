@@ -73,7 +73,6 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
 
         public unsafe void Decrypt(ref ReadableBuffer messageBuffer)
         {
-            var iv = stackalloc byte[_iVLength];
             var tag = stackalloc byte[16];
             messageBuffer.Slice(messageBuffer.Length - 16).CopyTo(new Span<byte>(tag, 16));
             messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - 16);
