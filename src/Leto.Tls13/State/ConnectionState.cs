@@ -10,10 +10,11 @@ using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
+using Leto.Tls13.Sessions;
 
 namespace Leto.Tls13.State
 {
-    public class ConnectionState:IDisposable
+    public class ConnectionState : IDisposable
     {
         private StateType _state = StateType.None;
         private KeySchedule _keySchedule;
@@ -24,10 +25,14 @@ namespace Leto.Tls13.State
         public ConnectionState(SecurePipelineListener listener)
         {
             _listener = listener;
+            PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
 
-        public IKeyShareInstance KeyShare { get; set; }
+        public string ServerName { get; set; }
+        public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
+        public IKeyshareInstance KeyShare { get; set; }
         public KeySchedule KeySchedule => _keySchedule;
+        public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
         public IHashInstance HandshakeHash { get; set; }
         public CryptoProvider CryptoProvider => _listener.CryptoProvider;
         public IBulkCipherInstance ReadKey { get; set; }
@@ -57,18 +62,18 @@ namespace Leto.Tls13.State
         public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
-            switch(_state)
+            switch (_state)
             {
                 case StateType.None:
                 case StateType.WaitHelloRetry:
-                    if(handshakeMessageType != HandshakeType.client_hello)
+                    if (handshakeMessageType != HandshakeType.client_hello)
                     {
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                     }
                     Hello.ReadClientHello(buffer, this);
                     if (!NegotiationComplete())
                     {
-                        if(_state == StateType.WaitHelloRetry)
+                        if (_state == StateType.WaitHelloRetry)
                         {
                             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
                         }
@@ -98,7 +103,7 @@ namespace Leto.Tls13.State
                     _state = StateType.WaitClientFinished;
                     return;
                 case StateType.WaitClientFinished:
-                    if(handshakeMessageType != HandshakeType.finished)
+                    if (handshakeMessageType != HandshakeType.finished)
                     {
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                     }
@@ -110,6 +115,10 @@ namespace Leto.Tls13.State
                     KeySchedule.GenerateResumptionSecret();
                     HandshakeHash.Dispose();
                     HandshakeHash = null;
+                    //Send a new session ticket
+                    writer = pipe.Alloc();
+                    WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
+                    await writer.FlushAsync();
                     _state = StateType.HandshakeComplete;
                     break;
                 default:
@@ -130,7 +139,7 @@ namespace Leto.Tls13.State
             }
             return true;
         }
-        
+
         private unsafe void GenerateApplicationKeys()
         {
             var hash = stackalloc byte[HandshakeHash.HashSize];
@@ -154,8 +163,11 @@ namespace Leto.Tls13.State
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
             BufferExtensions.WriteVector24Bit(ref writer, contentWriter, this);
-            var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
-            HandshakeHash.HashData(hashBuffer);
+            if (HandshakeHash != null)
+            {
+                var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
+                HandshakeHash.HashData(hashBuffer);
+            }
         }
 
         public void Dispose()

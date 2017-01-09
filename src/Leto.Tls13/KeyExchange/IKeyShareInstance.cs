@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Leto.Tls13.KeyExchange
 {
-    public interface IKeyShareInstance:IDisposable
+    public interface IKeyshareInstance:IDisposable
     {
         bool HasPeerKey { get; }
         void SetPeerKey(ReadableBuffer peerKey);

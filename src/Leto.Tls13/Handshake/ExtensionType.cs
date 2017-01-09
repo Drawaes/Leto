@@ -7,6 +7,7 @@ namespace Leto.Tls13.Handshake
 {
     public enum ExtensionType : ushort
     {
+        server_name = 0,
         supported_groups = 10,
         signature_algorithms = 13,
         key_share = 40,

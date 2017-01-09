@@ -60,10 +60,10 @@ namespace Leto.Tls13.State
             var iv = stackalloc byte[newKey.IVLength];
             var ivSpan = new Span<byte>(iv, newKey.IVLength);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
-                    , secret, secretLength, HkdfFunctions.s_trafficKey, new Span<byte>(), keySpan);
+                    , secret, secretLength, Tls1_3Labels.TrafficKey, new Span<byte>(), keySpan);
             newKey.SetKey(keySpan, mode);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
-                    , secret, secretLength, HkdfFunctions.s_trafficIv, new Span<byte>(), ivSpan);
+                    , secret, secretLength, Tls1_3Labels.TrafficIv, new Span<byte>(), ivSpan);
             newKey.SetIV(ivSpan);
             return newKey;
         }

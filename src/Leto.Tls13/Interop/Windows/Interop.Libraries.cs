@@ -9,5 +9,6 @@ internal static partial class Interop
     {
         internal const string Kernel32 = "Kernel32.dll";
         internal const string BCrypt = "BCrypt.dll";
+        internal const string NCrypt = "ncrypt.dll";
     }
 }

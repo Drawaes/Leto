@@ -3,10 +3,11 @@
   "buildOptions": {
     "allowUnsafe": true
   },
-    "dependencies": {
-      "NETStandard.Library": "1.6.0",
-      "System.IO.Pipelines": "0.1.0-e161227-1"
-    },
+  "dependencies": {
+    "NETStandard.Library": "1.6.0",
+    "System.IO.Pipelines": "0.1.0-e161227-1",
+    "System.IO.Pipelines.Text.Primitives": "0.1.0-e161227-1"
+  },
 
     "frameworks": {
       "netstandard1.6": {

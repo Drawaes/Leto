@@ -8,9 +8,9 @@ internal partial class Interop
     internal partial class LibCrypto
     {
         [System.Diagnostics.DebuggerHidden()]
-		internal unsafe static int ThrowOnError(int returnCode)
+        internal unsafe static int ThrowOnError(int returnCode)
         {
-			if(returnCode != 1)
+            if (returnCode != 1)
             {
                 var tempBuffer = new byte[512];
                 fixed (byte* buffPointer = tempBuffer)
@@ -23,15 +23,32 @@ internal partial class Interop
             }
             return returnCode;
         }
-        
+        [System.Diagnostics.DebuggerHidden()]
+
+        internal unsafe static int ThrowIfNegative(int returnCode)
+        {
+            if (returnCode < 0)
+            {
+                var tempBuffer = new byte[512];
+                fixed (byte* buffPointer = tempBuffer)
+                {
+                    var errCode = ERR_get_error();
+                    ERR_error_string_n(errCode, buffPointer, (UIntPtr)tempBuffer.Length);
+                    var errorString = Marshal.PtrToStringAnsi((IntPtr)buffPointer);
+                    throw new System.Security.SecurityException($"{errCode}-{errorString}");
+                }
+            }
+            return returnCode;
+        }
+
         internal static IntPtr ThrowOnError(IntPtr returnCode)
         {
-            if(returnCode.ToInt64() < 1)
+            if (returnCode.ToInt64() < 1)
             {
                 throw new NotImplementedException();
             }
             return returnCode;
         }
-        
+
     }
 }

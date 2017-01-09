@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13;
 using Xunit;
@@ -21,9 +22,9 @@ namespace Leto.Tls13Facts
             using (var list = new CertificateList())
             {
                 //list.AddCertificate(cert);
-                //list.AddCertificate(cert2);
+                list.AddCertificate(cert2);
                 //list.AddPEMCertificate(CertificateFacts.rsaCertPEM, CertificateFacts.rsaKeyPEM);
-                list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
+                //list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
@@ -55,7 +56,13 @@ namespace Leto.Tls13Facts
                     }
                     int len = request.Length;
                     var response = pipeline.Output.Alloc();
-                    response.Append(request);
+                    var sb = new StringBuilder();
+                    sb.AppendLine("HTTP/1.1 200 OK");
+                    sb.AppendLine("Content-Length: 13");
+                    sb.AppendLine("Content-Type: text/plain");
+                    sb.AppendLine("\r\n");
+                    sb.Append("Hello, World!");
+                    response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
                     await response.FlushAsync();
                     pipeline.Input.Advance(request.End);
                 }

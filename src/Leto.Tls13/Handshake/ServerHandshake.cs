@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
+using Leto.Tls13.Internal;
 using Leto.Tls13.State;
 
 namespace Leto.Tls13.Handshake
@@ -41,34 +42,34 @@ namespace Leto.Tls13.Handshake
             writer.WriteBigEndian<ushort>(0);
         }
 
-        internal unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, ConnectionState connectionState)
+        public unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, ConnectionState state)
         {
-            var hash = new byte[connectionState.HandshakeHash.HashSize];
-            Span<byte> result;
+            writer.WriteBigEndian(state.SignatureScheme);
+            var bookMark = writer.Memory;
+            writer.WriteBigEndian((ushort)0);
+            var hash = new byte[state.HandshakeHash.HashSize + Tls1_3Labels.SignatureDigestPrefix.Length + Tls1_3Labels.ServerCertificateVerify.Length];
+            Tls1_3Labels.SignatureDigestPrefix.CopyTo(hash, 0);
+            Tls1_3Labels.ServerCertificateVerify.CopyTo(hash, Tls1_3Labels.SignatureDigestPrefix.Length);
             fixed (byte* hPtr = hash)
             {
-                connectionState.HandshakeHash.InterimHash(hPtr, hash.Length);
-                result = connectionState.Certificate.SignHash(connectionState.CryptoProvider.HashProvider, connectionState.SignatureScheme,
-                    hPtr, hash.Length);
+                var sigPtr = hPtr + Tls1_3Labels.SignatureDigestPrefix.Length + Tls1_3Labels.ServerCertificateVerify.Length;
+                state.HandshakeHash.InterimHash(sigPtr, state.HandshakeHash.HashSize);
+                var sigSize = state.Certificate.SignHash(state.CryptoProvider.HashProvider, state.SignatureScheme, ref writer, hPtr, hash.Length);
+                bookMark.Span.Write16BitNumber((ushort)sigSize);
             }
-
-            writer.WriteBigEndian(connectionState.SignatureScheme);
-            writer.WriteBigEndian((ushort)result.Length);
-            writer.Write(result);
             return writer;
         }
 
-        internal static unsafe void ServerFinished(ref WritableBuffer writer, ConnectionState connectionState, byte[] serverFinishedKey)
+        public static unsafe void ServerFinished(ref WritableBuffer writer, ConnectionState connectionState, byte[] serverFinishedKey)
         {
             var hash = new byte[connectionState.HandshakeHash.HashSize];
             fixed (byte* hPtr = hash)
             fixed (byte* kPtr = serverFinishedKey)
             {
                 connectionState.HandshakeHash.InterimHash(hPtr, hash.Length);
-                connectionState.CryptoProvider.HashProvider.HmacData(connectionState.CipherSuite.HashType,kPtr, serverFinishedKey.Length,
+                connectionState.CryptoProvider.HashProvider.HmacData(connectionState.CipherSuite.HashType, kPtr, serverFinishedKey.Length,
                     hPtr, hash.Length, hPtr, hash.Length);
             }
-
             connectionState.WriteHandshake(ref writer, HandshakeType.finished, (buffer, state) =>
             {
                 buffer.Write(hash);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13.Hash;
@@ -72,14 +74,9 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             return ECDSA_size(_ecKey);
         }
 
-        public unsafe Span<byte> SignHash(IHashProvider provider, SignatureScheme scheme, byte* message, int messageLength)
+        public unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer , byte* message, int messageLength)
         {
             var hash = provider.GetHashInstance(_hashType);
-            var prefix = Enumerable.Repeat((byte)0x20,64).ToArray();
-            hash.HashData(prefix);
-            var contextLabel = Encoding.ASCII.GetBytes("TLS 1.3, server CertificateVerify\0");
-            
-            hash.HashData(contextLabel);
             hash.HashData(message, messageLength);
 
             var digest = new byte[hash.HashSize];
@@ -87,14 +84,25 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             {
                 hash.InterimHash(dPtr, digest.Length);
             }
-            
-            var output = new byte[ECDSA_size(_ecKey)];
-            fixed(byte* oPtr = output)
-            fixed(byte* iPtr = digest)
+            writer.Ensure(ECDSA_size(_ecKey));
+            GCHandle handle;
+            var output = writer.Memory.GetPointer(out handle);
+            try
             {
-                var sigSize = output.Length;
-                ThrowOnError(ECDSA_sign(0, iPtr, digest.Length, oPtr, ref sigSize, _ecKey));
-                return output.Slice(0, sigSize);
+                fixed (byte* iPtr = digest)
+                {
+                    var sigSize = writer.Memory.Length;
+                    ThrowOnError(ECDSA_sign(0, iPtr, digest.Length, output, ref sigSize, _ecKey));
+                    writer.Advance(sigSize);
+                    return sigSize;
+                }
+            }
+            finally
+            {
+                if (handle.IsAllocated)
+                {
+                    handle.Free();
+                }
             }
         }
 

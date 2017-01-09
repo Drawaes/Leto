@@ -8,7 +8,7 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
 {
-    public class ECCurveInstance : IKeyShareInstance
+    public class ECCurveInstance : IKeyshareInstance
     {
         private bool _hasPeerKey;
         private int _keyExchangeSize;

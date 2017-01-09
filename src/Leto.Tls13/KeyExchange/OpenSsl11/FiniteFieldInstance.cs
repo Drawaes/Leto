@@ -10,7 +10,7 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
 {
-    public class FiniteFieldInstance : IKeyShareInstance
+    public class FiniteFieldInstance : IKeyshareInstance
     {
         private bool _hasPeerKey;
         private int _keyExchangeSize;

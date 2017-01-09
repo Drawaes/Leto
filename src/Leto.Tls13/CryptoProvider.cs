@@ -14,14 +14,14 @@ namespace Leto.Tls13
     public sealed class CryptoProvider : IDisposable
     {
         private IHashProvider _hashProvider;
-        private IKeyShareProvider _keyShareProvider;
+        private IKeyshareProvider _keyShareProvider;
         private IBulkCipherProvider _bulkCipherProvider;
         private CipherSuite[] _priorityOrderedCipherSuites;
         private NamedGroup[] _priorityOrderedKeyExchange;
 
         public CryptoProvider()
         {
-            _keyShareProvider = new KeyExchange.OpenSsl11.KeyShareProvider();
+            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
             _hashProvider = new Hash.OpenSsl11.HashProvider();
             _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
 
@@ -41,16 +41,16 @@ namespace Leto.Tls13
 
             _priorityOrderedCipherSuites = new CipherSuite[]
                 {
-                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
-                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, CipherCode = 0x1302, HashType = HashType.SHA384},
-                    //new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
-                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM, CipherCode = 0x1304, HashType = HashType.SHA256},
-                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM_8, CipherCode = 0x1305, HashType = HashType.SHA256}
+                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
+                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, CipherCode = 0x1302, HashType = HashType.SHA384},
+                    new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM, CipherCode = 0x1304, HashType = HashType.SHA256},
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM_8, CipherCode = 0x1305, HashType = HashType.SHA256}
                 };
         }
 
         public IHashProvider HashProvider => _hashProvider;
-        public IKeyShareProvider KeyShareProvider => _keyShareProvider;
+        public IKeyshareProvider KeyShareProvider => _keyShareProvider;
         public IBulkCipherProvider CipherProvider => _bulkCipherProvider;
         public NamedGroup[] SupportedNamedGroups => _priorityOrderedKeyExchange;
 
@@ -82,7 +82,7 @@ namespace Leto.Tls13
             return null;
         }
 
-        public unsafe IKeyShareInstance GetKeyshareFromNamedGroups(ReadableBuffer buffer)
+        public unsafe IKeyshareInstance GetKeyshareFromNamedGroups(ReadableBuffer buffer)
         {
             if (buffer.Length % 2 != 0)
             {
@@ -110,7 +110,7 @@ namespace Leto.Tls13
             return null;
         }
 
-        public unsafe IKeyShareInstance GetKeyshareFromKeyshare(ReadableBuffer buffer)
+        public unsafe IKeyshareInstance GetKeyshareFromKeyshare(ReadableBuffer buffer)
         {
             var originalBuffer = buffer;
 
@@ -169,6 +169,11 @@ namespace Leto.Tls13
                     handle.Free();
                 }
             }
+        }
+
+        public unsafe void FillWithRandom(void* ptr, int size)
+        {
+            ThrowOnError(RAND_bytes((void*)ptr, size));
         }
 
         public void Dispose()

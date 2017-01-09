@@ -6,17 +6,17 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
 {
-    public class KeyShareProvider : IKeyShareProvider
+    public class KeyshareProvider : IKeyshareProvider
     {
         private BIGNUM _numberTwo;
 
-        public unsafe KeyShareProvider()
+        public unsafe KeyshareProvider()
         {
             byte val = 2;
             _numberTwo = BN_bin2bn(&val, 1, IntPtr.Zero);
         }
 
-        public IKeyShareInstance GetKeyShareInstance(NamedGroup namedGroup)
+        public IKeyshareInstance GetKeyShareInstance(NamedGroup namedGroup)
         {
             switch (namedGroup)
             {
@@ -43,7 +43,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             _numberTwo.Free();
         }
 
-        ~KeyShareProvider()
+        ~KeyshareProvider()
         {
             Dispose();
         }

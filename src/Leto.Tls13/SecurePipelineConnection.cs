@@ -35,50 +35,61 @@ namespace Leto.Tls13
 
         private async void StartReading()
         {
-            while (true)
+            try
             {
-
-                var result = await _lowerConnection.Input.ReadAsync();
-                var buffer = result.Buffer;
-                try
+                while (true)
                 {
-                    ReadableBuffer messageBuffer;
-                    while (_recordHandler.TryGetFrame(ref buffer, out messageBuffer))
+                    var result = await _lowerConnection.Input.ReadAsync();
+                    var buffer = result.Buffer;
+                    try
                     {
-                        var recordType = _recordHandler.ReadRecord(ref messageBuffer);
-                        if (recordType == RecordType.Handshake)
+                        ReadableBuffer messageBuffer;
+                        while (_recordHandler.TryGetFrame(ref buffer, out messageBuffer))
                         {
-                            var writer = _handshakePipe.Alloc();
-                            writer.Append(messageBuffer);
-                            await writer.FlushAsync();
-                            await HandshakeReading();
-                            if(_state.State == State.StateType.HandshakeComplete)
+                            var recordType = _recordHandler.ReadRecord(ref messageBuffer);
+                            if (recordType == RecordType.Handshake)
                             {
-                                ApplicationWriting();
+                                var writer = _handshakePipe.Alloc();
+                                writer.Append(messageBuffer);
+                                await writer.FlushAsync();
+                                await HandshakeReading();
+                                if (_state.State == State.StateType.HandshakeComplete)
+                                {
+                                    ApplicationWriting();
+                                }
+                                continue;
                             }
-                            continue;
+                            if (recordType == RecordType.Alert)
+                            {
+                                var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
+                                messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
+                                var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
+                                Alerts.AlertException.ThrowAlert(level, description);
+                            }
+                            if (recordType == RecordType.Application)
+                            {
+                                var writer = _outputPipe.Alloc();
+                                writer.Append(messageBuffer);
+                                await writer.FlushAsync();
+                                continue;
+                            }
+                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                         }
-                        if (recordType == RecordType.Alert)
+                        if (result.IsCompleted)
                         {
-                            var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
-                            messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
-                            var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
-                            Alerts.AlertException.ThrowAlert(level, description);
+                            return;
                         }
-                        if (recordType == RecordType.Application)
-                        {
-                            var writer = _outputPipe.Alloc();
-                            writer.Append(messageBuffer);
-                            await writer.FlushAsync();
-                            continue;
-                        }
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+                    }
+                    finally
+                    {
+                        _lowerConnection.Input.Advance(buffer.Start, buffer.End);
                     }
                 }
-                finally
-                {
-                    _lowerConnection.Input.Advance(buffer.Start, buffer.End);
-                }
+            }
+            catch
+            {
+                //nom nom
+                Dispose();
             }
         }
 
@@ -196,10 +207,16 @@ namespace Leto.Tls13
                 }
             }
         }
-        
+
         public void Dispose()
         {
-            throw new NotImplementedException();
+
+            GC.SuppressFinalize(this);
+        }
+
+        ~SecurePipelineConnection()
+        {
+            Dispose();
         }
     }
 }

@@ -5,21 +5,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13.Hash;
+using Leto.Tls13.Internal;
 
 namespace Leto.Tls13.KeyExchange
 {
     public static class HkdfFunctions
     {
         private static readonly IntPtr s_zeroArray;
-        private const string Prefix = "TLS 1.3, ";
-        private static readonly byte[] s_clientHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client handshake traffic secret");
-        private static readonly byte[] s_serverHandshakeTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server handshake traffic secret");
-        private static readonly byte[] s_clientApplicationTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client application traffic secret");
-        private static readonly byte[] s_serverApplicationTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server application traffic secret");
-        private static readonly byte[] s_resumptionSecret = Encoding.ASCII.GetBytes(Prefix + "resumption master secret");
-        private static readonly byte[] s_serverFinishedKey = Encoding.ASCII.GetBytes(Prefix + "finished");
-        public static readonly byte[] s_trafficKey = Encoding.ASCII.GetBytes(Prefix + "key");
-        public static readonly byte[] s_trafficIv = Encoding.ASCII.GetBytes(Prefix + "iv");
         private const int HkdfLabelHeaderSize = 4;
 
         static HkdfFunctions()
@@ -95,29 +87,29 @@ namespace Leto.Tls13.KeyExchange
             var hashSize = hash.Length;
             var clientSecret = new byte[hashSize];
             var serverSecret = new byte[hashSize];
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, s_clientApplicationTrafficSecret, hash, clientSecret);
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, s_serverApplicationTrafficSecret, hash, serverSecret);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ClientApplicationTrafficSecret, hash, clientSecret);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ServerApplicationTrafficSecret, hash, serverSecret);
             return Tuple.Create(clientSecret,serverSecret);
         }
 
         public static unsafe byte[] ServerHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret,Span<byte> hash)
         {
             var output = new byte[hash.Length];
-            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, s_serverHandshakeTrafficSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ServerHandshakeTrafficSecret, hash, output);
             return output;
         }
 
         public static unsafe byte[] ClientHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash)
         {
             var output = new byte[hash.Length];
-            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, s_clientHandshakeTrafficSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ClientHandshakeTrafficSecret, hash, output);
             return output;
         }
 
         public static unsafe byte[] ResumptionSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash)
         {
             var output = new byte[hash.Length];
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, s_resumptionSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ResumptionSecret, hash, output);
             return output;
         }
 
@@ -126,7 +118,7 @@ namespace Leto.Tls13.KeyExchange
             var output = new byte[provider.HashSize(hashType)];
             fixed(byte* sPtr = handshakeTrafficSecret)
             {
-                HkdfExpandLabel(provider, hashType, sPtr, handshakeTrafficSecret.Length, s_serverFinishedKey, new Span<byte>(), output);
+                HkdfExpandLabel(provider, hashType, sPtr, handshakeTrafficSecret.Length, Tls1_3Labels.ServerFinishedKey, new Span<byte>(), output);
             }
             return output;
         }

@@ -8,6 +8,6 @@ internal partial class Interop
     internal partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern unsafe int ECDSA_sign(int type, void* dgst, int dgstlen, void* sig, ref int siglen, EC_KEY eckey);
+        internal static extern unsafe int EVP_DigestSignFinal(EVP_MD_CTX ctx, void* out_sig, ref UIntPtr out_sig_len);
     }
 }

@@ -9,13 +9,15 @@ internal partial class Interop
     {
         internal enum EVP_PKEY_type:int
         {
-            EVP_PKEY_EC = 408
+            EVP_PKEY_EC = 408,
+            EVP_PKEY_RSA = 6
         }
 
         internal enum EVP_PKEY_Ctrl_Command : int
         {
             EVP_PKEY_ALG_CTRL = 0x1000,
             EVP_PKEY_CTRL_RSA_PADDING = EVP_PKEY_ALG_CTRL + 1,
+            EVP_PKEY_CTRL_RSA_PSS_SALTLEN = EVP_PKEY_ALG_CTRL + 3,
             EVP_PKEY_CTRL_MD = 1,
             EVP_PKEY_CTRL_EC_PARAMGEN_CURVE_NID = (EVP_PKEY_ALG_CTRL + 1),
             EVP_PKEY_CTRL_EC_PARAM_ENC = (EVP_PKEY_ALG_CTRL + 2),

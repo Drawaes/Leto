@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Leto.Tls13.KeyExchange
 {
-    public interface IKeyShareProvider
+    public interface IKeyshareProvider
     {
-        IKeyShareInstance GetKeyShareInstance(NamedGroup namedGroup);
+        IKeyshareInstance GetKeyShareInstance(NamedGroup namedGroup);
         void Dispose();
     }
 }

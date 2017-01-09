@@ -9,7 +9,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
 {
     public class BulkCipherProvider:IBulkCipherProvider
     {
-        private static readonly int _bufferSize = 16 + 12 + 12;
+        private static readonly int _bufferSize = 32 + 12 + 12;
         private readonly SecureBufferPool _bufferPool = new SecureBufferPool(_bufferSize, 10000);
 
         public IBulkCipherInstance GetCipherKey(BulkCipherType cipher)
@@ -29,7 +29,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
                     overhead = 16;
                     return EVP_aes_128_gcm;
                 case BulkCipherType.AES_256_GCM:
-                    keySize = 16;
+                    keySize = 32;
                     nonceSize = 12;
                     overhead = 16;
                     return EVP_aes_256_gcm;

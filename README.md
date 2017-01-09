@@ -8,6 +8,7 @@ Currently uses OpenSsl 1.1 for the crypto part and supports
 Hello Retry, and standard Handshake. 
 
 AESxxx-GCM
+ChaCha20/Poly
 ECDSA certificates
 
 Key exchanges (All now supported)
@@ -24,11 +25,11 @@ Key exchanges (All now supported)
 
 Things I am currently working on
 
-1. ~~EC key exchange~~
+1. ~~EC key exchange~~ done
 2. PSK
 3. 0-RTT
 4. CNG Windows Support
-5. ChaCha20/Poly Support
+5. ~~ChaCha20/Poly Support~~ done
 
 This library aims to prove out the use case for Pipelines having a native TLS library and for how TLS 1.3 can be implemented in that library.
 
