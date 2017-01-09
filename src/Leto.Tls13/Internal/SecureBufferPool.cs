@@ -50,6 +50,11 @@ namespace Leto.Tls13.Internal
             return returnValue;
         }
 
+        internal void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Return(OwnedMemory<byte> buffer)
         {
             _emptyData.CopyTo(buffer.Span);

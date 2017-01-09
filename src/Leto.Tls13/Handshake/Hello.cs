@@ -61,9 +61,11 @@ namespace Leto.Tls13.Handshake
             return buffer;
         }
 
-        public static void SendHelloRetry(ref WritableBuffer writer, ConnectionState connectionState)
+        public static WritableBuffer SendHelloRetry(WritableBuffer buffer, ConnectionState connectionState)
         {
-            throw new NotImplementedException();
+            buffer.WriteBigEndian(connectionState.Version);
+            BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
+            return buffer;
         }
     }
 }

@@ -2,21 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
 {
     public class KeyShareProvider : IKeyShareProvider
     {
+        private BIGNUM _numberTwo;
+
+        public unsafe KeyShareProvider()
+        {
+            byte val = 2;
+            _numberTwo = BN_bin2bn(&val, 1, IntPtr.Zero);
+        }
+
         public IKeyShareInstance GetKeyShareInstance(NamedGroup namedGroup)
         {
-            switch(namedGroup)
+            switch (namedGroup)
             {
                 case NamedGroup.ffdhe2048:
                 case NamedGroup.ffdhe3072:
                 case NamedGroup.ffdhe4096:
                 case NamedGroup.ffdhe6144:
                 case NamedGroup.ffdhe8192:
-                    return new FiniteFieldInstance();
+                    return new FiniteFieldInstance(namedGroup);
                 case NamedGroup.secp256r1:
                 case NamedGroup.secp384r1:
                 case NamedGroup.secp521r1:
@@ -27,6 +36,16 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                 default:
                     return null;
             }
+        }
+
+        public void Dispose()
+        {
+            _numberTwo.Free();
+        }
+
+        ~KeyShareProvider()
+        {
+            Dispose();
         }
     }
 }

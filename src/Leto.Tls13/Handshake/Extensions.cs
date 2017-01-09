@@ -19,7 +19,18 @@ namespace Leto.Tls13.Handshake
                 //As we don't support PSK yet we can only send the Key share extension
                 WriteKeyshare(ref buffer, connectionState);
             }
+            if (connectionState.State == StateType.WaitHelloRetry)
+            {
+                WriteRetryKeyshare(ref buffer, connectionState);
+            }
             return buffer;
+        }
+
+        public static void WriteRetryKeyshare(ref WritableBuffer buffer, ConnectionState connectionState)
+        {
+            buffer.WriteBigEndian(ExtensionType.key_share);
+            buffer.WriteBigEndian((ushort)sizeof(NamedGroup));
+            buffer.WriteBigEndian(connectionState.KeyShare.NamedGroup);
         }
 
         public static void ReadExtensionList(ReadableBuffer buffer, ConnectionState connectionState)
@@ -111,16 +122,7 @@ namespace Leto.Tls13.Handshake
                 return;
             }
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
-            while (buffer.Length > 1)
-            {
-                NamedGroup group;
-                buffer = buffer.SliceBigEndian(out group);
-                connectionState.KeyShare = connectionState.CryptoProvider.KeyShareProvider.GetKeyShareInstance(group);
-                if (connectionState.KeyShare != null)
-                {
-                    return;
-                }
-            }
+            connectionState.KeyShare = connectionState.CryptoProvider.GetKeyshareFromNamedGroups(buffer);
         }
 
         private static void ReadKeyshare(ReadableBuffer buffer, ConnectionState connectionState)
@@ -130,18 +132,8 @@ namespace Leto.Tls13.Handshake
                 return;
             }
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
-            while (buffer.Length > 1)
-            {
-                NamedGroup group;
-                buffer = buffer.SliceBigEndian(out group);
-                var keyData = BufferExtensions.SliceVector<ushort>(ref buffer);
-                connectionState.KeyShare = connectionState.CryptoProvider.KeyShareProvider.GetKeyShareInstance(group);
-                if (connectionState.KeyShare != null)
-                {
-                    connectionState.KeyShare.SetPeerKey(keyData);
-                    return;
-                }
-            }
+            var ks = connectionState.CryptoProvider.GetKeyshareFromKeyshare(buffer);
+            connectionState.KeyShare = ks ?? connectionState.KeyShare;
         }
 
         private static void ReadSignatureScheme(ReadableBuffer buffer, ConnectionState connectionState)

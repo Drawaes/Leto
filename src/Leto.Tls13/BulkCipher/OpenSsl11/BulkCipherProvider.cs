@@ -33,9 +33,25 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
                     nonceSize = 12;
                     overhead = 16;
                     return EVP_aes_256_gcm;
+                case BulkCipherType.CHACHA20_POLY1305:
+                    keySize = 32;
+                    nonceSize = 12;
+                    overhead = 16;
+                    return EVP_chacha20_poly1305;
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        public void Dispose()
+        {
+            _bufferPool.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        ~BulkCipherProvider()
+        {
+            Dispose();
         }
     }
 }

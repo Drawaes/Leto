@@ -8,5 +8,6 @@ namespace Leto.Tls13.KeyExchange
     public interface IKeyShareProvider
     {
         IKeyShareInstance GetKeyShareInstance(NamedGroup namedGroup);
+        void Dispose();
     }
 }

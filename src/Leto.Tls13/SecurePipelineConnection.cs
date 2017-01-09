@@ -37,6 +37,7 @@ namespace Leto.Tls13
         {
             while (true)
             {
+
                 var result = await _lowerConnection.Input.ReadAsync();
                 var buffer = result.Buffer;
                 try

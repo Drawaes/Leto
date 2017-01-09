@@ -58,5 +58,10 @@ namespace Leto.Tls13.Hash.OpenSsl11
             GetHashType(hashType, out size);
             return size;
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 }

@@ -74,7 +74,7 @@ namespace Leto.Tls13.State
                         }
                         _state = StateType.WaitHelloRetry;
                         writer = pipe.Alloc();
-                        Hello.SendHelloRetry(ref writer, this);
+                        WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
                         await writer.FlushAsync();
                         return;
                     }

@@ -73,9 +73,9 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
 
         public unsafe void Decrypt(ref ReadableBuffer messageBuffer)
         {
-            var tag = stackalloc byte[16];
-            messageBuffer.Slice(messageBuffer.Length - 16).CopyTo(new Span<byte>(tag, 16));
-            messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - 16);
+            var tag = stackalloc byte[_overhead];
+            messageBuffer.Slice(messageBuffer.Length - _overhead).CopyTo(new Span<byte>(tag, _overhead));
+            messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - _overhead);
 
             ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)_mode));
             ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_SET_TAG, _overhead, tag));

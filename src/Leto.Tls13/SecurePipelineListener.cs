@@ -29,7 +29,7 @@ namespace Leto.Tls13
 
         public void Dispose()
         {
-            
+            _cryptoProvider.Dispose();
         }
     }
 }
