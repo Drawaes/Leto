@@ -1,6 +1,8 @@
 # Leto
 A interest learning exercise in producing a TLS 1.3 Library based off the experimental "Pipelines" from CoreFXLabs
 
+Thanks to Mint/Tris who I have used some test data (cert data for example) from.
+
 Currently uses OpenSsl 1.1 for the crypto part and supports
 
 Hello Retry, and standard Handshake. 
