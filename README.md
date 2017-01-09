@@ -10,7 +10,7 @@ Hello Retry, and standard Handshake.
 AESxxx-GCM
 ECDSA certificates
 
-Key exchanges
+Key exchanges (All now supported)
 1. x25519
 2. x448
 3. ffdhe8192
@@ -18,13 +18,17 @@ Key exchanges
 5. ffdhe4096
 6. ffdhe3072
 7. ffdhe2048
+8. secp521r1
+9. secp384r1
+10. secp256r1
 
 Things I am currently working on
 
-1. EC key exchange
-2. PSK/0-RTT
-3. CNG Windows Support
-4. ChaCha20/Poly Support
+1. ~~EC key exchange~~
+2. PSK
+3. 0-RTT
+4. CNG Windows Support
+5. ChaCha20/Poly Support
 
 This library aims to prove out the use case for Pipelines having a native TLS library and for how TLS 1.3 can be implemented in that library.
 

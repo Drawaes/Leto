@@ -7,7 +7,7 @@ using Leto.Tls13.RecordLayer;
 
 namespace Leto.Tls13.BulkCipher
 {
-    public interface IBulkCipherInstance
+    public interface IBulkCipherInstance:IDisposable
     {
         int Overhead { get; }
         int KeyLength { get; }

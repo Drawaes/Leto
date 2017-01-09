@@ -13,7 +13,7 @@ using Leto.Tls13.KeyExchange;
 
 namespace Leto.Tls13.State
 {
-    public class ConnectionState
+    public class ConnectionState:IDisposable
     {
         private StateType _state = StateType.None;
         private KeySchedule _keySchedule;
@@ -104,6 +104,12 @@ namespace Leto.Tls13.State
                     }
                     Finished.ReadClientFinished(buffer, this);
                     GenerateApplicationKeys();
+                    //Hash the finish message now we have made the traffic keys
+                    //Then we can make the resumption secret
+                    HandshakeHash.HashData(buffer);
+                    KeySchedule.GenerateResumptionSecret();
+                    HandshakeHash.Dispose();
+                    HandshakeHash = null;
                     _state = StateType.HandshakeComplete;
                     break;
                 default:
@@ -130,17 +136,17 @@ namespace Leto.Tls13.State
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            _keySchedule.GenerateMasterSecret(span, this);
+            _keySchedule.GenerateMasterSecret(span);
         }
 
         private unsafe void GenerateHandshakeKeys()
         {
-            _keySchedule = new KeySchedule(CipherSuite, CryptoProvider);
+            _keySchedule = _listener.KeyScheduleProvider.GetKeySchedule(this);
             _keySchedule.SetDheDerivedValue(KeyShare.DeriveSecret());
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            _keySchedule.GenerateHandshakeTrafficKeys(span, this);
+            _keySchedule.GenerateHandshakeTrafficKeys(span);
         }
 
         public void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, ConnectionState, WritableBuffer> contentWriter)
@@ -150,6 +156,21 @@ namespace Leto.Tls13.State
             BufferExtensions.WriteVector24Bit(ref writer, contentWriter, this);
             var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
             HandshakeHash.HashData(hashBuffer);
+        }
+
+        public void Dispose()
+        {
+            HandshakeHash?.Dispose();
+            _keySchedule?.Dispose();
+            KeyShare?.Dispose();
+            ReadKey?.Dispose();
+            WriteKey?.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        ~ConnectionState()
+        {
+            Dispose();
         }
     }
 }

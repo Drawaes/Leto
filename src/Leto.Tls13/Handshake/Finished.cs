@@ -52,9 +52,6 @@ namespace Leto.Tls13.Handshake
                 {
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.bad_record_mac);
                 }
-                //So thats the end of the handshake. A number of house keeping items need to take place
-                //such as changing the keys and scrubbing excess handshake data
-                
             }
             finally
             {

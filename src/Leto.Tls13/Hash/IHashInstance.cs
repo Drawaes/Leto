@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Leto.Tls13.Hash
 {
-    public interface IHashInstance
+    public interface IHashInstance:IDisposable
     {
         void HashData(ReadableBuffer buffer);
         void HashData(byte[] data);

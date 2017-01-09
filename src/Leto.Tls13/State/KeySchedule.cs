@@ -1,106 +1,124 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.BulkCipher;
+using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
 using Leto.Tls13.RecordLayer;
 
 namespace Leto.Tls13.State
 {
-    public class KeySchedule
+    public unsafe class KeySchedule : IDisposable
     {
-        private CipherSuite _cipherSuite;
-        private CryptoProvider _provider;
-        private byte[] _earlySecret;
-        private byte[] _handshakeSecret;
-        private byte[] _masterSecret;
+        private void* _secret;
         private int _hashSize;
         private byte[] _clientTrafficSecret;
         private byte[] _serverTrafficSecret;
+        private ConnectionState _state;
+        private byte[] _resumptionSecret;
+        private SecureBufferPool _pool;
+        private OwnedMemory<byte> _stateData;
 
-        public unsafe KeySchedule(CipherSuite cipherSuite, CryptoProvider provider)
+        public unsafe KeySchedule(ConnectionState state, SecureBufferPool pool)
         {
-            _cipherSuite = cipherSuite;
-            _provider = provider;
-            _hashSize = provider.HashProvider.HashSize(cipherSuite.HashType);
-            _earlySecret = new byte[_hashSize];
-            fixed (byte* earlyPtr = _earlySecret)
-            {
-                HkdfFunctions.HkdfExtract(provider.HashProvider, cipherSuite.HashType, null, 0, null, 0, earlyPtr, _earlySecret.Length);
-            }
+            _pool = pool;
+            _stateData = pool.Rent();
+            _state = state;
+            _hashSize = CryptoProvider.HashProvider.HashSize(CipherSuite.HashType);
+            _stateData.Memory.TryGetPointer(out _secret);
+            HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, null, 0, null, 0, (byte*)_secret, _hashSize);
         }
+
+        private CipherSuite CipherSuite => _state.CipherSuite;
+        private CryptoProvider CryptoProvider => _state.CryptoProvider;
 
         public unsafe void SetDheDerivedValue(byte[] derivedValue)
         {
-            _handshakeSecret = new byte[_hashSize];
-            fixed (byte* salt = _earlySecret)
             fixed (byte* ikm = derivedValue)
-            fixed (byte* output = _handshakeSecret)
             {
-                HkdfFunctions.HkdfExtract(_provider.HashProvider, _cipherSuite.HashType, salt, _earlySecret.Length, ikm, derivedValue.Length, output, _hashSize);
+                HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, ikm, derivedValue.Length, _secret, _hashSize);
             }
         }
 
         public byte[] GenerateServerFinishKey()
         {
-            return HkdfFunctions.FinishedKey(_provider.HashProvider, _cipherSuite.HashType, _serverTrafficSecret);
+            return HkdfFunctions.FinishedKey(CryptoProvider.HashProvider, CipherSuite.HashType, _serverTrafficSecret);
         }
 
         public byte[] GenerateClientFinishedKey()
         {
-            return HkdfFunctions.FinishedKey(_provider.HashProvider, _cipherSuite.HashType, _clientTrafficSecret);
+            return HkdfFunctions.FinishedKey(CryptoProvider.HashProvider, CipherSuite.HashType, _clientTrafficSecret);
         }
 
         private unsafe IBulkCipherInstance GetKey(byte* secret, int secretLength, KeyMode mode)
         {
-            var newKey = _provider.CipherProvider.GetCipherKey(_cipherSuite.BulkCipherType);
+            var newKey = CryptoProvider.CipherProvider.GetCipherKey(CipherSuite.BulkCipherType);
             var key = stackalloc byte[newKey.KeyLength];
             var keySpan = new Span<byte>(key, newKey.KeyLength);
             var iv = stackalloc byte[newKey.IVLength];
             var ivSpan = new Span<byte>(iv, newKey.IVLength);
-            HkdfFunctions.HkdfExpandLabel(_provider.HashProvider, _cipherSuite.HashType
+            HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
                     , secret, secretLength, HkdfFunctions.s_trafficKey, new Span<byte>(), keySpan);
             newKey.SetKey(keySpan, mode);
-            HkdfFunctions.HkdfExpandLabel(_provider.HashProvider, _cipherSuite.HashType
+            HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
                     , secret, secretLength, HkdfFunctions.s_trafficIv, new Span<byte>(), ivSpan);
             newKey.SetIV(ivSpan);
             return newKey;
         }
 
-        public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash, ConnectionState state)
+        public unsafe void GenerateResumptionSecret()
         {
-            _clientTrafficSecret = HkdfFunctions.ClientHandshakeTrafficSecret(_provider.HashProvider, _cipherSuite.HashType, _handshakeSecret, hash);
-            _serverTrafficSecret = HkdfFunctions.ServerHandshakeTrafficSecret(_provider.HashProvider, _cipherSuite.HashType, _handshakeSecret, hash);
+            var hash = stackalloc byte[_hashSize];
+            _state.HandshakeHash.InterimHash(hash, _hashSize);
+            _resumptionSecret = HkdfFunctions.ResumptionSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, new Span<byte>(hash, _hashSize));
+        }
+
+        public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash)
+        {
+            _clientTrafficSecret = HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash);
+            _serverTrafficSecret = HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash);
             fixed (byte* cSecret = _clientTrafficSecret)
             {
-                state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
+                _state.ReadKey?.Dispose();
+                _state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
             }
             fixed (byte* sSecret = _serverTrafficSecret)
             {
-                state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
+                _state.WriteKey?.Dispose();
+                _state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
             }
         }
 
-        public unsafe void GenerateMasterSecret(Span<byte> hash, ConnectionState state)
+        public unsafe void GenerateMasterSecret(Span<byte> hash)
         {
-            _masterSecret = new byte[_hashSize];
-            fixed (byte* hPtr = _handshakeSecret)
-            fixed (byte* mPtr = _masterSecret)
-            {
-                HkdfFunctions.HkdfExtract(_provider.HashProvider, _cipherSuite.HashType, hPtr, _hashSize, null, 0, mPtr, _hashSize);
-            }
-            var traffic = HkdfFunctions.ClientServerApplicationTrafficSecret(_provider.HashProvider, _cipherSuite.HashType, _masterSecret, hash);
+            HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, null, 0, (byte*)_secret, _hashSize);
+            var traffic = HkdfFunctions.ClientServerApplicationTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, (byte*)_secret, hash);
             _clientTrafficSecret = traffic.Item1;
             _serverTrafficSecret = traffic.Item2;
             fixed (byte* cSecret = _clientTrafficSecret)
             {
-                state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
+                _state.ReadKey?.Dispose();
+                _state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
             }
             fixed (byte* sSecret = _serverTrafficSecret)
             {
-                state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
+                _state.WriteKey?.Dispose();
+                _state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
             }
+        }
+
+        public void Dispose()
+        {
+            _pool.Return(_stateData);
+            _stateData = null;
+            GC.SuppressFinalize(this);
+        }
+
+        ~KeySchedule()
+        {
+            Dispose();
         }
     }
 }

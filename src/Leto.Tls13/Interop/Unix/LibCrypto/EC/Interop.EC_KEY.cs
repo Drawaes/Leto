@@ -10,12 +10,12 @@ internal partial class Interop
         [StructLayout(LayoutKind.Sequential)]
         internal struct EC_KEY
         {
-            private IntPtr _ptr;
+            public IntPtr Ptr;
 
             public void Free()
             {
-                EC_KEY_free(_ptr);
-                _ptr = IntPtr.Zero;
+                EC_KEY_free(Ptr);
+                Ptr = IntPtr.Zero;
             }
         }
     }

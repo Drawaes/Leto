@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using static Interop.Kernel32;
@@ -13,7 +14,7 @@ namespace Leto.Tls13.Internal
         private IntPtr _memory;
         private int _bufferCount;
         private int _bufferSize;
-        private ConcurrentQueue<OwnedMemory<byte>> _buffers = new ConcurrentQueue<OwnedMemory<byte>>();
+        private ConcurrentQueue<SecureMemory> _buffers = new ConcurrentQueue<SecureMemory>();
         private UIntPtr _totalAllocated;
         private byte[] _emptyData;
 
@@ -33,7 +34,7 @@ namespace Leto.Tls13.Internal
 
             _memory = VirtualAlloc(IntPtr.Zero, _totalAllocated, MemOptions.MEM_COMMIT | MemOptions.MEM_RESERVE, PageOptions.PAGE_READWRITE);
             VirtualLock(_memory, _totalAllocated);
-            for(var i = 0; i < totalAllocated; i += bufferSize)
+            for (var i = 0; i < totalAllocated; i += bufferSize)
             {
                 var mem = new SecureMemory(IntPtr.Add(_memory, i), bufferSize);
                 _buffers.Enqueue(mem);
@@ -42,11 +43,12 @@ namespace Leto.Tls13.Internal
 
         public OwnedMemory<byte> Rent()
         {
-            OwnedMemory<byte> returnValue;
-            if(!_buffers.TryDequeue(out returnValue))
+            SecureMemory returnValue;
+            if (!_buffers.TryDequeue(out returnValue))
             {
                 ExceptionHelper.ThrowException(new OutOfMemoryException());
             }
+            returnValue.Rented = true;
             return returnValue;
         }
 
@@ -57,15 +59,26 @@ namespace Leto.Tls13.Internal
 
         public void Return(OwnedMemory<byte> buffer)
         {
+            var buffer2 = buffer as SecureMemory;
+            if (buffer2 == null)
+            {
+                throw new InvalidCastException("Buffer not from this pool");
+            }
+            Debug.Assert(buffer2.Rented, "Returning a buffer that isn't rented!");
+            if(!buffer2.Rented)
+            {
+                return;
+            }
+            buffer2.Rented = false;
             _emptyData.CopyTo(buffer.Span);
-            _buffers.Enqueue(buffer);
+            _buffers.Enqueue(buffer2);
         }
 
         sealed class SecureMemory : OwnedMemory<byte>
         {
             public SecureMemory(IntPtr memory, int length) : base(null, 0, length, memory)
             { }
-
+            internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
         }
     }

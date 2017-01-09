@@ -41,7 +41,7 @@ namespace Leto.Tls13.Hash.OpenSsl11
             return type;
         }
 
-        public unsafe void HmacData(HashType hashType, byte* key, int keyLength, byte* message, int messageLength, byte* result, int resultLength)
+        public unsafe void HmacData(HashType hashType, void* key, int keyLength, void* message, int messageLength, void* result, int resultLength)
         {
             int size;
             var type = GetHashType(hashType, out size);

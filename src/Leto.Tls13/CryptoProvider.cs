@@ -29,9 +29,9 @@ namespace Leto.Tls13
             {
                  NamedGroup.x25519,
                  NamedGroup.x448,
-                 //NamedGroup.secp521r1,
-                 //NamedGroup.secp384r1,
-                 //NamedGroup.secp256r1,
+                 NamedGroup.secp521r1,
+                 NamedGroup.secp384r1,
+                 NamedGroup.secp256r1,
                  NamedGroup.ffdhe8192,
                  NamedGroup.ffdhe6144,
                  NamedGroup.ffdhe4096,
