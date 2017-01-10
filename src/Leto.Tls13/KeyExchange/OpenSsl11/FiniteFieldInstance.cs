@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange.Internal;
 using static Interop.LibCrypto;
@@ -37,6 +38,20 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
             Dispose();
             return buffer;
+        }
+
+        public unsafe void DeriveSecret(IHashProvider hashProvider, HashType hashType, void* salt, int saltSize, void* output, int outputSize)
+        {
+            try
+            {
+                var buffer = stackalloc byte[_keyExchangeSize];
+                var written = DH_compute_key(buffer, _clientBN, _localKey);
+                hashProvider.HmacData(hashType, salt, saltSize, buffer, written, output, outputSize);
+            }
+            finally
+            {
+                Dispose();
+            }
         }
 
         public unsafe void GenerateKeys(byte[] privateKey, byte[] publicKey)
@@ -166,5 +181,6 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         {
             _localKey.Free();
         }
+        
     }
 }

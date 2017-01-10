@@ -28,6 +28,7 @@ namespace Leto.Tls13.State
             PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
 
+        public SecurePipelineListener Listener => _listener;
         public string ServerName { get; set; }
         public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
@@ -151,7 +152,7 @@ namespace Leto.Tls13.State
         private unsafe void GenerateHandshakeKeys()
         {
             _keySchedule = _listener.KeyScheduleProvider.GetKeySchedule(this);
-            _keySchedule.SetDheDerivedValue(KeyShare.DeriveSecret());
+            _keySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);

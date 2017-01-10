@@ -128,17 +128,7 @@ namespace Leto.Tls13.Handshake
 
         private static void ReadServerName(ReadableBuffer buffer, ConnectionState connectionState)
         {
-            buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
-            while(buffer.Length > 0)
-            {
-                var nameType = buffer.ReadBigEndian<byte>();
-                buffer = buffer.Slice(sizeof(byte));
-                var nameBuffer = BufferExtensions.SliceVector<ushort>(ref buffer);
-                if(nameType == 0)
-                {
-                    connectionState.ServerName = nameBuffer.GetUtf8String();
-                }
-            }
+            connectionState.Listener.ServerNameProvider.MatchServerName(buffer, connectionState);
         }
 
         private static void ReadPskKeyExchangeMode(ReadableBuffer buffer, ConnectionState connectionState)
@@ -208,7 +198,7 @@ namespace Leto.Tls13.Handshake
             {
                 SignatureScheme scheme;
                 buffer = buffer.SliceBigEndian(out scheme);
-                var cert = connectionState.CertificateList.GetCertificate(null, scheme);
+                var cert = connectionState.CertificateList.GetCertificate(connectionState.ServerName, scheme);
                 if (cert != null)
                 {
                     connectionState.Certificate = cert;

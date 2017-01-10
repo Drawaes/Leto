@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Hash;
 
 namespace Leto.Tls13.KeyExchange
 {
@@ -13,6 +14,6 @@ namespace Leto.Tls13.KeyExchange
         int KeyExchangeSize { get;}
         void WritePublicKey(ref WritableBuffer keyBuffer);
         NamedGroup  NamedGroup { get;}
-        byte[] DeriveSecret();
+        unsafe void DeriveSecret(IHashProvider hashProvider, HashType hashType, void* salt, int saltSize, void* output, int outputSize);
     }
 }

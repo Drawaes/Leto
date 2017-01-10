@@ -34,12 +34,9 @@ namespace Leto.Tls13.State
         private CipherSuite CipherSuite => _state.CipherSuite;
         private CryptoProvider CryptoProvider => _state.CryptoProvider;
 
-        public unsafe void SetDheDerivedValue(byte[] derivedValue)
+        public unsafe void SetDheDerivedValue(IKeyshareInstance keyShare)
         {
-            fixed (byte* ikm = derivedValue)
-            {
-                HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, ikm, derivedValue.Length, _secret, _hashSize);
-            }
+            keyShare.DeriveSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, _secret, _hashSize);
         }
 
         public byte[] GenerateServerFinishKey()

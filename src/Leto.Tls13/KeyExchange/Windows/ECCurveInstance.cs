@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static Interop.BCrypt;
 using Microsoft.Win32.SafeHandles;
+using Leto.Tls13.Hash;
 
 namespace Leto.Tls13.KeyExchange.Windows
 {
@@ -47,6 +48,11 @@ namespace Leto.Tls13.KeyExchange.Windows
         }
 
         public void WritePublicKey(ref WritableBuffer keyBuffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe void DeriveSecret(IHashProvider hashProvider, HashType hashType, void* salt, int saltSize, void* output, int outputSize)
         {
             throw new NotImplementedException();
         }

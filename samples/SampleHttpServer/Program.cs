@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace SampleHttpServer
 {
@@ -61,12 +65,19 @@ xVLHwDXh/6NJAiEAl2oHGGLz64BuAfjKrqwz7qMYr9HCLIe/YsoWq/olzScCIQDi
 D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
 -----END RSA PRIVATE KEY-----
 ";
+        public static readonly string _rsaCertPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "TestCert.pfx");
+        public static readonly string _ecdsaCertPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "certificate.pfx");
+        public static readonly string _certificatePassword = "Test123t";
 
         public static void Main(string[] args)
         {
+            using (var cert = new X509Certificate2(_rsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
+            using (var cert2 = new X509Certificate2(_ecdsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
+                list.AddCertificate(cert);
+                list.AddCertificate(cert2);
                 list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
@@ -89,29 +100,31 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
         {
             try
             {
-                while (true)
-                {
-                    var result = await pipeline.Input.ReadAsync();
-                    var request = result.Buffer;
+                var result = await pipeline.Input.ReadAsync();
+                var request = result.Buffer;
 
-                    if (request.IsEmpty && result.IsCompleted)
-                    {
-                        pipeline.Input.Advance(request.End);
-                        break;
-                    }
-                    int len = request.Length;
-                    var response = pipeline.Output.Alloc();
-                    response.Append(request);
-                    await response.FlushAsync();
+                if (request.IsEmpty && result.IsCompleted)
+                {
                     pipeline.Input.Advance(request.End);
+                    return;
                 }
+                int len = request.Length;
+                var response = pipeline.Output.Alloc();
+                var sb = new StringBuilder();
+                sb.AppendLine("HTTP/1.1 200 OK");
+                sb.AppendLine("Content-Length: 13");
+                sb.AppendLine("Content-Type: text/plain");
+                sb.AppendLine("\r\n");
+                sb.Append("Hello, World!");
+                response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
+                await response.FlushAsync();
+                pipeline.Input.Advance(request.End);
+
+            }
+            finally
+            {
                 pipeline.Input.Complete();
                 pipeline.Output.Complete();
-            }
-            catch (Exception ex)
-            {
-                pipeline.Input.Complete(ex);
-                pipeline.Output.Complete(ex);
             }
         }
     }

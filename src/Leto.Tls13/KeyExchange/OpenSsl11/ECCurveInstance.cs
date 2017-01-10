@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Leto.Tls13.Hash;
 using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
@@ -76,7 +77,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
         }
 
-        public unsafe byte[] DeriveSecret()
+        public unsafe void DeriveSecret(IHashProvider hashProvider, HashType hashType, void* salt, int saltSize, void* output, int outputSize)
         {
             var ctx = EVP_PKEY_CTX_new(_eKey, IntPtr.Zero);
             try
@@ -85,20 +86,18 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                 ThrowOnError(EVP_PKEY_derive_set_peer(ctx, _clientKey));
                 IntPtr len = IntPtr.Zero;
                 ThrowOnError(EVP_PKEY_derive(ctx, null, ref len));
-                var data = new byte[len.ToInt32()];
-                fixed (void* dPtr = data)
-                {
-                    ThrowOnError(EVP_PKEY_derive(ctx, dPtr, ref len));
-                }
+
+                var data = stackalloc byte[len.ToInt32()];
+                ThrowOnError(EVP_PKEY_derive(ctx, data, ref len));
                 Dispose();
-                return data;
+                hashProvider.HmacData(hashType, salt, saltSize, data, len.ToInt32(), output,outputSize);
             }
             finally
             {
                 ctx.Free();
             }
         }
-
+    
         public void Dispose()
         {
             _clientKey.Free();

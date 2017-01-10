@@ -114,49 +114,46 @@ namespace Leto.Tls13
 
         private async void ApplicationWriting()
         {
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
-                    while (true)
+                    var result = await _inputPipe.ReadAsync();
+                    var buffer = result.Buffer;
+                    if (result.IsCompleted && result.Buffer.IsEmpty)
                     {
-                        var result = await _inputPipe.ReadAsync();
-                        var buffer = result.Buffer;
-                        if (result.IsCompleted && result.Buffer.IsEmpty)
+                        break;
+                    }
+                    try
+                    {
+                        while (buffer.Length > 0)
                         {
-                            break;
-                        }
-                        try
-                        {
-                            while (buffer.Length > 0)
+                            ReadableBuffer messageBuffer;
+                            if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
                             {
-                                ReadableBuffer messageBuffer;
-                                if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
-                                {
-                                    messageBuffer = buffer;
-                                    buffer = buffer.Slice(buffer.End);
-                                }
-                                else
-                                {
-                                    messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
-                                    buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
-                                }
-                                var writer = _lowerConnection.Output.Alloc();
-                                _recordHandler.WriteRecord(ref writer, RecordType.Application, messageBuffer);
-                                await writer.FlushAsync();
+                                messageBuffer = buffer;
+                                buffer = buffer.Slice(buffer.End);
                             }
-                            _state.DataForCurrentScheduleSent.Set();
+                            else
+                            {
+                                messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
+                                buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
+                            }
+                            var writer = _lowerConnection.Output.Alloc();
+                            _recordHandler.WriteRecord(ref writer, RecordType.Application, messageBuffer);
+                            await writer.FlushAsync();
                         }
-                        finally
-                        {
-                            _inputPipe.AdvanceReader(buffer.Start, buffer.End);
-                        }
+                        _state.DataForCurrentScheduleSent.Set();
+                    }
+                    finally
+                    {
+                        _inputPipe.AdvanceReader(buffer.Start, buffer.End);
                     }
                 }
-                finally
-                {
-
-                }
+            }
+            catch
+            {
+                //Nom Nom
             }
         }
 
