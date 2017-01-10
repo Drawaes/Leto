@@ -21,7 +21,7 @@ namespace Leto.Tls13
 
         public CryptoProvider()
         {
-            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
+            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); //KeyExchange.Windows.KeyshareProvider();
             _hashProvider = new Hash.OpenSsl11.HashProvider();
             _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
 

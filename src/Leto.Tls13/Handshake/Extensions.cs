@@ -113,7 +113,18 @@ namespace Leto.Tls13.Handshake
 
         private static void ReadPskKey(ReadableBuffer pskBuffer, ConnectionState connectionState)
         {
+            var identities = BufferExtensions.SliceVector<ushort>(ref pskBuffer);
+            while(identities.Length > 0)
+            {
+                var identity = BufferExtensions.SliceVector<ushort>(ref identities);
+                long serviceId, keyId;
+                identity = identity.SliceBigEndian(out serviceId);
+                identity = identity.SliceBigEndian(out keyId);
+
+                bool resumed = connectionState.ResumptionProvider.TryToResume(serviceId, keyId, identity);
+            }
             //throw new NotImplementedException();
+
         }
 
         private static void WriteKeyshare(ref WritableBuffer buffer, ConnectionState connectionState)

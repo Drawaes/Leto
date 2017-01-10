@@ -19,6 +19,8 @@ namespace Leto.Tls13.Sessions
         {
             _historySize = historySize;
             _keyset = new ResumptionKey[_historySize];
+            _provider = provider;
+            GenerateResumptionKey();
         }
         
         public void AddNewKey(DateTime keyExpiry, DateTime keyActivated, ResumptionKey newKey)
@@ -37,22 +39,27 @@ namespace Leto.Tls13.Sessions
         public void GenerateSessionTicket(ref WritableBuffer writer, ConnectionState state)
         {
             var key = _keyset[_currentIndex];
-            writer.WriteBigEndian(123456);
+            key.WriteSessionKey(ref writer, state);
         }
 
         public unsafe void GenerateResumptionKey()
         {
             var timestamp = DateTime.UtcNow.ToBinary();
             var code = stackalloc long[2];
-            _provider.FillWithRandom(code, 128);
+            _provider.FillWithRandom(code, 16);
             code[0] = code[0] ^ timestamp;
-            var key = new byte[16];
+            var key = new byte[32];
             var nounceBase = new byte[12];
             _provider.FillWithRandom(key);
             _provider.FillWithRandom(nounceBase);
 
             var newKey = new ResumptionKey(code[0], code[1], key, nounceBase);
+            AddNewKey(DateTime.UtcNow.AddHours(4), DateTime.UtcNow.AddHours(-1), newKey);
+        }
 
+        internal bool TryToResume(long serviceId, long keyId, ReadableBuffer identity)
+        {
+            
         }
     }
 }

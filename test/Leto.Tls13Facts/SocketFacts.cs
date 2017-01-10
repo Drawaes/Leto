@@ -59,12 +59,13 @@ namespace Leto.Tls13Facts
                     var sb = new StringBuilder();
                     sb.AppendLine("HTTP/1.1 200 OK");
                     sb.AppendLine("Content-Length: 13");
-                    sb.AppendLine("Content-Type: text/plain");
-                    sb.AppendLine("\r\n");
+                    sb.Append("Content-Type: text/plain");
+                    sb.Append("\r\n\r\n");
                     sb.Append("Hello, World!");
                     response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
                     await response.FlushAsync();
                     pipeline.Input.Advance(request.End);
+                    return;
                 }
                 pipeline.Input.Complete();
                 pipeline.Output.Complete();

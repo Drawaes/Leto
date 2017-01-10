@@ -34,7 +34,11 @@ namespace Leto.Tls13.KeyExchange.Windows
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _x25519?.Dispose();
+            _finite?.Dispose();
+            _secp256r1?.Dispose();
+            _secp384r1?.Dispose();
+            _secp521r1?.Dispose();
         }
 
         public IKeyshareInstance GetKeyShareInstance(NamedGroup namedGroup)
@@ -42,13 +46,13 @@ namespace Leto.Tls13.KeyExchange.Windows
             switch(namedGroup)
             {
                 case NamedGroup.secp256r1:
-                    return new ECCurveInstance(_secp256r1, namedGroup);
+                    return new ECCurveInstance(_secp256r1, namedGroup, 65);
                 case NamedGroup.secp384r1:
-                    return new ECCurveInstance(_secp384r1, namedGroup);
+                    return new ECCurveInstance(_secp384r1, namedGroup, 97);
                 case NamedGroup.secp521r1:
-                    return new ECCurveInstance(_secp521r1, namedGroup);
+                    return new ECCurveInstance(_secp521r1, namedGroup, 133);
                 case NamedGroup.x25519:
-                    return new ECCurveInstance(_x25519, namedGroup);
+                    return new ECCurveInstance(_x25519, namedGroup, 32);
                 default:
                     return null;
             }

@@ -33,6 +33,7 @@ namespace Leto.Tls13.State
 
         private CipherSuite CipherSuite => _state.CipherSuite;
         private CryptoProvider CryptoProvider => _state.CryptoProvider;
+        public byte[] ResumptionSecret => _resumptionSecret;
 
         public unsafe void SetDheDerivedValue(IKeyshareInstance keyShare)
         {
