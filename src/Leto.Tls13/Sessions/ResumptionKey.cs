@@ -18,6 +18,9 @@ namespace Leto.Tls13.Sessions
         private long _sequence;
         private long _nounceStart;
 
+        public long ServiceId => _randomServiceId;
+        public long KeyId => _randomId;
+
         public ResumptionKey(long serviceId, long id, byte[] key, byte[] nounceBase)
         {
             _randomServiceId = serviceId;
@@ -27,9 +30,10 @@ namespace Leto.Tls13.Sessions
             _nounceBase = nounceBase;
         }
 
-        public byte[] DecryptSession(ReadableBuffer buffer)
+        public void DecryptSession(ref ReadableBuffer buffer)
         {
-            throw new NotImplementedException();
+            var nounce = buffer.Slice(0,12).ToArray();
+            buffer = buffer.Slice(12);
         }
 
         internal void WriteSessionKey(ref WritableBuffer writer, ConnectionState state)

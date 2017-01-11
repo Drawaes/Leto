@@ -22,32 +22,7 @@ namespace Leto.Tls13.Hash.OpenSsl11
         }
 
         public int HashSize => _size;
-
-        public void HashData(ReadableBuffer datatToHash)
-        {
-            foreach (var m in datatToHash)
-            {
-                HashData(m);
-            }
-        }
-
-        public unsafe void HashData(Memory<byte> dataToHash)
-        {
-            GCHandle handle;
-            var ptr = dataToHash.GetPointer(out handle);
-            try
-            {
-                HashData((byte*)ptr, dataToHash.Length);
-            }
-            finally
-            {
-                if (handle.IsAllocated)
-                {
-                    handle.Free();
-                }
-            }
-        }
-
+    
         public unsafe void HashData(byte* buffer, int bufferLength)
         {
             ThrowOnError(EVP_DigestUpdate(_ctx, buffer, bufferLength));
@@ -72,15 +47,7 @@ namespace Leto.Tls13.Hash.OpenSsl11
             _ctx.Free();
             GC.SuppressFinalize(this);
         }
-
-        public unsafe void HashData(byte[] data)
-        {
-            fixed(byte* prt = data)
-            {
-                HashData(prt, data.Length);
-            }
-        }
-
+        
         ~HashInstance()
         {
             Dispose();

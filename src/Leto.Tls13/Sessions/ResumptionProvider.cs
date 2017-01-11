@@ -59,7 +59,21 @@ namespace Leto.Tls13.Sessions
 
         internal bool TryToResume(long serviceId, long keyId, ReadableBuffer identity)
         {
-            
+            for(int i = 0; i < _keyset.Length;i++)
+            {
+                var key = _keyset[i];
+                if(key == null)
+                {
+                    continue;
+                }
+                if(key.ServiceId != serviceId || key.KeyId != keyId)
+                {
+                    continue;
+                }
+                key.DecryptSession(ref identity);
+                return true;
+            }
+            return false;
         }
     }
 }

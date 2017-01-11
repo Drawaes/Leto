@@ -120,7 +120,8 @@ namespace Leto.Tls13.Handshake
                 long serviceId, keyId;
                 identity = identity.SliceBigEndian(out serviceId);
                 identity = identity.SliceBigEndian(out keyId);
-
+                int ticketAge;
+                identities = identities.SliceBigEndian(out ticketAge);
                 bool resumed = connectionState.ResumptionProvider.TryToResume(serviceId, keyId, identity);
             }
             //throw new NotImplementedException();

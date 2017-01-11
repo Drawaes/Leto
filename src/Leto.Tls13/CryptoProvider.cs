@@ -21,14 +21,14 @@ namespace Leto.Tls13
 
         public CryptoProvider()
         {
-            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); //KeyExchange.Windows.KeyshareProvider();
-            _hashProvider = new Hash.OpenSsl11.HashProvider();
+            _keyShareProvider = new KeyExchange.Windows.KeyshareProvider();//new KeyExchange.OpenSsl11.KeyshareProvider(); //
+            _hashProvider = new Hash.Windows.HashProvider(); // new Hash.OpenSsl11.HashProvider();
             _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
 
             _priorityOrderedKeyExchange = new NamedGroup[]
             {
-                 NamedGroup.x25519,
-                 NamedGroup.x448,
+                 //NamedGroup.x25519,
+                 //NamedGroup.x448,
                  NamedGroup.secp521r1,
                  NamedGroup.secp384r1,
                  NamedGroup.secp256r1,
@@ -102,7 +102,11 @@ namespace Leto.Tls13
                 {
                     if (peerGroupList[x] == _priorityOrderedKeyExchange[i])
                     {
-                        return _keyShareProvider.GetKeyShareInstance(peerGroupList[x]);
+                        var ks = _keyShareProvider.GetKeyShareInstance(peerGroupList[x]);
+                        if (ks != null)
+                        {
+                            return ks;
+                        }
                     }
                 }
             }
@@ -144,6 +148,10 @@ namespace Leto.Tls13
                     if (peerKeyshareList[x] == (ushort)_priorityOrderedKeyExchange[i])
                     {
                         var instance = _keyShareProvider.GetKeyShareInstance((NamedGroup)peerKeyshareList[x]);
+                        if (instance == null)
+                        {
+                            continue;
+                        }
                         originalBuffer = originalBuffer.Slice(peerKeyshareList[x + 1]);
                         originalBuffer = BufferExtensions.SliceVector<ushort>(ref originalBuffer);
                         instance.SetPeerKey(originalBuffer);

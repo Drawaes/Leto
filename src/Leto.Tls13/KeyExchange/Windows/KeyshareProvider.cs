@@ -52,7 +52,7 @@ namespace Leto.Tls13.KeyExchange.Windows
                 case NamedGroup.secp521r1:
                     return new ECCurveInstance(_secp521r1, namedGroup, 133);
                 case NamedGroup.x25519:
-                    return new ECCurveInstance(_x25519, namedGroup, 32);
+                    return null;
                 default:
                     return null;
             }

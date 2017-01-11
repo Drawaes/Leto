@@ -12,6 +12,7 @@ ChaCha20/Poly
 ECDSA certificates
 
 Key exchanges (All now supported)
+
 1. x25519
 2. x448
 3. ffdhe8192
@@ -28,7 +29,12 @@ Things I am currently working on
 1. ~~EC key exchange~~ done
 2. PSK
 3. 0-RTT
-4. CNG Windows Support
+4. CNG Windows Support 
+  1. ~~Hash~~ done
+  2. ~~EC Keyexchange~~ done
+  3. FF Keyexchange
+  4. x25519
+  6. AES 
 5. ~~ChaCha20/Poly Support~~ done
 
 This library aims to prove out the use case for Pipelines having a native TLS library and for how TLS 1.3 can be implemented in that library.
