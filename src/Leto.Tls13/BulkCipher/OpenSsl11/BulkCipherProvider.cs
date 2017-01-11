@@ -16,7 +16,11 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         {
             int keySize, nonceSize, overhead;
             var type = GetCipherType(cipher, out keySize, out nonceSize, out overhead);
-            return new AesBulkCipherInstance(type, _bufferPool, nonceSize, keySize, overhead);
+            if (type != IntPtr.Zero)
+            {
+                return new AeadBulkCipherInstance(type, _bufferPool, nonceSize, keySize, overhead);
+            }
+            return null;
         }
 
         private static IntPtr GetCipherType(BulkCipherType cipherType, out int keySize, out int nonceSize, out int overhead)
@@ -39,7 +43,10 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
                     overhead = 16;
                     return EVP_chacha20_poly1305;
                 default:
-                    throw new NotImplementedException();
+                    keySize = 0;
+                    nonceSize = 0;
+                    overhead = 0;
+                    return IntPtr.Zero;
             }
         }
 

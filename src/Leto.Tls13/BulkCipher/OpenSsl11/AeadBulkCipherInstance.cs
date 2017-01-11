@@ -11,7 +11,7 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.BulkCipher.OpenSsl11
 {
-    public class AesBulkCipherInstance : IBulkCipherInstance
+    public class AeadBulkCipherInstance : IBulkCipherInstance
     {
         private static readonly IntPtr s_zeroBuffer = Marshal.AllocHGlobal(255);
         private IntPtr _cipherType;
@@ -27,13 +27,13 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         private byte[] _sequence;
         private int _overhead;
 
-        static AesBulkCipherInstance()
+        static AeadBulkCipherInstance()
         {
             var array = new byte[255];
             Marshal.Copy(array,0, s_zeroBuffer, array.Length);
         }
 
-        public unsafe AesBulkCipherInstance(IntPtr cipherType, SecureBufferPool bufferPool, int ivLength, int keySize, int overhead)
+        public unsafe AeadBulkCipherInstance(IntPtr cipherType, SecureBufferPool bufferPool, int ivLength, int keySize, int overhead)
         {
             _overhead = overhead;
             _bufferPool = bufferPool;
@@ -183,7 +183,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             GC.SuppressFinalize(this);
         }
 
-        ~AesBulkCipherInstance()
+        ~AeadBulkCipherInstance()
         {
             Dispose();
         }
