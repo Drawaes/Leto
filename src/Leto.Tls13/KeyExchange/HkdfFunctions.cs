@@ -63,7 +63,7 @@ namespace Leto.Tls13.KeyExchange
             }
         }
 
-        public static unsafe void HkdfExpandLabel(IHashProvider provider, HashType hashType, void* secret, int secretLength,Span<byte> label, Span<byte> hash, Span<byte> output)
+        public static unsafe void HkdfExpandLabel(IHashProvider provider, HashType hashType, void* secret, int secretLength, Span<byte> label, Span<byte> hash, Span<byte> output)
         {
             var hkdfSize = HkdfLabelHeaderSize + label.Length + hash.Length;
             var hkdfLabel = stackalloc byte[hkdfSize];
@@ -79,31 +79,24 @@ namespace Leto.Tls13.KeyExchange
             hash.CopyTo(hkdfSpan);
             hkdfSpan = new Span<byte>(hkdfLabel, hkdfSize);
 
-            HkdfExpand(provider, hashType, secret, secretLength, hkdfSpan,  output);
+            HkdfExpand(provider, hashType, secret, secretLength, hkdfSpan, output);
         }
 
-        public static unsafe Tuple<byte[],byte[]> ClientServerApplicationTrafficSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash)
+        public static unsafe void ClientServerApplicationTrafficSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash
+            , Span<byte> clientSecret, Span<byte> serverSecret)
         {
-            var hashSize = hash.Length;
-            var clientSecret = new byte[hashSize];
-            var serverSecret = new byte[hashSize];
             HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ClientApplicationTrafficSecret, hash, clientSecret);
             HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ServerApplicationTrafficSecret, hash, serverSecret);
-            return Tuple.Create(clientSecret,serverSecret);
         }
 
-        public static unsafe byte[] ServerHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret,Span<byte> hash)
+        public static unsafe void ServerHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash, Span<byte> output)
         {
-            var output = new byte[hash.Length];
             HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ServerHandshakeTrafficSecret, hash, output);
-            return output;
         }
 
-        public static unsafe byte[] ClientHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash)
+        public static unsafe void ClientHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash, Span<byte> output)
         {
-            var output = new byte[hash.Length];
             HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ClientHandshakeTrafficSecret, hash, output);
-            return output;
         }
 
         public static unsafe byte[] ResumptionSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash)
@@ -113,13 +106,10 @@ namespace Leto.Tls13.KeyExchange
             return output;
         }
 
-        public unsafe static byte[] FinishedKey(IHashProvider provider, HashType hashType, byte[] handshakeTrafficSecret)
+        public unsafe static byte[] FinishedKey(IHashProvider provider, HashType hashType, byte* handshakeTrafficSecret)
         {
             var output = new byte[provider.HashSize(hashType)];
-            fixed(byte* sPtr = handshakeTrafficSecret)
-            {
-                HkdfExpandLabel(provider, hashType, sPtr, handshakeTrafficSecret.Length, Tls1_3Labels.ServerFinishedKey, new Span<byte>(), output);
-            }
+            HkdfExpandLabel(provider, hashType, handshakeTrafficSecret, output.Length, Tls1_3Labels.ServerFinishedKey, new Span<byte>(), output);
             return output;
         }
     }

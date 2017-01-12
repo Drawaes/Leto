@@ -14,8 +14,8 @@ namespace Leto.Tls13.State
     {
         private void* _secret;
         private int _hashSize;
-        private byte[] _clientTrafficSecret;
-        private byte[] _serverTrafficSecret;
+        private byte* _clientTrafficSecret;
+        private byte* _serverTrafficSecret;
         private ConnectionState _state;
         private byte[] _resumptionSecret;
         private SecureBufferPool _pool;
@@ -29,6 +29,8 @@ namespace Leto.Tls13.State
             _hashSize = CryptoProvider.HashProvider.HashSize(CipherSuite.HashType);
             _stateData.Memory.TryGetPointer(out _secret);
             HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, null, 0, null, 0, (byte*)_secret, _hashSize);
+            _clientTrafficSecret = ((byte*)_secret) + _hashSize;
+            _serverTrafficSecret = _clientTrafficSecret + _hashSize;
         }
 
         private CipherSuite CipherSuite => _state.CipherSuite;
@@ -75,36 +77,23 @@ namespace Leto.Tls13.State
 
         public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash)
         {
-            _clientTrafficSecret = HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash);
-            _serverTrafficSecret = HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash);
-            fixed (byte* cSecret = _clientTrafficSecret)
-            {
-                _state.ReadKey?.Dispose();
-                _state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
-            }
-            fixed (byte* sSecret = _serverTrafficSecret)
-            {
-                _state.WriteKey?.Dispose();
-                _state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
-            }
+            HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_clientTrafficSecret, _hashSize));
+            HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_serverTrafficSecret, _hashSize));
+            _state.ReadKey?.Dispose();
+            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize, KeyMode.Decryption);
+            _state.WriteKey?.Dispose();
+            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize, KeyMode.Encryption);
         }
 
         public unsafe void GenerateMasterSecret(Span<byte> hash)
         {
             HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, null, 0, (byte*)_secret, _hashSize);
-            var traffic = HkdfFunctions.ClientServerApplicationTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, (byte*)_secret, hash);
-            _clientTrafficSecret = traffic.Item1;
-            _serverTrafficSecret = traffic.Item2;
-            fixed (byte* cSecret = _clientTrafficSecret)
-            {
-                _state.ReadKey?.Dispose();
-                _state.ReadKey = GetKey(cSecret, _clientTrafficSecret.Length, KeyMode.Decryption);
-            }
-            fixed (byte* sSecret = _serverTrafficSecret)
-            {
-                _state.WriteKey?.Dispose();
-                _state.WriteKey = GetKey(sSecret, _serverTrafficSecret.Length, KeyMode.Encryption);
-            }
+            HkdfFunctions.ClientServerApplicationTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, (byte*)_secret, hash,
+                new Span<byte>(_clientTrafficSecret, _hashSize), new Span<byte>(_serverTrafficSecret, _hashSize));
+            _state.ReadKey?.Dispose();
+            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize, KeyMode.Decryption);
+            _state.WriteKey?.Dispose();
+            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize, KeyMode.Encryption);
         }
 
         public void Dispose()

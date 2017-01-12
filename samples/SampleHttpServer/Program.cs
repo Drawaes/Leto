@@ -112,11 +112,10 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                 var response = pipeline.Output.Alloc();
                 var sb = new StringBuilder();
                 sb.AppendLine("HTTP/1.1 200 OK");
-                sb.AppendLine("Content-Length: 13");
+                sb.AppendLine("Content-Length: " + request.Length);
                 sb.AppendLine("Content-Type: text/plain");
-                sb.AppendLine("\r\n");
-                sb.Append("Hello, World!");
                 response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
+                response.Append(request);
                 await response.FlushAsync();
                 pipeline.Input.Advance(request.End);
 

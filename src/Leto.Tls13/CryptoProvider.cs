@@ -21,14 +21,14 @@ namespace Leto.Tls13
 
         public CryptoProvider()
         {
-            _keyShareProvider = new KeyExchange.Windows.KeyshareProvider();//new KeyExchange.OpenSsl11.KeyshareProvider(); //
-            _hashProvider = new Hash.Windows.HashProvider(); // new Hash.OpenSsl11.HashProvider();
+            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); //new KeyExchange.Windows.KeyshareProvider();//
+            _hashProvider = new Hash.OpenSsl11.HashProvider(); //new Hash.Windows.HashProvider(); // 
             _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
 
             _priorityOrderedKeyExchange = new NamedGroup[]
             {
-                 //NamedGroup.x25519,
-                 //NamedGroup.x448,
+                 NamedGroup.x25519,
+                 NamedGroup.x448,
                  NamedGroup.secp521r1,
                  NamedGroup.secp384r1,
                  NamedGroup.secp256r1,
@@ -41,8 +41,8 @@ namespace Leto.Tls13
 
             _priorityOrderedCipherSuites = new CipherSuite[]
                 {
-                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
-                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, CipherCode = 0x1302, HashType = HashType.SHA384},
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, CipherCode = 0x1302, HashType = HashType.SHA384},
                     new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM, CipherCode = 0x1304, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM_8, CipherCode = 0x1305, HashType = HashType.SHA256}

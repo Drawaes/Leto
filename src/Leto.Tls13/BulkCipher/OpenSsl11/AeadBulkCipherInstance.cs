@@ -33,7 +33,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             Marshal.Copy(array,0, s_zeroBuffer, array.Length);
         }
 
-        public unsafe AeadBulkCipherInstance(IntPtr cipherType, SecureBufferPool bufferPool, int ivLength, int keySize, int overhead)
+        internal unsafe AeadBulkCipherInstance(IntPtr cipherType, SecureBufferPool bufferPool, int ivLength, int keySize, int overhead)
         {
             _overhead = overhead;
             _bufferPool = bufferPool;

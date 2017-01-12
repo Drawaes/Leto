@@ -9,10 +9,13 @@ internal partial class Interop
     {
         internal static readonly IntPtr EVP_aes_128_gcm = Internal_EVP_aes_128_gcm();
         internal static readonly IntPtr EVP_aes_256_gcm = Internal_EVP_aes_256_gcm();
+        internal static readonly IntPtr EVP_aes_128_ccm = Internal_EVP_aes_128_ccm();
         internal static readonly IntPtr EVP_chacha20_poly1305 = Internal_EVP_chacha20_poly1305();
 
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "EVP_aes_128_gcm")]
         private static extern IntPtr Internal_EVP_aes_128_gcm();
+        [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "EVP_aes_128_gcm")]
+        private static extern IntPtr Internal_EVP_aes_128_ccm();
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "EVP_aes_256_gcm")]
         private static extern IntPtr Internal_EVP_aes_256_gcm();
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "EVP_chacha20_poly1305")]
