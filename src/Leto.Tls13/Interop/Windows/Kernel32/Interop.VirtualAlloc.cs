@@ -17,5 +17,7 @@ internal partial class Interop
         internal extern static bool VirtualLock(IntPtr lpAddress, UIntPtr dwSize);
         [DllImport(Libraries.Kernel32, CharSet = CharSet.Unicode)]
         internal extern static uint GetLastError();
+        [DllImport(Libraries.Kernel32, CharSet = CharSet.Unicode)]
+        internal extern static IntPtr SecureZeroMemory(IntPtr ptr, UIntPtr cnt);
     }
 }

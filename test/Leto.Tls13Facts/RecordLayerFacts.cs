@@ -37,7 +37,7 @@ namespace Leto.Tls13Facts
         {
             var prov = new BulkCipherProvider();
             var bKey = prov.GetCipherKey(BulkCipherType.AES_128_GCM);
-            bKey.SetKey(key, KeyMode.Decryption);
+            bKey.SetKey(key);
             bKey.SetIV(iv);
             using (var factory = new PipelineFactory())
             {
@@ -47,7 +47,7 @@ namespace Leto.Tls13Facts
                 buffer.FlushAsync().Wait();
                 var reader = pipe.ReadAsync();
                 var result = reader.GetResult().Buffer;
-                var state = new ConnectionState(_listener);
+                var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.ReadKey = bKey;
                 var header = recordHandler.ReadRecord(ref result);
@@ -61,13 +61,13 @@ namespace Leto.Tls13Facts
         {
             var prov = new BulkCipherProvider();
             var bKey = prov.GetCipherKey(BulkCipherType.AES_128_GCM);
-            bKey.SetKey(key, KeyMode.Encryption);
+            bKey.SetKey(key);
             bKey.SetIV(iv);
             using (var factory = new PipelineFactory())
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(_listener);
+                var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();
@@ -86,14 +86,14 @@ namespace Leto.Tls13Facts
         {
             var prov = new BulkCipherProvider();
             var bKey = prov.GetCipherKey(BulkCipherType.AES_128_GCM);
-            bKey.SetKey(key, KeyMode.Encryption);
+            bKey.SetKey(key);
             bKey.SetIV(iv);
             bKey.WithPadding(paddingLength);
             using (var factory = new PipelineFactory())
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(_listener);
+                var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();
@@ -112,7 +112,7 @@ namespace Leto.Tls13Facts
         {
             var prov = new BulkCipherProvider();
             var bKey = prov.GetCipherKey(BulkCipherType.AES_128_GCM);
-            bKey.SetKey(key, KeyMode.Encryption);
+            bKey.SetKey(key);
             bKey.SetIV(iv);
             bKey.WithPadding(paddingLength);
             for (int i = 0; i < sequenceChange; i++)
@@ -123,7 +123,7 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ConnectionState(_listener);
+                var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
                 state.WriteKey = bKey;
                 var buff = pipe.Alloc();

@@ -49,6 +49,18 @@ namespace Leto.Tls13
                 };
         }
 
+        internal CipherSuite GetCipherSuiteFromCode(ushort cipherCode)
+        {
+            for(int i = 0; i < _priorityOrderedCipherSuites.Length;i++)
+            {
+                if(_priorityOrderedCipherSuites[i] != null)
+                {
+                    return _priorityOrderedCipherSuites[i];
+                }
+            }
+            return null;
+        }
+
         public IHashProvider HashProvider => _hashProvider;
         public IKeyshareProvider KeyShareProvider => _keyShareProvider;
         public IBulkCipherProvider CipherProvider => _bulkCipherProvider;

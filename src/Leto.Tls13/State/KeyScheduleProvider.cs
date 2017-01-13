@@ -13,9 +13,9 @@ namespace Leto.Tls13.State
         private const int MaxConnections = 10000;
         private SecureBufferPool _bufferPool = new SecureBufferPool(StateSize, MaxConnections);
 
-        public KeySchedule GetKeySchedule(ConnectionState state)
+        public KeySchedule GetKeySchedule(IConnectionState state, byte[] resumptionSecret)
         {
-            return new KeySchedule(state, _bufferPool);
+            return new KeySchedule(state, _bufferPool, resumptionSecret);
         }
 
         public void Dispose()

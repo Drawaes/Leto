@@ -114,6 +114,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                 sb.AppendLine("HTTP/1.1 200 OK");
                 sb.AppendLine("Content-Length: " + request.Length);
                 sb.AppendLine("Content-Type: text/plain");
+                sb.AppendLine("Connection: close");
                 response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
                 response.Append(request);
                 await response.FlushAsync();

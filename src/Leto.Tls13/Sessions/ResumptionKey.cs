@@ -30,13 +30,20 @@ namespace Leto.Tls13.Sessions
             _nounceBase = nounceBase;
         }
 
-        public void DecryptSession(ref ReadableBuffer buffer)
+        public void DecryptSession(ref ReadableBuffer buffer, IConnectionState state)
         {
             var nounce = buffer.Slice(0,12).ToArray();
             buffer = buffer.Slice(12);
+            ushort cipherCode, version;
+            buffer = buffer.SliceBigEndian(out cipherCode);
+            buffer = buffer.SliceBigEndian(out version);
+            state.Version = version;
+            state.CipherSuite = state.CryptoProvider.GetCipherSuiteFromCode(cipherCode);
+            state.KeySchedule = state.Listener.KeyScheduleProvider.GetKeySchedule(state, buffer.ToArray());
+            
         }
 
-        internal void WriteSessionKey(ref WritableBuffer writer, ConnectionState state)
+        internal void WriteSessionKey(ref WritableBuffer writer, IConnectionState state)
         {
             writer.WriteBigEndian(_randomServiceId);
             writer.WriteBigEndian(_randomId);

@@ -38,7 +38,7 @@ namespace Leto.Tls13
 
         public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
         {
-            return new SecurePipelineConnection(pipeline, _factory, this);
+            return new SecurePipelineConnection(new ServerConnectionState(this), pipeline, _factory, this);
         }
 
         public void Dispose()

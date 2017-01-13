@@ -180,7 +180,7 @@ namespace Leto.Tls13.BulkCipher.Windows
             }
         }
 
-        public unsafe void SetKey(Span<byte> key, KeyMode decrypt)
+        public unsafe void SetKey(Span<byte> key)
         {
             var keyBlob = stackalloc byte[sizeof(BCRYPT_KEY_DATA_BLOB) + _keyLength];
             BCRYPT_KEY_DATA_BLOB* pkeyDataBlob = (BCRYPT_KEY_DATA_BLOB*)keyBlob;

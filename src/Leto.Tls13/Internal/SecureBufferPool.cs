@@ -9,7 +9,7 @@ using static Interop.Kernel32;
 
 namespace Leto.Tls13.Internal
 {
-    public class SecureBufferPool
+    public class SecureBufferPool:IDisposable
     {
         private IntPtr _memory;
         private int _bufferCount;
@@ -51,12 +51,7 @@ namespace Leto.Tls13.Internal
             returnValue.Rented = true;
             return returnValue;
         }
-
-        internal void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void Return(OwnedMemory<byte> buffer)
         {
             var buffer2 = buffer as SecureMemory;
@@ -80,6 +75,18 @@ namespace Leto.Tls13.Internal
             { }
             internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
+        }
+        
+        public void Dispose()
+        {
+            //var ptr = SecureZeroMemory(_memory, _totalAllocated);
+            VirtualFree(_memory, _totalAllocated, 0x8000);
+            GC.SuppressFinalize(this);
+        }
+
+        ~SecureBufferPool()
+        {
+            Dispose();
         }
     }
 }

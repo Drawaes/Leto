@@ -32,7 +32,7 @@ namespace Leto.Tls13
             return ptr;
         }
 
-        public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, ConnectionState, WritableBuffer> writeContent, ConnectionState state) where T : struct
+        public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionState, WritableBuffer> writeContent, IConnectionState state) where T : struct
         {
             var bookMark = buffer.Memory;
             if(typeof(T) == typeof(ushort))
@@ -101,7 +101,7 @@ namespace Leto.Tls13
             buffer.Span.Slice(2).Write((byte)(numberToWrite & 0x0000ff));
         }
 
-        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, ConnectionState, WritableBuffer> writeContent, ConnectionState state)
+        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionState, WritableBuffer> writeContent, IConnectionState state)
         {
             buffer.Ensure(3);
             var bookmark = buffer.Memory;

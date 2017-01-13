@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace Leto.Tls13.Internal
 {
-    internal class Signal : ICriticalNotifyCompletion
+    public class Signal : ICriticalNotifyCompletion
     {
         private readonly ContinuationMode _continuationMode;
 
         private Action _continuation;
         private static readonly Action _completedSentinel = delegate { };
 
-        public Signal(ContinuationMode continuationMode = ContinuationMode.Synchronous)
+        internal Signal(ContinuationMode continuationMode = ContinuationMode.Synchronous)
         {
             _continuationMode = continuationMode;
         }

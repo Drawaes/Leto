@@ -12,7 +12,7 @@ namespace Leto.Tls13.BulkCipher
         int Overhead { get; }
         int KeyLength { get; }
         int IVLength { get; }
-        void SetKey(Span<byte> key, KeyMode decrypt);
+        void SetKey(Span<byte> key);
         void SetIV(Span<byte> iv);
         void Decrypt(ref ReadableBuffer messageBuffer);
         void IncrementSequence();

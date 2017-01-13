@@ -14,15 +14,14 @@ using Leto.Tls13.Sessions;
 
 namespace Leto.Tls13.State
 {
-    public class ConnectionState : IDisposable
+    public class ServerConnectionState : IConnectionState
     {
         private StateType _state = StateType.None;
-        private KeySchedule _keySchedule;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private SecurePipelineListener _listener;
 
-        public ConnectionState(SecurePipelineListener listener)
+        public ServerConnectionState(SecurePipelineListener listener)
         {
             _listener = listener;
             PskKeyExchangeMode = PskKeyExchangeMode.none;
@@ -32,30 +31,31 @@ namespace Leto.Tls13.State
         public string ServerName { get; set; }
         public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
-        public KeySchedule KeySchedule => _keySchedule;
+        public KeySchedule KeySchedule { get; set; }
         public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
         public IHashInstance HandshakeHash { get; set; }
         public CryptoProvider CryptoProvider => _listener.CryptoProvider;
         public IBulkCipherInstance ReadKey { get; set; }
         public IBulkCipherInstance WriteKey { get; set; }
         public CertificateList CertificateList => _listener.CertificateList;
-        public CipherSuite CipherSuite { get; internal set; }
+        public CipherSuite CipherSuite { get; set; }
         public StateType State => _state;
-        public ushort Version { get; internal set; }
-        public ICertificate Certificate { get; internal set; }
-        internal Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
-        internal Signal WaitForHandshakeToChangeSchedule => _waitForHandshakeToChangeSchedule;
+        public ushort Version { get; set; }
+        public ICertificate Certificate { get; set; }
+        public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
+        public Signal WaitForHandshakeToChangeSchedule => _waitForHandshakeToChangeSchedule;
+        public SignatureScheme SignatureScheme { get; set; }
+        public int PskIdentity { get; set; } = -1;
+        public IBulkCipherInstance EarlyDataKey { get; set; }
 
-        public SignatureScheme SignatureScheme { get; internal set; }
-
-        internal void StartHandshakeHash(ReadableBuffer readable)
+        public void StartHandshakeHash(ReadableBuffer readable)
         {
             _dataForCurrentScheduleSent.Set();
             HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
             HandshakeHash.HashData(readable);
         }
 
-        internal void HandshakeContext(ReadableBuffer readable)
+        public void HandshakeContext(ReadableBuffer readable)
         {
             HandshakeHash.HashData(readable);
         }
@@ -97,7 +97,7 @@ namespace Leto.Tls13.State
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
                     ServerHandshake.SendFlightOne(ref writer, this);
-                    ServerHandshake.ServerFinished(ref writer, this, _keySchedule.GenerateServerFinishKey());
+                    ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await _dataForCurrentScheduleSent;
@@ -130,6 +130,10 @@ namespace Leto.Tls13.State
 
         private bool NegotiationComplete()
         {
+            if (PskIdentity != -1)
+            {
+                return true;
+            }
             if (KeyShare == null || Certificate == null)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
@@ -146,20 +150,23 @@ namespace Leto.Tls13.State
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            _keySchedule.GenerateMasterSecret(span);
+            KeySchedule.GenerateMasterSecret(span);
         }
 
         private unsafe void GenerateHandshakeKeys()
         {
-            _keySchedule = _listener.KeyScheduleProvider.GetKeySchedule(this);
-            _keySchedule.SetDheDerivedValue(KeyShare);
+            if (KeySchedule == null)
+            {
+                KeySchedule = _listener.KeyScheduleProvider.GetKeySchedule(this, null);
+            }
+            KeySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            _keySchedule.GenerateHandshakeTrafficKeys(span);
+            KeySchedule.GenerateHandshakeTrafficKeys(span);
         }
 
-        public void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, ConnectionState, WritableBuffer> contentWriter)
+        public void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionState, WritableBuffer> contentWriter)
         {
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
@@ -174,14 +181,14 @@ namespace Leto.Tls13.State
         public void Dispose()
         {
             HandshakeHash?.Dispose();
-            _keySchedule?.Dispose();
+            KeySchedule?.Dispose();
             KeyShare?.Dispose();
             ReadKey?.Dispose();
             WriteKey?.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        ~ConnectionState()
+        ~ServerConnectionState()
         {
             Dispose();
         }

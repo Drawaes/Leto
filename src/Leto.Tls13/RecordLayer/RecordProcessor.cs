@@ -12,9 +12,9 @@ namespace Leto.Tls13.RecordLayer
         public const int RecordHeaderLength = 5;
         public const int PlainTextMaxSize = 2 << 14;
         private const ushort TlsRecordVersion = 0x0301;
-        private State.ConnectionState _state;
+        private State.IConnectionState _state;
         
-        public RecordProcessor(State.ConnectionState state)
+        public RecordProcessor(State.IConnectionState state)
         {
             _state = state;
         }

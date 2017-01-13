@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.State;
 
 namespace Leto.Tls13.Handshake
 {
@@ -10,7 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         public const int HandshakeHeaderSize = 4;
                 
-        public static bool TryGetFrame(ref ReadableBuffer buffer, State.ConnectionState state, out ReadableBuffer messageBuffer, out HandshakeType messageType)
+        public static bool TryGetFrame(ref ReadableBuffer buffer, IConnectionState state, out ReadableBuffer messageBuffer, out HandshakeType messageType)
         {
             messageType = HandshakeType.certificate;
             messageBuffer = default(ReadableBuffer);

@@ -94,6 +94,11 @@ namespace Leto.Tls13.KeyExchange
             HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ServerHandshakeTrafficSecret, hash, output);
         }
 
+        public static unsafe void ClientEarlyTrafficSecret(IHashProvider provider, HashType hashType, void* earlySecret, Span<byte> hash, Span<byte> output)
+        {
+            HkdfExpandLabel(provider, hashType, earlySecret, hash.Length, Tls1_3Labels.ClientEarlyTrafficSecret, hash, output);
+        }
+
         public static unsafe void ClientHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash, Span<byte> output)
         {
             HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ClientHandshakeTrafficSecret, hash, output);

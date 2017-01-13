@@ -28,7 +28,7 @@ namespace Leto.Tls13.Certificates
         public bool RequiresMatch => _requiresMatch; 
 
 
-        public void MatchServerName(ReadableBuffer buffer, ConnectionState state)
+        public void MatchServerName(ReadableBuffer buffer, IConnectionState state)
         {
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
             while (buffer.Length > 0)

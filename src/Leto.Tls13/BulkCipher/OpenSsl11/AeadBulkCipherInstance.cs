@@ -18,7 +18,6 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         private int _iVLength;
         private int _keyLength;
         private EVP_CIPHER_CTX _ctx;
-        private KeyMode _mode;
         private SecureBufferPool _bufferPool;
         private OwnedMemory<byte> _keyStore;
         private IntPtr _ivPointer;
@@ -55,9 +54,8 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         public int KeyLength => _keyLength;
         public int Overhead => _overhead + _paddingSize;
 
-        public unsafe void SetKey(Span<byte> key, KeyMode mode)
+        public unsafe void SetKey(Span<byte> key)
         {
-            _mode = mode;
             _ctx = EVP_CIPHER_CTX_new();
             key.CopyTo(new Span<byte>(_keyPointer.ToPointer(), _keyLength));
         }
@@ -77,7 +75,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             messageBuffer.Slice(messageBuffer.Length - _overhead).CopyTo(new Span<byte>(tag, _overhead));
             messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - _overhead);
 
-            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)_mode));
+            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Decryption));
             ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_SET_TAG, _overhead, tag));
             int outLength;
             foreach (var b in messageBuffer)
@@ -102,7 +100,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         {
             int outLength;
             GCHandle inHandle, outHandle;
-            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)_mode));
+            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Encryption));
             foreach(var b in plainText)
             {
                 if(b.Length == 0)

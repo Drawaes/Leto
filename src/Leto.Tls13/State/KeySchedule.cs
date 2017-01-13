@@ -16,21 +16,42 @@ namespace Leto.Tls13.State
         private int _hashSize;
         private byte* _clientTrafficSecret;
         private byte* _serverTrafficSecret;
-        private ConnectionState _state;
+        private IConnectionState _state;
         private byte[] _resumptionSecret;
         private SecureBufferPool _pool;
         private OwnedMemory<byte> _stateData;
+        private byte[] resumptionSecret;
 
-        public unsafe KeySchedule(ConnectionState state, SecureBufferPool pool)
+        public unsafe KeySchedule(IConnectionState state, SecureBufferPool pool, byte[] resumptionSecret)
         {
             _pool = pool;
             _stateData = pool.Rent();
             _state = state;
             _hashSize = CryptoProvider.HashProvider.HashSize(CipherSuite.HashType);
+
             _stateData.Memory.TryGetPointer(out _secret);
-            HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, null, 0, null, 0, (byte*)_secret, _hashSize);
             _clientTrafficSecret = ((byte*)_secret) + _hashSize;
             _serverTrafficSecret = _clientTrafficSecret + _hashSize;
+
+            void* resumptionPointer = null;
+            int secretLength = 0;
+            if (resumptionSecret != null)
+            {
+                var stackSecret = stackalloc byte[resumptionSecret.Length];
+                resumptionSecret.CopyTo(new Span<byte>(stackSecret, resumptionSecret.Length));
+                secretLength = resumptionSecret.Length;
+                resumptionPointer = stackSecret;
+            }
+            HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, null, 0, resumptionPointer, secretLength, _secret, _hashSize);
+
+            if (resumptionSecret != null)
+            {
+                var hash = stackalloc byte[_hashSize];
+                _state.HandshakeHash.InterimHash(hash, _hashSize);
+                var hashSpan = new Span<byte>(hash, _hashSize);
+                HkdfFunctions.ClientEarlyTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hashSpan, new Span<byte>(_clientTrafficSecret, _hashSize));
+                state.EarlyDataKey = GetKey(_clientTrafficSecret, _hashSize);
+            }
         }
 
         private CipherSuite CipherSuite => _state.CipherSuite;
@@ -39,7 +60,14 @@ namespace Leto.Tls13.State
 
         public unsafe void SetDheDerivedValue(IKeyshareInstance keyShare)
         {
-            keyShare.DeriveSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, _secret, _hashSize);
+            if (keyShare != null)
+            {
+                keyShare.DeriveSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, _secret, _hashSize);
+            }
+            else
+            {
+                HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, null, 0, _secret, _hashSize, _secret, _hashSize);
+            }
         }
 
         public byte[] GenerateServerFinishKey()
@@ -52,7 +80,7 @@ namespace Leto.Tls13.State
             return HkdfFunctions.FinishedKey(CryptoProvider.HashProvider, CipherSuite.HashType, _clientTrafficSecret);
         }
 
-        private unsafe IBulkCipherInstance GetKey(byte* secret, int secretLength, KeyMode mode)
+        private unsafe IBulkCipherInstance GetKey(byte* secret, int secretLength)
         {
             var newKey = CryptoProvider.CipherProvider.GetCipherKey(CipherSuite.BulkCipherType);
             var key = stackalloc byte[newKey.KeyLength];
@@ -61,7 +89,7 @@ namespace Leto.Tls13.State
             var ivSpan = new Span<byte>(iv, newKey.IVLength);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
                     , secret, secretLength, Tls1_3Labels.TrafficKey, new Span<byte>(), keySpan);
-            newKey.SetKey(keySpan, mode);
+            newKey.SetKey(keySpan);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
                     , secret, secretLength, Tls1_3Labels.TrafficIv, new Span<byte>(), ivSpan);
             newKey.SetIV(ivSpan);
@@ -80,9 +108,9 @@ namespace Leto.Tls13.State
             HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_clientTrafficSecret, _hashSize));
             HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_serverTrafficSecret, _hashSize));
             _state.ReadKey?.Dispose();
-            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize, KeyMode.Decryption);
+            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize);
             _state.WriteKey?.Dispose();
-            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize, KeyMode.Encryption);
+            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize);
         }
 
         public unsafe void GenerateMasterSecret(Span<byte> hash)
@@ -91,9 +119,9 @@ namespace Leto.Tls13.State
             HkdfFunctions.ClientServerApplicationTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, (byte*)_secret, hash,
                 new Span<byte>(_clientTrafficSecret, _hashSize), new Span<byte>(_serverTrafficSecret, _hashSize));
             _state.ReadKey?.Dispose();
-            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize, KeyMode.Decryption);
+            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize);
             _state.WriteKey?.Dispose();
-            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize, KeyMode.Encryption);
+            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize);
         }
 
         public void Dispose()

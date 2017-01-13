@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.RecordLayer;
+using Leto.Tls13.State;
 
 namespace Leto.Tls13
 {
@@ -15,16 +16,16 @@ namespace Leto.Tls13
         private readonly Pipe _inputPipe;
         private readonly Pipe _handshakePipe;
         private readonly Pipe _handshakeOutpipe;
-        private State.ConnectionState _state;
+        private IConnectionState _state;
 
-        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
+        public SecurePipelineConnection(IConnectionState state, IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
             _handshakeOutpipe = factory.Create();
-            _state = new State.ConnectionState(listener);
+            _state = state;
             _recordHandler = new RecordProcessor(_state);
             HandshakeWriting();
             StartReading();

@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         private const int RandomLength = 32;
 
-        public static void ReadClientHello(ReadableBuffer readable, State.ConnectionState connectionState)
+        public static void ReadClientHello(ReadableBuffer readable, IConnectionState connectionState)
         {
             var buffer = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
             var version = buffer.ReadBigEndian<ushort>();
@@ -46,10 +46,11 @@ namespace Leto.Tls13.Handshake
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
             }
-            Extensions.ReadExtensionList(buffer, connectionState);
+            Extensions.ReadExtensionList(ref buffer, connectionState);
+
         }
 
-        public static WritableBuffer SendServerHello(WritableBuffer buffer, ConnectionState connectionState)
+        public static WritableBuffer SendServerHello(WritableBuffer buffer, IConnectionState connectionState)
         {
             buffer.Ensure(RandomLength + sizeof(ushort));
             buffer.WriteBigEndian(connectionState.Version);
@@ -61,7 +62,7 @@ namespace Leto.Tls13.Handshake
             return buffer;
         }
 
-        public static WritableBuffer SendHelloRetry(WritableBuffer buffer, ConnectionState connectionState)
+        public static WritableBuffer SendHelloRetry(WritableBuffer buffer, IConnectionState connectionState)
         {
             buffer.WriteBigEndian(connectionState.Version);
             BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);

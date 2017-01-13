@@ -11,24 +11,30 @@ namespace Leto.Tls13.Handshake
     {
         const int TicketLifeTimeInHours = 24;
 
-        public static WritableBuffer CreateNewSessionKey(WritableBuffer buffer, ConnectionState state)
+        public static WritableBuffer CreateNewSessionKey(WritableBuffer buffer, IConnectionState state)
         {
             var lifetime = TicketLifeTimeInHours * 60 * 60;
             buffer.WriteBigEndian((uint)lifetime);
             buffer.Ensure(4);
             state.CryptoProvider.FillWithRandom(buffer.Memory.Slice(0, 4));
             buffer.Advance(4);
-                        
+
             BufferExtensions.WriteVector<ushort>(ref buffer, (writer, conn) =>
             {
                 state.ResumptionProvider.GenerateSessionTicket(ref writer, conn);
                 return writer;
             }, state);
 
-            BufferExtensions.WriteVector<ushort>(ref buffer, (writer,conn) =>
+            BufferExtensions.WriteVector<ushort>(ref buffer, (writer, conn) =>
             {
                 return writer;
             }, state);
+            //    writer.WriteBigEndian(ExtensionType.early_data);
+            //    writer.WriteBigEndian<ushort>(sizeof(uint));
+            //    uint maxData = 1024*2;
+            //    writer.WriteBigEndian(maxData);
+            //    return writer;
+            //}, state);
             return buffer;
         }
     }

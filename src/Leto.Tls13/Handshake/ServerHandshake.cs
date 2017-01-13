@@ -11,18 +11,21 @@ namespace Leto.Tls13.Handshake
 {
     public class ServerHandshake
     {
-        public static void SendFlightOne(ref WritableBuffer writer, ConnectionState connectionState)
+        public static void SendFlightOne(ref WritableBuffer writer, IConnectionState connectionState)
         {
             connectionState.WriteHandshake(ref writer, HandshakeType.encrypted_extensions, (buffer, state) =>
             {
                 BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, state);
                 return buffer;
             });
-            connectionState.WriteHandshake(ref writer, HandshakeType.certificate, WriteCertificate);
-            connectionState.WriteHandshake(ref writer, HandshakeType.certificate_verify, SendCertificateVerify);
+            if (connectionState.PskIdentity == -1)
+            {
+                connectionState.WriteHandshake(ref writer, HandshakeType.certificate, WriteCertificate);
+                connectionState.WriteHandshake(ref writer, HandshakeType.certificate_verify, SendCertificateVerify);
+            }
         }
 
-        public static WritableBuffer WriteCertificate(WritableBuffer writer, ConnectionState connectionState)
+        public static WritableBuffer WriteCertificate(WritableBuffer writer, IConnectionState connectionState)
         {
             writer.WriteBigEndian<byte>(0);
             BufferExtensions.WriteVector24Bit(ref writer, (buffer, state) =>
@@ -42,7 +45,7 @@ namespace Leto.Tls13.Handshake
             writer.WriteBigEndian<ushort>(0);
         }
 
-        public unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, ConnectionState state)
+        public unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, IConnectionState state)
         {
             writer.WriteBigEndian(state.SignatureScheme);
             var bookMark = writer.Memory;
@@ -60,7 +63,7 @@ namespace Leto.Tls13.Handshake
             return writer;
         }
 
-        public static unsafe void ServerFinished(ref WritableBuffer writer, ConnectionState connectionState, byte[] serverFinishedKey)
+        public static unsafe void ServerFinished(ref WritableBuffer writer, IConnectionState connectionState, byte[] serverFinishedKey)
         {
             var hash = new byte[connectionState.HandshakeHash.HashSize];
             fixed (byte* hPtr = hash)
