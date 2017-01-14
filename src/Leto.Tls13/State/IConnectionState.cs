@@ -24,18 +24,18 @@ namespace Leto.Tls13.State
         SecurePipelineListener Listener { get; }
         int PskIdentity { get; set;}
         PskKeyExchangeMode PskKeyExchangeMode { get; set; }
-        IBulkCipherInstance ReadKey { get; set; }
+        IBulkCipherInstance ReadKey { get; }
         ResumptionProvider ResumptionProvider { get; }
         string ServerName { get; set; }
         SignatureScheme SignatureScheme { get; set;}
         StateType State { get; }
         ushort Version { get; set; }
-        IBulkCipherInstance WriteKey { get; set; }
+        IBulkCipherInstance WriteKey { get; }
         Signal DataForCurrentScheduleSent { get;}
         Signal WaitForHandshakeToChangeSchedule { get; }
         void StartHandshakeHash(ReadableBuffer readable);
         void HandshakeContext(ReadableBuffer readable);
         Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
-        void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionState, WritableBuffer> contentWriter);
+        void StartHandshake(ref WritableBuffer writer);
     }
 }

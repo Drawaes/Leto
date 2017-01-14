@@ -14,7 +14,7 @@ namespace Leto.Tls13Facts
     public class SocketFacts
     {
         [Fact]
-        public void WaitForConnectionFact()
+        public async Task WaitForConnectionFact()
         {
             using (var factory = new PipelineFactory())
             using (var cert = new X509Certificate2(CertificateFacts._certificatePath, CertificateFacts._certificatePassword, X509KeyStorageFlags.Exportable))
@@ -26,15 +26,27 @@ namespace Leto.Tls13Facts
                 //list.AddPEMCertificate(CertificateFacts.rsaCertPEM, CertificateFacts.rsaKeyPEM);
                 //list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
-                using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
+                //using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
                     var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 443);
-                    socketClient.OnConnection(async s =>
-                    {
-                        var sp = serverContext.CreateSecurePipeline(s);
-                        await Echo(sp);
-                    });
-                    socketClient.Start(ipEndPoint);
+                    //socketClient.OnConnection(async s =>
+                    //{
+                    //    var sp = serverContext.CreateSecurePipeline(s);
+                    //    await Echo(sp);
+                    //});
+                    //socketClient.Start(ipEndPoint);
+
+                    var socket = await System.IO.Pipelines.Networking.Sockets.SocketConnection.ConnectAsync(ipEndPoint);
+                    var clientPipe = serverContext.CreateSecureClientPipeline(socket);
+                    var buffer = clientPipe.Output.Alloc();
+                    var sb = new StringBuilder();
+                    sb.AppendLine("HTTP/1.1 200 OK");
+                    sb.AppendLine("Content-Length: 13");
+                    sb.Append("Content-Type: text/plain");
+                    sb.Append("\r\n\r\n");
+                    sb.Append("Hello, World!");
+                    buffer.Write(Encoding.ASCII.GetBytes(sb.ToString()));
+                    await buffer.FlushAsync();
                     Console.ReadLine();
                 }
             }

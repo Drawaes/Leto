@@ -49,7 +49,7 @@ namespace Leto.Tls13Facts
                 var result = reader.GetResult().Buffer;
                 var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
-                state.ReadKey = bKey;
+                //state.ReadKey = bKey;
                 var header = recordHandler.ReadRecord(ref result);
                 Assert.Equal(RecordType.Alert, header);
                 Assert.Equal<byte>(plainText.Skip(5), result.ToArray());
@@ -69,7 +69,7 @@ namespace Leto.Tls13Facts
                 var pipeWriter = factory.Create();
                 var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
-                state.WriteKey = bKey;
+                //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);
@@ -95,7 +95,7 @@ namespace Leto.Tls13Facts
                 var pipeWriter = factory.Create();
                 var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
-                state.WriteKey = bKey;
+                //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);
@@ -125,7 +125,7 @@ namespace Leto.Tls13Facts
                 var pipeWriter = factory.Create();
                 var state = new ServerConnectionState(_listener);
                 var recordHandler = new RecordProcessor(state);
-                state.WriteKey = bKey;
+                //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);

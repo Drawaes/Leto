@@ -13,6 +13,11 @@ namespace Leto.Tls13.State
         SendServerHello,
         SendServerFinished,
         ServerAuthentication,
-        HandshakeComplete
+        SendClientHello,
+        HandshakeComplete,
+        WaitServerHello,
+        WaitEncryptedExtensions,
+        WaitServerVerification,
+        WaitServerFinished
     }
 }

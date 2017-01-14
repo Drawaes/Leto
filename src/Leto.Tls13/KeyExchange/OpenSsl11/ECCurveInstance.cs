@@ -18,8 +18,9 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         private EVP_PKEY _eKey;
         private EVP_PKEY _clientKey;
 
-        public ECCurveInstance(NamedGroup namedGroup)
+        public ECCurveInstance(NamedGroup namedGroup, int keyExchangeSize)
         {
+            _keyExchangeSize = keyExchangeSize;
             _namedGroup = namedGroup;
             switch (namedGroup)
             {
@@ -41,6 +42,10 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         private void GenerateECKeySet()
         {
+            if(_eKey.IsValid())
+            {
+                return;
+            }
             var param = CreateParams();
             var keyGenCtx = default(EVP_PKEY_CTX);
             try
@@ -112,7 +117,6 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void SetPeerKey(ReadableBuffer peerKey)
         {
-            _keyExchangeSize = peerKey.Length;
             GenerateECKeySet();
 
             var group = EC_KEY_get0_group(EVP_PKEY_get0_EC_KEY(_eKey));
@@ -157,6 +161,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void WritePublicKey(ref WritableBuffer keyBuffer)
         {
+            GenerateECKeySet();
             var key = EVP_PKEY_get0_EC_KEY(_eKey);
             var pubKey = EC_KEY_get0_public_key(key);
             var group = EC_KEY_get0_group(key);

@@ -20,6 +20,8 @@ namespace Leto.Tls13.State
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private SecurePipelineListener _listener;
+        private IBulkCipherInstance _readKey;
+        private IBulkCipherInstance _writeKey;
 
         public ServerConnectionState(SecurePipelineListener listener)
         {
@@ -35,8 +37,8 @@ namespace Leto.Tls13.State
         public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
         public IHashInstance HandshakeHash { get; set; }
         public CryptoProvider CryptoProvider => _listener.CryptoProvider;
-        public IBulkCipherInstance ReadKey { get; set; }
-        public IBulkCipherInstance WriteKey { get; set; }
+        public IBulkCipherInstance ReadKey => _readKey;
+        public IBulkCipherInstance WriteKey => _writeKey;
         public CertificateList CertificateList => _listener.CertificateList;
         public CipherSuite CipherSuite { get; set; }
         public StateType State => _state;
@@ -57,7 +59,7 @@ namespace Leto.Tls13.State
 
         public void HandshakeContext(ReadableBuffer readable)
         {
-            HandshakeHash.HashData(readable);
+            HandshakeHash?.HashData(readable);
         }
 
         public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
@@ -80,14 +82,14 @@ namespace Leto.Tls13.State
                         }
                         _state = StateType.WaitHelloRetry;
                         writer = pipe.Alloc();
-                        WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
+                        this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
                         await writer.FlushAsync();
                         return;
                     }
                     //Write the server hello, the last of the unencrypted messages
                     _state = StateType.SendServerHello;
                     writer = pipe.Alloc();
-                    WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello);
+                    this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello);
                     //block our next actions because we need to have sent the message before changing keys
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
@@ -118,7 +120,7 @@ namespace Leto.Tls13.State
                     HandshakeHash = null;
                     //Send a new session ticket
                     writer = pipe.Alloc();
-                    WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
+                    this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
                     await writer.FlushAsync();
                     _state = StateType.HandshakeComplete;
                     break;
@@ -150,7 +152,7 @@ namespace Leto.Tls13.State
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateMasterSecret(span);
+            KeySchedule.GenerateMasterSecret(span,ref _readKey, ref _writeKey);
         }
 
         private unsafe void GenerateHandshakeKeys()
@@ -163,21 +165,9 @@ namespace Leto.Tls13.State
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateHandshakeTrafficKeys(span);
+            KeySchedule.GenerateHandshakeTrafficKeys(span, ref _readKey, ref _writeKey);
         }
-
-        public void WriteHandshake(ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionState, WritableBuffer> contentWriter)
-        {
-            var dataWritten = writer.BytesWritten;
-            writer.WriteBigEndian(handshakeType);
-            BufferExtensions.WriteVector24Bit(ref writer, contentWriter, this);
-            if (HandshakeHash != null)
-            {
-                var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
-                HandshakeHash.HashData(hashBuffer);
-            }
-        }
-
+        
         public void Dispose()
         {
             HandshakeHash?.Dispose();
@@ -186,6 +176,10 @@ namespace Leto.Tls13.State
             ReadKey?.Dispose();
             WriteKey?.Dispose();
             GC.SuppressFinalize(this);
+        }
+
+        public void StartHandshake(ref WritableBuffer writer)
+        {
         }
 
         ~ServerConnectionState()

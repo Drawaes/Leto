@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Handshake;
 using Leto.Tls13.State;
 
 namespace Leto.Tls13.Sessions
@@ -75,6 +76,32 @@ namespace Leto.Tls13.Sessions
                 return true;
             }
             return false;
+        }
+
+        public void RegisterSessionTicket(ReadableBuffer buffer)
+        {
+            //slice off the head first
+            buffer = buffer.Slice(Handshake.HandshakeProcessor.HandshakeHeaderSize);
+            uint ticketAge, ageRandom;
+            buffer = buffer.SliceBigEndian(out ticketAge);
+            buffer = buffer.SliceBigEndian(out ageRandom);
+            var ticketData = BufferExtensions.SliceVector<ushort>(ref buffer);
+            if(buffer.Length > 0)
+            {
+                //Extensions
+                buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
+                if(buffer.Length > 0)
+                {
+                    //seems we can resume data
+                    ExtensionType type;
+                    buffer = buffer.SliceBigEndian(out type);
+                    if(type != ExtensionType.ticket_early_data_info)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                    }
+
+                }
+            }
         }
     }
 }

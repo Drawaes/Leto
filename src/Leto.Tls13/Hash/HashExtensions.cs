@@ -17,6 +17,14 @@ namespace Leto.Tls13.Hash
             }
         }
 
+        public unsafe static void InterimHash(this IHashInstance instance, byte[] hash)
+        {
+            fixed (byte* ptr = hash)
+            {
+                instance.InterimHash(ptr, hash.Length);
+            }
+        }
+
         public static unsafe void HashData(this IHashInstance hash, Memory<byte> dataToHash)
         {
             GCHandle handle;

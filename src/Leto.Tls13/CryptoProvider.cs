@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Leto.Tls13.BulkCipher;
+using Leto.Tls13.Certificates;
 using Leto.Tls13.Hash;
 using Leto.Tls13.KeyExchange;
 using static Interop.LibCrypto;
@@ -17,7 +18,8 @@ namespace Leto.Tls13
         private IKeyshareProvider _keyShareProvider;
         private IBulkCipherProvider _bulkCipherProvider;
         private CipherSuite[] _priorityOrderedCipherSuites;
-        private NamedGroup[] _priorityOrderedKeyExchange;
+        private NamedGroup[] _priorityOrderedKeyExchanges;
+        private SignatureScheme[] _prioritySignatureSchemes;
 
         public CryptoProvider()
         {
@@ -25,13 +27,23 @@ namespace Leto.Tls13
             _hashProvider = new Hash.OpenSsl11.HashProvider(); //new Hash.Windows.HashProvider(); // 
             _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
 
-            _priorityOrderedKeyExchange = new NamedGroup[]
+            _prioritySignatureSchemes = new SignatureScheme[]
             {
+                SignatureScheme.ecdsa_secp256r1_sha256,
+                SignatureScheme.ecdsa_secp384r1_sha384,
+                SignatureScheme.ecdsa_secp521r1_sha512,
+                SignatureScheme.rsa_pss_sha256,
+                SignatureScheme.rsa_pss_sha384,
+                SignatureScheme.rsa_pss_sha512
+            };
+
+            _priorityOrderedKeyExchanges = new NamedGroup[]
+            {
+                 NamedGroup.secp256r1,
                  NamedGroup.x25519,
                  NamedGroup.x448,
                  NamedGroup.secp521r1,
                  NamedGroup.secp384r1,
-                 NamedGroup.secp256r1,
                  NamedGroup.ffdhe8192,
                  NamedGroup.ffdhe6144,
                  NamedGroup.ffdhe4096,
@@ -49,11 +61,46 @@ namespace Leto.Tls13
                 };
         }
 
+        public void WriteSupportedGroups(ref WritableBuffer buffer)
+        {
+            var length = _priorityOrderedKeyExchanges.Length * sizeof(NamedGroup);
+            buffer.WriteBigEndian((ushort)length);
+            for (int i = 0; i < _priorityOrderedKeyExchanges.Length; i++)
+            {
+                buffer.WriteBigEndian(_priorityOrderedKeyExchanges[i]);
+            }
+        }
+
+        public void WriteSignatureSchemes(ref WritableBuffer buffer)
+        {
+            var length = _prioritySignatureSchemes.Length * sizeof(SignatureScheme);
+            buffer.WriteBigEndian((ushort)length);
+            for (int i = 0; i < _prioritySignatureSchemes.Length; i++)
+            {
+                buffer.WriteBigEndian(_prioritySignatureSchemes[i]);
+            }
+        }
+
+        public IKeyshareInstance GetDefaultKeyShare()
+        {
+            return _keyShareProvider.GetKeyShareInstance(_priorityOrderedKeyExchanges[0]);
+        }
+
+        public void WriteCipherSuites(ref WritableBuffer buffer)
+        {
+            var length = _priorityOrderedCipherSuites.Length * sizeof(ushort);
+            buffer.WriteBigEndian((ushort)length);
+            for (int i = 0; i < _priorityOrderedCipherSuites.Length; i++)
+            {
+                buffer.WriteBigEndian(_priorityOrderedCipherSuites[i].CipherCode);
+            }
+        }
+
         internal CipherSuite GetCipherSuiteFromCode(ushort cipherCode)
         {
-            for(int i = 0; i < _priorityOrderedCipherSuites.Length;i++)
+            for (int i = 0; i < _priorityOrderedCipherSuites.Length; i++)
             {
-                if(_priorityOrderedCipherSuites[i] != null)
+                if (_priorityOrderedCipherSuites[i] != null)
                 {
                     return _priorityOrderedCipherSuites[i];
                 }
@@ -64,7 +111,7 @@ namespace Leto.Tls13
         public IHashProvider HashProvider => _hashProvider;
         public IKeyshareProvider KeyShareProvider => _keyShareProvider;
         public IBulkCipherProvider CipherProvider => _bulkCipherProvider;
-        public NamedGroup[] SupportedNamedGroups => _priorityOrderedKeyExchange;
+        public NamedGroup[] SupportedNamedGroups => _priorityOrderedKeyExchanges;
 
         public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer)
         {
@@ -108,11 +155,11 @@ namespace Leto.Tls13
                 buffer = buffer.Slice(sizeof(NamedGroup));
             }
 
-            for (var i = 0; i < _priorityOrderedKeyExchange.Length; i++)
+            for (var i = 0; i < _priorityOrderedKeyExchanges.Length; i++)
             {
                 for (var x = 0; x < numberOfGroups; x++)
                 {
-                    if (peerGroupList[x] == _priorityOrderedKeyExchange[i])
+                    if (peerGroupList[x] == _priorityOrderedKeyExchanges[i])
                     {
                         var ks = _keyShareProvider.GetKeyShareInstance(peerGroupList[x]);
                         if (ks != null)
@@ -153,11 +200,11 @@ namespace Leto.Tls13
                 currentIndex += 2;
             }
 
-            for (var i = 0; i < _priorityOrderedKeyExchange.Length; i++)
+            for (var i = 0; i < _priorityOrderedKeyExchanges.Length; i++)
             {
                 for (var x = 0; x < keyshareCount; x += 2)
                 {
-                    if (peerKeyshareList[x] == (ushort)_priorityOrderedKeyExchange[i])
+                    if (peerKeyshareList[x] == (ushort)_priorityOrderedKeyExchanges[i])
                     {
                         var instance = _keyShareProvider.GetKeyShareInstance((NamedGroup)peerKeyshareList[x]);
                         if (instance == null)

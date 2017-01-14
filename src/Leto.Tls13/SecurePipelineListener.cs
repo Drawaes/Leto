@@ -41,6 +41,11 @@ namespace Leto.Tls13
             return new SecurePipelineConnection(new ServerConnectionState(this), pipeline, _factory, this);
         }
 
+        public SecurePipelineConnection CreateSecureClientPipeline(IPipelineConnection pipeline)
+        {
+            return new SecurePipelineConnection(new ClientConnectionState(this), pipeline, _factory, this);
+        }
+
         public void Dispose()
         {
             _cryptoProvider.Dispose();

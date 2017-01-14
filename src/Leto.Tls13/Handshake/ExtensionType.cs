@@ -13,6 +13,7 @@ namespace Leto.Tls13.Handshake
         key_share = 40,
         pre_shared_key = 41,
         early_data = 42,
+        ticket_early_data_info = 46,
         supported_versions = 43,
         cookie = 44,
         psk_key_exchange_modes = 45,

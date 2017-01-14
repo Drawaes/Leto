@@ -27,9 +27,11 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                 case NamedGroup.ffdhe8192:
                     return new FiniteFieldInstance(namedGroup);
                 case NamedGroup.secp256r1:
+                    return new ECCurveInstance(namedGroup, 65);
                 case NamedGroup.secp384r1:
+                    return new ECCurveInstance(namedGroup, 97);
                 case NamedGroup.secp521r1:
-                    return new ECCurveInstance(namedGroup);
+                    return new ECCurveInstance(namedGroup, 133);
                 case NamedGroup.x25519:
                 case NamedGroup.x448:
                     return new ECFunctionInstance(namedGroup);

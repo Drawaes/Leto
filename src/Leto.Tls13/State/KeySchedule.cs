@@ -103,25 +103,25 @@ namespace Leto.Tls13.State
             _resumptionSecret = HkdfFunctions.ResumptionSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, new Span<byte>(hash, _hashSize));
         }
 
-        public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash)
+        public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash, ref IBulkCipherInstance clientKey, ref IBulkCipherInstance serverKey)
         {
             HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_clientTrafficSecret, _hashSize));
             HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_serverTrafficSecret, _hashSize));
-            _state.ReadKey?.Dispose();
-            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize);
-            _state.WriteKey?.Dispose();
-            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize);
+            clientKey?.Dispose();
+            clientKey = GetKey(_clientTrafficSecret, _hashSize);
+            serverKey?.Dispose();
+            serverKey = GetKey(_serverTrafficSecret, _hashSize);
         }
 
-        public unsafe void GenerateMasterSecret(Span<byte> hash)
+        public unsafe void GenerateMasterSecret(Span<byte> hash, ref IBulkCipherInstance clientKey, ref IBulkCipherInstance serverKey)
         {
             HkdfFunctions.HkdfExtract(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, _hashSize, null, 0, (byte*)_secret, _hashSize);
             HkdfFunctions.ClientServerApplicationTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, (byte*)_secret, hash,
                 new Span<byte>(_clientTrafficSecret, _hashSize), new Span<byte>(_serverTrafficSecret, _hashSize));
-            _state.ReadKey?.Dispose();
-            _state.ReadKey = GetKey(_clientTrafficSecret, _hashSize);
-            _state.WriteKey?.Dispose();
-            _state.WriteKey = GetKey(_serverTrafficSecret, _hashSize);
+            clientKey?.Dispose();
+            clientKey = GetKey(_clientTrafficSecret, _hashSize);
+            serverKey?.Dispose();
+            serverKey = GetKey(_serverTrafficSecret, _hashSize);
         }
 
         public void Dispose()

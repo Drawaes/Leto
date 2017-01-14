@@ -27,14 +27,13 @@ namespace Leto.Tls13.Handshake
 
             BufferExtensions.WriteVector<ushort>(ref buffer, (writer, conn) =>
             {
+                writer.WriteBigEndian(ExtensionType.ticket_early_data_info);
+                writer.WriteBigEndian<ushort>(sizeof(uint));
+                uint maxData = 1024*2;
+                writer.WriteBigEndian(maxData);
                 return writer;
+
             }, state);
-            //    writer.WriteBigEndian(ExtensionType.early_data);
-            //    writer.WriteBigEndian<ushort>(sizeof(uint));
-            //    uint maxData = 1024*2;
-            //    writer.WriteBigEndian(maxData);
-            //    return writer;
-            //}, state);
             return buffer;
         }
     }

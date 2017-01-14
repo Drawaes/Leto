@@ -86,6 +86,10 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void WritePublicKey(ref WritableBuffer keyBuffer)
         {
+            if(!_publicPrivateKey.IsValid())
+            {
+                GenerateKeyset();
+            }
             IntPtr ptr;
             var buffSize = (int)ThrowOnError(EVP_PKEY_get1_tls_encodedpoint(_publicPrivateKey, out ptr));
             try

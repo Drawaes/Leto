@@ -63,14 +63,14 @@ namespace Leto.Tls13.Handshake
             return writer;
         }
 
-        public static unsafe void ServerFinished(ref WritableBuffer writer, IConnectionState connectionState, byte[] serverFinishedKey)
+        public static unsafe void ServerFinished(ref WritableBuffer writer, IConnectionState connectionState, byte[] finishedKey)
         {
             var hash = new byte[connectionState.HandshakeHash.HashSize];
             fixed (byte* hPtr = hash)
-            fixed (byte* kPtr = serverFinishedKey)
+            fixed (byte* kPtr = finishedKey)
             {
                 connectionState.HandshakeHash.InterimHash(hPtr, hash.Length);
-                connectionState.CryptoProvider.HashProvider.HmacData(connectionState.CipherSuite.HashType, kPtr, serverFinishedKey.Length,
+                connectionState.CryptoProvider.HashProvider.HmacData(connectionState.CipherSuite.HashType, kPtr, finishedKey.Length,
                     hPtr, hash.Length, hPtr, hash.Length);
             }
             connectionState.WriteHandshake(ref writer, HandshakeType.finished, (buffer, state) =>
