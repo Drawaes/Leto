@@ -75,6 +75,7 @@ namespace Leto.Tls13.State
                 case StateType.WaitServerVerification:
                     if (handshakeMessageType == HandshakeType.certificate)
                     {
+                        Handshake.Certificates.ReadCertificates(buffer, Listener);
                         HandshakeContext(buffer);
                         return;
                     }

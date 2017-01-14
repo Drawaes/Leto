@@ -26,15 +26,9 @@ namespace Leto.Tls13Facts
                 //list.AddPEMCertificate(CertificateFacts.rsaCertPEM, CertificateFacts.rsaKeyPEM);
                 //list.AddPEMCertificate(CertificateFacts.ecdsaCertPEM, CertificateFacts.ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
-                //using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
+                    serverContext.CertificateValidation = CertificateValidation;
                     var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 443);
-                    //socketClient.OnConnection(async s =>
-                    //{
-                    //    var sp = serverContext.CreateSecurePipeline(s);
-                    //    await Echo(sp);
-                    //});
-                    //socketClient.Start(ipEndPoint);
 
                     var socket = await System.IO.Pipelines.Networking.Sockets.SocketConnection.ConnectAsync(ipEndPoint);
                     var clientPipe = serverContext.CreateSecureClientPipeline(socket);
@@ -50,6 +44,11 @@ namespace Leto.Tls13Facts
                     Console.ReadLine();
                 }
             }
+        }
+
+        private bool CertificateValidation(X509Certificate2Collection certificateCollection)
+        {
+            return true;
         }
 
         private async Task Echo(SecurePipelineConnection pipeline)

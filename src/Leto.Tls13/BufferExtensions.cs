@@ -60,6 +60,14 @@ namespace Leto.Tls13
             }
         }
 
+        public static ReadableBuffer SliceVector24Bit(ref ReadableBuffer buffer)
+        {
+            var length = buffer.ReadBigEndian24bit();
+            var returnBuffer = buffer.Slice(3,length);
+            buffer = buffer.Slice(returnBuffer.End);
+            return returnBuffer;
+        }
+        
         public static ReadableBuffer SliceVector<[Primitive]T>(ref ReadableBuffer buffer) where T : struct
         {
             uint length = 0;

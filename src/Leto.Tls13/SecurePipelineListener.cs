@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
 using Leto.Tls13.Internal;
@@ -35,6 +36,7 @@ namespace Leto.Tls13
         public KeyScheduleProvider KeyScheduleProvider => _keyscheduleProvider;
         public ResumptionProvider ResumptionProvider => _resumptionProvider;
         public ServerNameProvider ServerNameProvider => _serverNameProvider;
+        public Func<X509Certificate2Collection, bool> CertificateValidation { get; set; }
 
         public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
         {

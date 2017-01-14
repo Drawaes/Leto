@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Internal;
 using Leto.Tls13.RecordLayer;
 using Leto.Tls13.State;
 
@@ -17,9 +18,12 @@ namespace Leto.Tls13
         private readonly Pipe _handshakePipe;
         private readonly Pipe _handshakeOutpipe;
         private IConnectionState _state;
+        private bool _startedApplicationWrite;
+        private Signal _handshakeReadingGate = new Signal(Signal.ContinuationMode.Synchronous);
 
         public SecurePipelineConnection(IConnectionState state, IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
+            _handshakeReadingGate.Set();
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
@@ -54,9 +58,10 @@ namespace Leto.Tls13
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();
                                 await HandshakeReading();
-                                if (_state.State == StateType.HandshakeComplete)
+                                if (_state.State == StateType.HandshakeComplete && !_startedApplicationWrite)
                                 {
                                     ApplicationWriting();
+                                    _startedApplicationWrite = true;
                                 }
                                 continue;
                             }
@@ -96,6 +101,8 @@ namespace Leto.Tls13
 
         private async Task HandshakeReading()
         {
+            await _handshakeReadingGate;
+            _handshakeReadingGate.Reset();
             var result = await _handshakePipe.ReadAsync();
             var buffer = result.Buffer;
             try
@@ -111,6 +118,7 @@ namespace Leto.Tls13
             {
                 _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
             }
+            _handshakeReadingGate.Set();
         }
 
         private async void ApplicationWriting()
