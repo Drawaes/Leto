@@ -95,7 +95,50 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             outLength = 0;
             ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
         }
-        
+
+
+        public unsafe void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType)
+        {
+            int outLength;
+            GCHandle outHandle;
+            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Encryption));
+            buffer.Ensure(plainText.Length);
+            var outPtr = buffer.Memory.GetPointer(out outHandle);
+            try
+            {
+                outLength = buffer.Memory.Length;
+                fixed (byte* inPtr = plainText.ToArray())
+                {
+                    ThrowOnError(EVP_CipherUpdate(_ctx, outPtr, ref outLength, inPtr, plainText.Length));
+                    buffer.Advance(outLength);
+                }
+            }
+            finally
+            {
+                if (outHandle.IsAllocated)
+                {
+                    outHandle.Free();
+                }
+            }
+            buffer.Ensure(Overhead + sizeof(RecordType));
+            var writePtr = buffer.Memory.GetPointer(out outHandle);
+            outLength = buffer.Memory.Length;
+            ThrowOnError(EVP_CipherUpdate(_ctx, writePtr, ref outLength, &recordType, sizeof(RecordType)));
+            buffer.Advance(outLength);
+            if (_paddingSize > 0)
+            {
+                outLength = _paddingSize;
+                writePtr = buffer.Memory.GetPointer(out outHandle);
+                ThrowOnError(EVP_CipherUpdate(_ctx, writePtr, ref outLength, (byte*)s_zeroBuffer, _paddingSize));
+                buffer.Advance(outLength);
+            }
+            writePtr = buffer.Memory.GetPointer(out outHandle);
+            outLength = 0;
+            ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
+            ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_GET_TAG, _overhead, writePtr));
+            buffer.Advance(_overhead);
+        }
+
         public unsafe void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType)
         {
             int outLength;
@@ -180,7 +223,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             _keyStore = null;
             GC.SuppressFinalize(this);
         }
-
+        
         ~AeadBulkCipherInstance()
         {
             Dispose();

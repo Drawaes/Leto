@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Leto.Tls13.RecordLayer;
 
 namespace Leto.Tls13.Alerts
 {
@@ -40,6 +42,15 @@ namespace Leto.Tls13.Alerts
         {
             return Message;
         }
-
+        
+        public static void WriteAlert(RecordProcessor recordHandler, ref WritableBuffer output, AlertLevel level, AlertDescription description)
+        {
+            var buffer = new byte[sizeof(AlertLevel) + sizeof(AlertDescription)];
+            var span = new Span<byte>(buffer);
+            span.Write(level);
+            span = span.Slice(sizeof(AlertLevel));
+            span.Write(description);
+            recordHandler.WriteRecord(ref output, RecordType.Alert, buffer);
+        }
     }
 }

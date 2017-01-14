@@ -131,6 +131,9 @@ namespace Leto.Tls13
                     var buffer = result.Buffer;
                     if (result.IsCompleted && result.Buffer.IsEmpty)
                     {
+                        var output = _lowerConnection.Output.Alloc();
+                        Alerts.AlertException.WriteAlert(_recordHandler, ref output,Alerts.AlertLevel.Warning,Alerts.AlertDescription.close_notify);
+                        await output.FlushAsync();
                         break;
                     }
                     try
@@ -164,6 +167,7 @@ namespace Leto.Tls13
             {
                 //Nom Nom
             }
+            _lowerConnection.Output.Complete();
         }
 
         private async void HandshakeWriting()

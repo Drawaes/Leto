@@ -82,13 +82,14 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
-                    var ip = IPAddress.Loopback;
+                    var ip = IPAddress.Any;
                     int port = 443;
                     var ipEndPoint = new IPEndPoint(ip, port);
                     socketClient.OnConnection(async s =>
                     {
                         var sp = serverContext.CreateSecurePipeline(s);
                         await Echo(sp);
+                        s.Dispose();
                     });
                     socketClient.Start(ipEndPoint);
                     Console.ReadLine();
@@ -108,21 +109,17 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                     pipeline.Input.Advance(request.End);
                     return;
                 }
-                int len = request.Length;
                 var response = pipeline.Output.Alloc();
-                var sb = new StringBuilder();
-                sb.AppendLine("HTTP/1.1 200 OK");
-                sb.AppendLine("Content-Length: " + "test".Length);
-                sb.AppendLine("Content-Type: text/plain");
-                sb.Append("\n\r\n");
-                sb.AppendLine("test");
-                response.Write(Encoding.UTF8.GetBytes(sb.ToString()));
+                response.Write(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK"));
+                response.Write(Encoding.UTF8.GetBytes("\r\nContent-Length: 13"));
+                response.Write(Encoding.UTF8.GetBytes("\r\nContent-Type: text/plain"));
+                response.Write(Encoding.UTF8.GetBytes("\r\n\r\n"));
+                response.Write(Encoding.UTF8.GetBytes("Hello, World!"));
                 await response.FlushAsync();
                 pipeline.Input.Advance(request.End);
             }
             finally
             {
-                pipeline.Input.Complete();
                 pipeline.Output.Complete();
             }
         }

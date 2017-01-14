@@ -41,6 +41,25 @@ namespace Leto.Tls13.RecordLayer
             return recordType;
         }
 
+        public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, Span<byte> plainText)
+        {
+            buffer.Ensure(RecordHeaderLength);
+            if(_state.WriteKey == null)
+            {
+                buffer.WriteBigEndian(recordType);
+                buffer.WriteBigEndian(TlsRecordVersion);
+                buffer.WriteBigEndian((ushort)plainText.Length);
+                buffer.Write(plainText);
+                return;
+            }
+            buffer.WriteBigEndian(RecordType.Application);
+            buffer.WriteBigEndian(TlsRecordVersion);
+            var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
+            buffer.WriteBigEndian((ushort)totalSize);
+            _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            _state.WriteKey.IncrementSequence();
+        }
+
         public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer plainText)
         {
             buffer.Ensure(RecordHeaderLength);

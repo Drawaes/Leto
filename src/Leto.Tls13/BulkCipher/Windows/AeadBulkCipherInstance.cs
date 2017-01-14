@@ -209,6 +209,11 @@ namespace Leto.Tls13.BulkCipher.Windows
             GC.SuppressFinalize(this);
         }
 
+        public void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType)
+        {
+            throw new NotImplementedException();
+        }
+
         ~AeadBulkCipherInstance()
         {
             Dispose();

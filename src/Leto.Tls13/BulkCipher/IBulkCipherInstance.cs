@@ -18,5 +18,6 @@ namespace Leto.Tls13.BulkCipher
         void IncrementSequence();
         void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType);
         void WithPadding(int paddingSize);
+        void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType);
     }
 }
