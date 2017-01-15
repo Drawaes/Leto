@@ -8,6 +8,6 @@ namespace Leto.Tls13.Alerts
     public enum AlertLevel : byte
     {
         Warning = 1,
-        Fatal = 2
+        Fatal = 2,
     }
 }

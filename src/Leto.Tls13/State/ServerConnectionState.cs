@@ -46,13 +46,14 @@ namespace Leto.Tls13.State
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
         public SignatureScheme SignatureScheme { get; set; }
         public int PskIdentity { get; set; } = -1;
-        public IBulkCipherInstance EarlyDataKey { get; set; }
         public bool EarlyDataSupported { get; set; }
 
         public void StartHandshakeHash(ReadableBuffer readable)
         {
-            _dataForCurrentScheduleSent.Set();
-            HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
+            if (HandshakeHash == null)
+            {
+                HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
+            }
             HandshakeHash.HashData(readable);
         }
 
@@ -61,7 +62,7 @@ namespace Leto.Tls13.State
             HandshakeHash?.HashData(readable);
         }
 
-        public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
             switch (State)
@@ -73,6 +74,13 @@ namespace Leto.Tls13.State
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                     }
                     Hello.ReadClientHello(buffer, this);
+                    if(CipherSuite == null)
+                    {
+                        //Couldn't agree a set of ciphers
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
+                    }
+                    StartHandshakeHash(buffer);
+                    //If we can't agree on a schedule we will have to send a hello retry and try again
                     if (!NegotiationComplete())
                     {
                         writer = pipe.Alloc();
@@ -80,6 +88,11 @@ namespace Leto.Tls13.State
                         await writer.FlushAsync();
                         return;
                     }
+                    if(PskIdentity != -1 && EarlyDataSupported)
+                    {
+                        KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
+                    }
+
                     //Write the server hello, the last of the unencrypted messages
                     State = StateType.SendServerHello;
                     writer = pipe.Alloc();
@@ -94,8 +107,11 @@ namespace Leto.Tls13.State
                     writer = pipe.Alloc();
                     ServerHandshake.SendFlightOne(ref writer, this);
                     ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
+                    _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    if (EarlyDataSupported && EarlyDataKey != null && PskIdentity != -1)
+                    await _dataForCurrentScheduleSent;
+                    GenerateServerApplicationKey();
+                    if (EarlyDataSupported && PskIdentity != -1)
                     {
                         State = StateType.WaitEarlyDataFinished;
                     }
@@ -110,7 +126,8 @@ namespace Leto.Tls13.State
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                     }
                     Finished.ReadClientFinished(buffer, this);
-                    GenerateApplicationKeys();
+                    _readKey?.Dispose();
+                    _readKey = KeySchedule.GenerateClientApplicationKey();
                     //Hash the finish message now we have made the traffic keys
                     //Then we can make the resumption secret
                     HandshakeHash.HashData(buffer);
@@ -127,6 +144,23 @@ namespace Leto.Tls13.State
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
                     break;
             }
+        }
+
+        public void HandleAlertMessage(ReadableBuffer messageBuffer)
+        {
+            var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
+            messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
+            var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
+            if(level == Alerts.AlertLevel.Warning && description == Alerts.AlertDescription.end_of_early_data && State == StateType.WaitEarlyDataFinished)
+            {
+                //0RTT data finished so we switch the reader key to the handshake key and wait for 
+                //the client to send it's finish message
+                _readKey?.Dispose();
+                _readKey = KeySchedule.GenerateClientHandshakeKey();
+                State = StateType.WaitClientFinished;
+                return;
+            }
+            Alerts.AlertException.ThrowAlert(level, description);
         }
 
         private bool NegotiationComplete()
@@ -146,31 +180,35 @@ namespace Leto.Tls13.State
             return true;
         }
 
-        private unsafe void GenerateApplicationKeys()
+        private unsafe void GenerateServerApplicationKey()
         {
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateMasterSecret(span, ref _readKey, ref _writeKey);
+            KeySchedule.GenerateMasterSecret(span);
+            Console.WriteLine("Application Write Key");
+            _writeKey?.Dispose();
+            _writeKey = KeySchedule.GenerateServerApplicationKey();
         }
 
         private unsafe void GenerateHandshakeKeys()
         {
             if (KeySchedule == null)
             {
-                KeySchedule = _listener.KeyScheduleProvider.GetKeySchedule(this, null);
+                KeySchedule = Listener.KeyScheduleProvider.GetKeySchedule(this);
             }
             KeySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateHandshakeTrafficKeys(span, ref _readKey, ref _writeKey);
-            if (EarlyDataKey != null && PskIdentity != -1 && EarlyDataSupported)
+            KeySchedule.GenerateHandshakeTrafficSecrets(span);
+            Console.WriteLine("Handshake Write Key");
+            _writeKey = KeySchedule.GenerateServerHandshakeKey();
+            if (PskIdentity == -1 || !EarlyDataSupported)
             {
-                _readKey.Dispose();
-                _readKey = EarlyDataKey;
+                _readKey?.Dispose();
+                _readKey = KeySchedule.GenerateClientHandshakeKey();
             }
-                       
         }
 
         public void Dispose()
@@ -186,7 +224,7 @@ namespace Leto.Tls13.State
         public void StartHandshake(ref WritableBuffer writer)
         {
         }
-
+        
         ~ServerConnectionState()
         {
             Dispose();

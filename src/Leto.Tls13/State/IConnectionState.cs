@@ -17,7 +17,6 @@ namespace Leto.Tls13.State
         CertificateList CertificateList { get; }
         CipherSuite CipherSuite { get; set;}
         CryptoProvider CryptoProvider { get;}
-        IBulkCipherInstance EarlyDataKey { get; set;}
         IHashInstance HandshakeHash { get; set; }
         KeySchedule KeySchedule { get; set; }
         IKeyshareInstance KeyShare { get; set; }
@@ -33,10 +32,11 @@ namespace Leto.Tls13.State
         IBulkCipherInstance WriteKey { get; }
         Signal DataForCurrentScheduleSent { get;}
         bool EarlyDataSupported { get; set; }
-
+               
         void StartHandshakeHash(ReadableBuffer readable);
         void HandshakeContext(ReadableBuffer readable);
-        Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
+        void HandleAlertMessage(ReadableBuffer readable);
+        Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
         void StartHandshake(ref WritableBuffer writer);
     }
 }

@@ -8,6 +8,7 @@ namespace Leto.Tls13.Alerts
     public enum AlertDescription : byte
     {
         close_notify = 0,
+        end_of_early_data = 1,
         unexpected_message = 10,
         bad_record_mac = 20,
         decryption_failed_RESERVED = 21,

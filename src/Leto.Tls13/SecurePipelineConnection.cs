@@ -60,7 +60,7 @@ namespace Leto.Tls13
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();
                                 await HandshakeReading();
-                                if ((_state.State == StateType.HandshakeComplete || _state.State == StateType.WaitEarlyDataFinished) && !_startedApplicationWrite)
+                                if (_state.State == StateType.HandshakeComplete && !_startedApplicationWrite)
                                 {
                                     ApplicationWriting();
                                     _startedApplicationWrite = true;
@@ -69,10 +69,8 @@ namespace Leto.Tls13
                             }
                             if (recordType == RecordType.Alert)
                             {
-                                var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
-                                messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
-                                var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
-                                Alerts.AlertException.ThrowAlert(level, description);
+                                _state.HandleAlertMessage(messageBuffer);
+                                continue;
                             }
                             if (recordType == RecordType.Application)
                             {
@@ -111,7 +109,7 @@ namespace Leto.Tls13
                 Handshake.HandshakeType handshakeType;
                 while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, _state, out messageBuffer, out handshakeType))
                 {
-                    await _state.HandleMessage(handshakeType, messageBuffer, _handshakeOutpipe);
+                    await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe);
                 }
             }
             finally

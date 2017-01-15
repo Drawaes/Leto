@@ -48,15 +48,6 @@ namespace Leto.Tls13.Handshake
             if (connectionState.CipherSuite == null)
             {
                 connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers);
-                if (connectionState.CipherSuite == null)
-                {
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
-                }
-                connectionState.StartHandshakeHash(readable);
-            }
-            else
-            {
-                connectionState.HandshakeContext(readable);
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref buffer);
@@ -65,7 +56,6 @@ namespace Leto.Tls13.Handshake
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
             }
             Extensions.ReadExtensionList(ref buffer, connectionState);
-
         }
 
         public static void ReadServerHello(ReadableBuffer readable, IConnectionState connectionState)

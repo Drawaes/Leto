@@ -58,7 +58,7 @@ namespace Leto.Tls13.Sessions
             AddNewKey(DateTime.UtcNow.AddHours(4), DateTime.UtcNow.AddHours(-1), newKey);
         }
 
-        internal bool TryToResume(long serviceId, long keyId, ReadableBuffer identity, IConnectionState state)
+        public bool TryToResume(long serviceId, long keyId, ReadableBuffer identity, IConnectionState state)
         {
             for(int i = 0; i < _keyset.Length;i++)
             {
@@ -71,8 +71,8 @@ namespace Leto.Tls13.Sessions
                 {
                     continue;
                 }
-                key.DecryptSession(ref identity, state);
                 state.PskIdentity = 0;
+                key.DecryptSession(ref identity, state);
                 return true;
             }
             return false;
@@ -81,7 +81,7 @@ namespace Leto.Tls13.Sessions
         public void RegisterSessionTicket(ReadableBuffer buffer)
         {
             //slice off the head first
-            buffer = buffer.Slice(Handshake.HandshakeProcessor.HandshakeHeaderSize);
+            buffer = buffer.Slice(HandshakeProcessor.HandshakeHeaderSize);
             uint ticketAge, ageRandom;
             buffer = buffer.SliceBigEndian(out ticketAge);
             buffer = buffer.SliceBigEndian(out ageRandom);

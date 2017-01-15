@@ -50,7 +50,7 @@ namespace Leto.Tls13.State
         public IBulkCipherInstance WriteKey => _writeKey;
         public bool EarlyDataSupported { get; set; }
 
-        public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             switch (State)
             {
@@ -117,7 +117,7 @@ namespace Leto.Tls13.State
 
         private unsafe void GenerateApplicationKeys(byte[] hash)
         {
-            KeySchedule.GenerateMasterSecret(hash, ref _writeKey, ref _readKey);
+            KeySchedule.GenerateMasterSecret(hash);
         }
 
         public void HandshakeContext(ReadableBuffer readable)
@@ -145,18 +145,29 @@ namespace Leto.Tls13.State
         {
             if (KeySchedule == null)
             {
-                KeySchedule = Listener.KeyScheduleProvider.GetKeySchedule(this, null);
+                KeySchedule = Listener.KeyScheduleProvider.GetKeySchedule(this);
             }
             KeySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateHandshakeTrafficKeys(span, ref _writeKey, ref _readKey);
+            KeySchedule.GenerateHandshakeTrafficSecrets(span);
+            _writeKey = KeySchedule.GenerateServerHandshakeKey();
+            if (PskIdentity == -1 || !EarlyDataSupported)
+            {
+                _readKey?.Dispose();
+                _readKey = KeySchedule.GenerateClientHandshakeKey();
+            }
         }
 
         public void Dispose()
         {
             GC.SuppressFinalize(this);
+        }
+
+        public void HandleAlertMessage(ReadableBuffer readable)
+        {
+            throw new NotImplementedException();
         }
 
         ~ClientConnectionState()

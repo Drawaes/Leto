@@ -176,16 +176,16 @@ namespace Leto.Tls13.Handshake
                 identity = identity.SliceBigEndian(out keyId);
                 int ticketAge;
                 identities = identities.SliceBigEndian(out ticketAge);
-                bool resumed = connectionState.ResumptionProvider.TryToResume(serviceId, keyId, identity, connectionState);
-                if (resumed)
+                if (!connectionState.ResumptionProvider.TryToResume(serviceId, keyId, identity, connectionState))
                 {
-                    if ((connectionState.PskKeyExchangeMode & PskKeyExchangeMode.psk_dhe_ke) == 0)
-                    {
-                        connectionState.KeyShare?.Dispose();
-                        connectionState.KeyShare = null;
-                    }
-                    return;
+                    continue;
                 }
+                if ((connectionState.PskKeyExchangeMode & PskKeyExchangeMode.psk_dhe_ke) == 0)
+                {
+                    connectionState.KeyShare?.Dispose();
+                    connectionState.KeyShare = null;
+                }
+                return;
             }
         }
 
