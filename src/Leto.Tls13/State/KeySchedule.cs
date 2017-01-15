@@ -105,7 +105,8 @@ namespace Leto.Tls13.State
 
         public unsafe void GenerateHandshakeTrafficKeys(Span<byte> hash, ref IBulkCipherInstance clientKey, ref IBulkCipherInstance serverKey)
         {
-            HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_clientTrafficSecret, _hashSize));
+            var trafficSpan = new Span<byte>(_clientTrafficSecret, _hashSize);
+            HkdfFunctions.ClientHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, trafficSpan);
             HkdfFunctions.ServerHandshakeTrafficSecret(CryptoProvider.HashProvider, CipherSuite.HashType, _secret, hash, new Span<byte>(_serverTrafficSecret, _hashSize));
             clientKey?.Dispose();
             clientKey = GetKey(_clientTrafficSecret, _hashSize);
