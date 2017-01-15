@@ -89,7 +89,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                     {
                         var sp = serverContext.CreateSecurePipeline(s);
                         await Echo(sp);
-                        s.Dispose();
+                        await s.Output.Writing;
                     });
                     socketClient.Start(ipEndPoint);
                     Console.ReadLine();
@@ -101,26 +101,31 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
         {
             try
             {
-                var result = await pipeline.Input.ReadAsync();
-                var request = result.Buffer;
-
-                if (request.IsEmpty && result.IsCompleted)
+                while (true)
                 {
+                    var result = await pipeline.Input.ReadAsync();
+                    var request = result.Buffer;
+
+                    if (request.IsEmpty && result.IsCompleted)
+                    {
+                        pipeline.Input.Advance(request.End);
+                        return;
+                    }
+                    var response = pipeline.Output.Alloc();
+                    response.Write(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK"));
+                    response.Write(Encoding.UTF8.GetBytes("\r\nContent-Length: 13"));
+                    response.Write(Encoding.UTF8.GetBytes("\r\nContent-Type: text/plain"));
+                    response.Write(Encoding.UTF8.GetBytes("\r\nConnection: close"));
+                    response.Write(Encoding.UTF8.GetBytes("\n\r\n"));
+                    response.Write(Encoding.UTF8.GetBytes("Hello, World!"));
+                    await response.FlushAsync();
                     pipeline.Input.Advance(request.End);
-                    return;
+                    pipeline.Output.Complete();
                 }
-                var response = pipeline.Output.Alloc();
-                response.Write(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK"));
-                response.Write(Encoding.UTF8.GetBytes("\r\nContent-Length: 13"));
-                response.Write(Encoding.UTF8.GetBytes("\r\nContent-Type: text/plain"));
-                response.Write(Encoding.UTF8.GetBytes("\r\n\r\n"));
-                response.Write(Encoding.UTF8.GetBytes("Hello, World!"));
-                await response.FlushAsync();
-                pipeline.Input.Advance(request.End);
             }
             finally
             {
-                pipeline.Output.Complete();
+                
             }
         }
     }

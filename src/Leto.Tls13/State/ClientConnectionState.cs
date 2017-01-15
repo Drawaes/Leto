@@ -16,7 +16,6 @@ namespace Leto.Tls13.State
     public class ClientConnectionState : IConnectionState
     {
         private SecurePipelineListener _securePipelineListener;
-        private StateType _state;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private byte[] _helloBuffer;
@@ -25,8 +24,8 @@ namespace Leto.Tls13.State
 
         public ClientConnectionState(SecurePipelineListener securePipelineListener)
         {
+            State = StateType.SendClientHello;
             _securePipelineListener = securePipelineListener;
-            _state = StateType.SendClientHello;
             Version = 0x7f00 | 18;
         }
 
@@ -46,21 +45,21 @@ namespace Leto.Tls13.State
         public ResumptionProvider ResumptionProvider => Listener.ResumptionProvider;
         public string ServerName { get; set; }
         public SignatureScheme SignatureScheme { get; set; }
-        public StateType State => _state;
+        public StateType State { get; set; }
         public ushort Version { get; set; }
-        public Signal WaitForHandshakeToChangeSchedule => _waitForHandshakeToChangeSchedule;
         public IBulkCipherInstance WriteKey => _writeKey;
+        public bool EarlyDataSupported { get; set; }
 
         public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
-            switch (_state)
+            switch (State)
             {
                 case StateType.WaitServerHello:
                     if (handshakeMessageType == HandshakeType.server_hello)
                     {
                         Hello.ReadServerHello(buffer, this);
                         GenerateHandshakeKeys();
-                        _state = StateType.WaitEncryptedExtensions;
+                        State = StateType.WaitEncryptedExtensions;
                         return;
                     }
                     break;
@@ -68,7 +67,7 @@ namespace Leto.Tls13.State
                     if (handshakeMessageType == HandshakeType.encrypted_extensions)
                     {
                         HandshakeContext(buffer);
-                        _state = StateType.WaitServerVerification;
+                        State = StateType.WaitServerVerification;
                         return;
                     }
                     break;
@@ -82,7 +81,7 @@ namespace Leto.Tls13.State
                     if (handshakeMessageType == HandshakeType.certificate_verify)
                     {
                         HandshakeContext(buffer);
-                        _state = StateType.WaitServerFinished;
+                        State = StateType.WaitServerFinished;
                         return;
                     }
                     break;
@@ -101,12 +100,12 @@ namespace Leto.Tls13.State
                         KeySchedule.GenerateResumptionSecret();
                         HandshakeHash.Dispose();
                         HandshakeHash = null;
-                        _state = StateType.HandshakeComplete;
+                        State = StateType.HandshakeComplete;
                         return;
                     }
                     break;
                 case StateType.HandshakeComplete:
-                    if(handshakeMessageType == HandshakeType.new_session_ticket)
+                    if (handshakeMessageType == HandshakeType.new_session_ticket)
                     {
                         Listener.ResumptionProvider.RegisterSessionTicket(buffer);
                         return;
@@ -130,7 +129,7 @@ namespace Leto.Tls13.State
         {
             this.WriteHandshake(ref writer, HandshakeType.client_hello, Hello.WriteClientHello);
             _helloBuffer = writer.AsReadableBuffer().ToArray();
-            _state = StateType.WaitServerHello;
+            State = StateType.WaitServerHello;
         }
 
         public void StartHandshakeHash(ReadableBuffer readable)

@@ -29,7 +29,6 @@ namespace Leto.Tls13.Handshake
                 {
                     WriteServerKeyshare(ref buffer, connectionState);
                 }
-                //WriteServerEarlyData(ref buffer, connectionState);
             }
             if (connectionState.State == StateType.WaitHelloRetry)
             {
@@ -41,6 +40,10 @@ namespace Leto.Tls13.Handshake
                 WriteClientKeyshares(ref buffer, connectionState);
                 WriteSignatureSchemes(ref buffer, connectionState);
                 WriteSupportedGroups(ref buffer, connectionState);
+            }
+            if (connectionState.State == StateType.ServerAuthentication)
+            {
+                WriteServerEarlyData(ref buffer, connectionState);
             }
             return buffer;
         }
@@ -67,8 +70,11 @@ namespace Leto.Tls13.Handshake
 
         public static void WriteServerEarlyData(ref WritableBuffer buffer, IConnectionState connectionState)
         {
-            buffer.WriteBigEndian(ExtensionType.early_data);
-            buffer.WriteBigEndian<ushort>(0);
+            if (connectionState.EarlyDataSupported)
+            {
+                buffer.WriteBigEndian(ExtensionType.early_data);
+                buffer.WriteBigEndian<ushort>(0);
+            }
         }
         public static void WriteRetryKeyshare(ref WritableBuffer buffer, IConnectionState connectionState)
         {
@@ -157,7 +163,7 @@ namespace Leto.Tls13.Handshake
         }
         private static void ReadEarlyData(ReadableBuffer earlyData, IConnectionState connectionState)
         {
-
+            connectionState.EarlyDataSupported = true;
         }
         private static void ReadPskKey(ReadableBuffer pskBuffer, IConnectionState connectionState)
         {

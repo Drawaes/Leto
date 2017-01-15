@@ -18,6 +18,7 @@ namespace Leto.Tls13.State
         WaitServerHello,
         WaitEncryptedExtensions,
         WaitServerVerification,
-        WaitServerFinished
+        WaitServerFinished,
+        WaitEarlyDataFinished
     }
 }

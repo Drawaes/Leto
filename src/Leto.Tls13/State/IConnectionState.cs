@@ -28,11 +28,12 @@ namespace Leto.Tls13.State
         ResumptionProvider ResumptionProvider { get; }
         string ServerName { get; set; }
         SignatureScheme SignatureScheme { get; set;}
-        StateType State { get; }
+        StateType State { get; set;}
         ushort Version { get; set; }
         IBulkCipherInstance WriteKey { get; }
         Signal DataForCurrentScheduleSent { get;}
-        Signal WaitForHandshakeToChangeSchedule { get; }
+        bool EarlyDataSupported { get; set; }
+
         void StartHandshakeHash(ReadableBuffer readable);
         void HandshakeContext(ReadableBuffer readable);
         Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);

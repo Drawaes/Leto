@@ -19,11 +19,11 @@ namespace Leto.Tls13
         private readonly Pipe _handshakeOutpipe;
         private IConnectionState _state;
         private bool _startedApplicationWrite;
-        private Signal _handshakeReadingGate = new Signal(Signal.ContinuationMode.Synchronous);
+        private Signal _handshakeFinished = new Signal(Signal.ContinuationMode.Synchronous);
 
         public SecurePipelineConnection(IConnectionState state, IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
-            _handshakeReadingGate.Set();
+            _handshakeFinished.Reset();
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
@@ -62,6 +62,7 @@ namespace Leto.Tls13
                                 {
                                     ApplicationWriting();
                                     _startedApplicationWrite = true;
+                                    //_handshakeFinished.Set();
                                 }
                                 continue;
                             }
@@ -101,8 +102,6 @@ namespace Leto.Tls13
 
         private async Task HandshakeReading()
         {
-            await _handshakeReadingGate;
-            _handshakeReadingGate.Reset();
             var result = await _handshakePipe.ReadAsync();
             var buffer = result.Buffer;
             try
@@ -118,7 +117,6 @@ namespace Leto.Tls13
             {
                 _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
             }
-            _handshakeReadingGate.Set();
         }
 
         private async void ApplicationWriting()
@@ -131,6 +129,7 @@ namespace Leto.Tls13
                     var buffer = result.Buffer;
                     if (result.IsCompleted && result.Buffer.IsEmpty)
                     {
+                        await _handshakeFinished;
                         var output = _lowerConnection.Output.Alloc();
                         Alerts.AlertException.WriteAlert(_recordHandler, ref output,Alerts.AlertLevel.Warning,Alerts.AlertDescription.close_notify);
                         await output.FlushAsync();

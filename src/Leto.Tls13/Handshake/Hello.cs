@@ -120,6 +120,11 @@ namespace Leto.Tls13.Handshake
 
         public static WritableBuffer SendHelloRetry(WritableBuffer buffer, IConnectionState connectionState)
         {
+            if(connectionState.State == StateType.WaitHelloRetry)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
+            }
+            connectionState.State = StateType.WaitHelloRetry;
             buffer.WriteBigEndian(connectionState.Version);
             BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
             return buffer;

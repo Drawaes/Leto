@@ -16,15 +16,14 @@ namespace Leto.Tls13.State
 {
     public class ServerConnectionState : IConnectionState
     {
-        private StateType _state = StateType.None;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
-        private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private SecurePipelineListener _listener;
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
 
         public ServerConnectionState(SecurePipelineListener listener)
         {
+            State = StateType.None;
             _listener = listener;
             PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
@@ -41,14 +40,14 @@ namespace Leto.Tls13.State
         public IBulkCipherInstance WriteKey => _writeKey;
         public CertificateList CertificateList => _listener.CertificateList;
         public CipherSuite CipherSuite { get; set; }
-        public StateType State => _state;
+        public StateType State { get; set; }
         public ushort Version { get; set; }
         public ICertificate Certificate { get; set; }
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
-        public Signal WaitForHandshakeToChangeSchedule => _waitForHandshakeToChangeSchedule;
         public SignatureScheme SignatureScheme { get; set; }
         public int PskIdentity { get; set; } = -1;
         public IBulkCipherInstance EarlyDataKey { get; set; }
+        public bool EarlyDataSupported { get; set; }
 
         public void StartHandshakeHash(ReadableBuffer readable)
         {
@@ -65,7 +64,7 @@ namespace Leto.Tls13.State
         public async Task HandleMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
-            switch (_state)
+            switch (State)
             {
                 case StateType.None:
                 case StateType.WaitHelloRetry:
@@ -76,34 +75,34 @@ namespace Leto.Tls13.State
                     Hello.ReadClientHello(buffer, this);
                     if (!NegotiationComplete())
                     {
-                        if (_state == StateType.WaitHelloRetry)
-                        {
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
-                        }
-                        _state = StateType.WaitHelloRetry;
                         writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
                         await writer.FlushAsync();
                         return;
                     }
                     //Write the server hello, the last of the unencrypted messages
-                    _state = StateType.SendServerHello;
+                    State = StateType.SendServerHello;
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello);
                     //block our next actions because we need to have sent the message before changing keys
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await _dataForCurrentScheduleSent;
-                    _state = StateType.ServerAuthentication;
+                    State = StateType.ServerAuthentication;
                     //Generate the encryption keys and send the next set of messages
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
                     ServerHandshake.SendFlightOne(ref writer, this);
                     ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
-                    _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
-                    _state = StateType.WaitClientFinished;
+                    if (EarlyDataSupported && EarlyDataKey != null && PskIdentity != -1)
+                    {
+                        State = StateType.WaitEarlyDataFinished;
+                    }
+                    else
+                    {
+                        State = StateType.WaitClientFinished;
+                    }
                     return;
                 case StateType.WaitClientFinished:
                     if (handshakeMessageType != HandshakeType.finished)
@@ -122,7 +121,7 @@ namespace Leto.Tls13.State
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
                     await writer.FlushAsync();
-                    _state = StateType.HandshakeComplete;
+                    State = StateType.HandshakeComplete;
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
@@ -152,7 +151,7 @@ namespace Leto.Tls13.State
             var hash = stackalloc byte[HandshakeHash.HashSize];
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
-            KeySchedule.GenerateMasterSecret(span,ref _readKey, ref _writeKey);
+            KeySchedule.GenerateMasterSecret(span, ref _readKey, ref _writeKey);
         }
 
         private unsafe void GenerateHandshakeKeys()
@@ -166,8 +165,13 @@ namespace Leto.Tls13.State
             var span = new Span<byte>(hash, HandshakeHash.HashSize);
             HandshakeHash.InterimHash(hash, HandshakeHash.HashSize);
             KeySchedule.GenerateHandshakeTrafficKeys(span, ref _readKey, ref _writeKey);
+            if (EarlyDataKey != null && PskIdentity != -1 && EarlyDataSupported)
+            {
+                _readKey.Dispose();
+                _readKey = EarlyDataKey;
+            }
         }
-        
+
         public void Dispose()
         {
             HandshakeHash?.Dispose();
