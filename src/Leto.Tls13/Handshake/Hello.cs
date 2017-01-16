@@ -36,7 +36,7 @@ namespace Leto.Tls13.Handshake
             //for TLS 1.3 it has to name TLS 1.2 as the legacy version number
             if (version != 0x0303)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "The version of the client is not TLS 1.2");
             }
             buffer = buffer.Slice(sizeof(ushort));
             //Random is legacy, it is just included in the secrets via the entire message MAC
@@ -53,7 +53,7 @@ namespace Leto.Tls13.Handshake
             BufferExtensions.SliceVector<byte>(ref buffer);
             if (buffer.Length == 0)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "There is no extensions but we need them for Tls 1.3");
             }
             Extensions.ReadExtensionList(ref buffer, connectionState);
         }
@@ -66,7 +66,7 @@ namespace Leto.Tls13.Handshake
             readable = readable.SliceBigEndian(out version);
             if (version != connectionState.Version)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Server did not respond with the same version of TLS");
             }
             //skip random
             readable = readable.Slice(RandomLength);
@@ -74,7 +74,7 @@ namespace Leto.Tls13.Handshake
             connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromCode(cipherCode);
             if (connectionState.CipherSuite == null)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Could not get a cipher suite during server hello");
             }
             connectionState.StartHandshakeHash(original);
             readable = BufferExtensions.SliceVector<ushort>(ref readable);
@@ -82,14 +82,14 @@ namespace Leto.Tls13.Handshake
             readable = readable.SliceBigEndian(out ext);
             if(ext != ExtensionType.key_share)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "There was no keyshare on the server hello");
             }
             readable = BufferExtensions.SliceVector<ushort>(ref readable);
             NamedGroup group;
             readable = readable.SliceBigEndian(out group);
             if(group != connectionState.KeyShare.NamedGroup)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "The named group didn't match the keyshare during server hello");
             }
             readable = BufferExtensions.SliceVector<ushort>(ref readable);
             connectionState.KeyShare.SetPeerKey(readable);
@@ -112,7 +112,7 @@ namespace Leto.Tls13.Handshake
         {
             if(connectionState.State == StateType.WaitHelloRetry)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "need to send a hello retry but have already sent one");
             }
             connectionState.State = StateType.WaitHelloRetry;
             buffer.WriteBigEndian(connectionState.Version);

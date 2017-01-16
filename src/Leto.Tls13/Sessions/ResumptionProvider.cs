@@ -97,7 +97,7 @@ namespace Leto.Tls13.Sessions
                     buffer = buffer.SliceBigEndian(out type);
                     if(type != ExtensionType.ticket_early_data_info)
                     {
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter,"Early session ticket received had an invalid extension");
                     }
 
                 }

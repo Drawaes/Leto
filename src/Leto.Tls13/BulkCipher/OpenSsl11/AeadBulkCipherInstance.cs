@@ -208,7 +208,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
                 }
                 i -= 1;
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Failed to increment sequence on Aead Cipher");
         }
 
         public void WithPadding(int paddingSize)

@@ -168,7 +168,7 @@ namespace Leto.Tls13.BulkCipher.Windows
                 }
                 i -= 1;
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Failed to increment sequence in Aead Cipher");
         }
 
         public unsafe void SetIV(Span<byte> iv)

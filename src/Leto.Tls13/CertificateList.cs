@@ -27,10 +27,10 @@ namespace Leto.Tls13
         {
             for (int i = 0; i < _certificates.Count; i++)
             {
-                if (_certificates[i].HostName != host && host != null)
-                {
-                    continue;
-                }
+                //if (_certificates[i].HostName != host && host != null)
+                //{
+                //    continue;
+                //}
                 var cert = _certificates[i];
                 if (!cert.SupportsSignatureScheme(type))
                 {

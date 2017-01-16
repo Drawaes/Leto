@@ -21,7 +21,7 @@ namespace Leto.Tls13.Handshake
             //and cause a stack overflow
             if (messageBuffer.Length != hashSize)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Client finished is the wrong size (not equal to hash size)");
             }
             //We have the client hash so we need to grab the client base key
             //and the hash up until now and make sure that the data is good
@@ -50,7 +50,7 @@ namespace Leto.Tls13.Handshake
             {
                 if(!Internal.CompareFunctions.ConstantTimeEquals(clientHash, new Span<byte>(hash, hashSize)))
                 {
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.bad_record_mac);
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.bad_record_mac, "The mac of the client finished did not match the expected");
                 }
             }
             finally

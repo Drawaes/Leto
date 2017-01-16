@@ -25,8 +25,9 @@ namespace Leto.Tls13.Alerts
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerHidden()]
-        public static void ThrowAlert(AlertLevel alertLeve, AlertDescription description)
+        public static void ThrowAlert(AlertLevel alertLeve, AlertDescription description,string message)
         {
+            Console.WriteLine($"Writing alert {alertLeve}-{description} message {message}");
             throw new AlertException(alertLeve, description);
         }
 

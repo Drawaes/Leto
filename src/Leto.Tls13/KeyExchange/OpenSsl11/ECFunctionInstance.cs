@@ -42,7 +42,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         {
             if(buffer.Length != _keyExchangeSize)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The peer key is not the length of the keyexchange size {buffer.Length} - {_keyExchangeSize}");
             }
             GCHandle handle;
             void* ptr;

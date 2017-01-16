@@ -40,7 +40,7 @@ namespace Leto.Tls13.KeyExchange.Windows
         {
             if (peerKey.Length != _keyExchangeSize)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The client key didn't match the expected length");
             }
             int cbKey;
             peerKey = peerKey.Slice(1);

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13;
 using Microsoft.Extensions.PlatformAbstractions;
+using SampleHttpServer.Http;
 
 namespace SampleHttpServer
 {
@@ -76,9 +77,10 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
-                list.AddCertificate(cert);
+                //list.AddCertificate(cert);
                 list.AddCertificate(cert2);
-                list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
+                //list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
+                //list.AddPEMCertificate(ecdsaCertPEM,ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
@@ -87,9 +89,10 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                     var ipEndPoint = new IPEndPoint(ip, port);
                     socketClient.OnConnection(async s =>
                     {
+                        Console.WriteLine("Connected");
                         var sp = serverContext.CreateSecurePipeline(s);
-                        await Echo(sp);
-                        await s.Output.Writing;
+                        Console.WriteLine("Secure Connection Created");
+                        await ServerLoop.HandleConnection(sp);
                     });
                     socketClient.Start(ipEndPoint);
                     Console.ReadLine();

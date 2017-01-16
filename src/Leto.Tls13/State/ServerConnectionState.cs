@@ -71,13 +71,13 @@ namespace Leto.Tls13.State
                 case StateType.WaitHelloRetry:
                     if (handshakeMessageType != HandshakeType.client_hello)
                     {
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"State is wait hello retry but got {handshakeMessageType}");
                     }
                     Hello.ReadClientHello(buffer, this);
-                    if(CipherSuite == null)
+                    if (CipherSuite == null)
                     {
                         //Couldn't agree a set of ciphers
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
                     }
                     StartHandshakeHash(buffer);
                     //If we can't agree on a schedule we will have to send a hello retry and try again
@@ -88,7 +88,7 @@ namespace Leto.Tls13.State
                         await writer.FlushAsync();
                         return;
                     }
-                    if(PskIdentity != -1 && EarlyDataSupported)
+                    if (PskIdentity != -1 && EarlyDataSupported)
                     {
                         KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
                     }
@@ -123,7 +123,7 @@ namespace Leto.Tls13.State
                 case StateType.WaitClientFinished:
                     if (handshakeMessageType != HandshakeType.finished)
                     {
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Waiting for client finished but received {handshakeMessageType}");
                     }
                     Finished.ReadClientFinished(buffer, this);
                     _readKey?.Dispose();
@@ -141,7 +141,7 @@ namespace Leto.Tls13.State
                     State = StateType.HandshakeComplete;
                     break;
                 default:
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message,$"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}" );
                     break;
             }
         }
@@ -151,7 +151,7 @@ namespace Leto.Tls13.State
             var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
             messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
             var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
-            if(level == Alerts.AlertLevel.Warning && description == Alerts.AlertDescription.end_of_early_data && State == StateType.WaitEarlyDataFinished)
+            if (level == Alerts.AlertLevel.Warning && description == Alerts.AlertDescription.end_of_early_data && State == StateType.WaitEarlyDataFinished)
             {
                 //0RTT data finished so we switch the reader key to the handshake key and wait for 
                 //the client to send it's finish message
@@ -160,7 +160,7 @@ namespace Leto.Tls13.State
                 State = StateType.WaitClientFinished;
                 return;
             }
-            Alerts.AlertException.ThrowAlert(level, description);
+            Alerts.AlertException.ThrowAlert(level, description,"Alert from the client");
         }
 
         private bool NegotiationComplete()
@@ -171,7 +171,7 @@ namespace Leto.Tls13.State
             }
             if (KeyShare == null || Certificate == null)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter,$"negotiation complete but no cipher suite or certificate");
             }
             if (!KeyShare.HasPeerKey)
             {
@@ -224,7 +224,7 @@ namespace Leto.Tls13.State
         public void StartHandshake(ref WritableBuffer writer)
         {
         }
-        
+
         ~ServerConnectionState()
         {
             Dispose();

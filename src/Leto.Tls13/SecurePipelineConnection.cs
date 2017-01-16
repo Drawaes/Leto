@@ -20,8 +20,6 @@ namespace Leto.Tls13
         private readonly Pipe _handshakeOutpipe;
         private IConnectionState _state;
         private bool _startedApplicationWrite;
-        private ManualResetEventSlim _completedWriting = new ManualResetEventSlim(false);
-        private FramePipelineWriter _pipelineWriter;
 
         public SecurePipelineConnection(IConnectionState state, IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
@@ -30,7 +28,6 @@ namespace Leto.Tls13
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
             _handshakeOutpipe = factory.Create();
-            _pipelineWriter = new FramePipelineWriter(_completedWriting, _inputPipe);
             _state = state;
             _recordHandler = new RecordProcessor(_state);
             HandshakeWriting();
@@ -38,7 +35,7 @@ namespace Leto.Tls13
         }
 
         public IPipelineReader Input => _outputPipe;
-        public IPipelineWriter Output => _pipelineWriter;
+        public IPipelineWriter Output => _inputPipe;
 
         private async void StartReading()
         {
@@ -54,6 +51,7 @@ namespace Leto.Tls13
                         while (_recordHandler.TryGetFrame(ref buffer, out messageBuffer))
                         {
                             var recordType = _recordHandler.ReadRecord(ref messageBuffer);
+                            Console.WriteLine($"Received TLS frame {recordType}");
                             if (recordType == RecordType.Handshake)
                             {
                                 var writer = _handshakePipe.Alloc();
@@ -79,7 +77,7 @@ namespace Leto.Tls13
                                 await writer.FlushAsync();
                                 continue;
                             }
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Unknown message type {recordType}");
                         }
                         if (result.IsCompleted)
                         {
@@ -126,14 +124,6 @@ namespace Leto.Tls13
                 {
                     var result = await _inputPipe.ReadAsync();
                     var buffer = result.Buffer;
-                    if (result.IsCompleted && result.Buffer.IsEmpty)
-                    {
-                        var output = _lowerConnection.Output.Alloc();
-                        Alerts.AlertException.WriteAlert(_recordHandler, ref output,Alerts.AlertLevel.Warning,Alerts.AlertDescription.close_notify);
-                        await output.FlushAsync();
-                        _completedWriting.Set();
-                        break;
-                    }
                     try
                     {
                         while (buffer.Length > 0)
@@ -154,6 +144,13 @@ namespace Leto.Tls13
                             await writer.FlushAsync();
                         }
                         _state.DataForCurrentScheduleSent.Set();
+                        if (result.IsCompleted && buffer.IsEmpty)
+                        {
+                            var output = _lowerConnection.Output.Alloc();
+                            Alerts.AlertException.WriteAlert(_recordHandler, ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify);
+                            await output.FlushAsync();
+                            break;
+                        }
                     }
                     finally
                     {
@@ -161,8 +158,9 @@ namespace Leto.Tls13
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine($"Exception was thrown {ex}");
                 //Nom Nom
             }
             _lowerConnection.Output.Complete();
@@ -221,6 +219,8 @@ namespace Leto.Tls13
 
         public void Dispose()
         {
+            Console.WriteLine("Disposed connection");
+            _lowerConnection.Dispose();
             GC.SuppressFinalize(this);
         }
 

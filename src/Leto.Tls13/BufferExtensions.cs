@@ -45,7 +45,7 @@ namespace Leto.Tls13
             }
             else
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.internal_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.internal_error, $"Unkown vector type {typeof(T).Name}");
             }
             var sizeofVector = buffer.BytesWritten;
             buffer = writeContent(buffer, state);

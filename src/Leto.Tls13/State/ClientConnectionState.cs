@@ -112,7 +112,7 @@ namespace Leto.Tls13.State
                     }
                     break;
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message,"");
         }
 
         private unsafe void GenerateApplicationKeys(byte[] hash)

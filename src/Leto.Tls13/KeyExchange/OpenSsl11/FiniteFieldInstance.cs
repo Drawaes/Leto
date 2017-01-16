@@ -128,7 +128,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             GenerateKeys(null, null);
             if(peerKey.Length != _keyExchangeSize)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "The client key didn't match the expected size");
             }
             GCHandle handle = default(GCHandle);
             try

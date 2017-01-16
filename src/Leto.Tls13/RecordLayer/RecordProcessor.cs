@@ -10,7 +10,7 @@ namespace Leto.Tls13.RecordLayer
     public class RecordProcessor
     {
         public const int RecordHeaderLength = 5;
-        public const int PlainTextMaxSize = 2 << 14;
+        public const int PlainTextMaxSize = 2 << 12;
         private const ushort TlsRecordVersion = 0x0301;
         private State.IConnectionState _state;
         
@@ -23,7 +23,7 @@ namespace Leto.Tls13.RecordLayer
         {
             if (messageBuffer.Length < RecordHeaderLength)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "The message buffer length is smaller than the record header length");
             }
             var recordType = messageBuffer.ReadBigEndian<RecordType>();
             var version = messageBuffer.Slice(sizeof(RecordType)).ReadBigEndian<ushort>();
@@ -90,12 +90,12 @@ namespace Leto.Tls13.RecordLayer
             if (frameType != RecordType.Alert && frameType != RecordType.Application
                 && frameType != RecordType.Handshake)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"unknown frame type {frameType}");
             }
             var version = buffer.Slice(1).ReadBigEndian<ushort>();
             if (version < 0x0300 || version > 0x0400)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"The frame version was outside the range {version}");
             }
             var length = buffer.Slice(3).ReadBigEndian<ushort>();
             if (buffer.Length >= (length + RecordHeaderLength))

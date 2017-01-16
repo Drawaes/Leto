@@ -39,7 +39,7 @@ namespace Leto.Tls13.Handshake
             {
                 if(!listener.CertificateValidation(collection))
                 {
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.bad_certificate);
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.bad_certificate,"Failed to verify the certificate chain via the callback");
                 }
             }
         }

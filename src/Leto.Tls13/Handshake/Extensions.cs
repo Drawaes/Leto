@@ -88,13 +88,13 @@ namespace Leto.Tls13.Handshake
             ReadableBuffer pskBuffer = default(ReadableBuffer);
             if (buffer.Length < sizeof(ushort))
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"extension list is not at least the size of a ushort");
             }
             var listLength = buffer.ReadBigEndian<ushort>();
             buffer = buffer.Slice(sizeof(ushort));
             if (buffer.Length < listLength)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "The extension list is not as long as the header says");
             }
             var currentbuffer = buffer.Slice(0, listLength);
             buffer = buffer.Slice(currentbuffer.End);
@@ -105,7 +105,7 @@ namespace Leto.Tls13.Handshake
                 currentbuffer = currentbuffer.Slice(sizeof(ExtensionType) + sizeof(ushort));
                 if (currentbuffer.Length < extensionLength)
                 {
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"The extension of type {extensionType} is too long for the remaining buffer");
                 }
                 var extensionBuffer = currentbuffer.Slice(0, extensionLength);
                 currentbuffer = currentbuffer.Slice(extensionLength);
@@ -158,7 +158,7 @@ namespace Leto.Tls13.Handshake
             }
             if (currentbuffer.Length != 0)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "there was data after the extension list which is invalid");
             }
         }
         private static void ReadEarlyData(ReadableBuffer earlyData, IConnectionState connectionState)
@@ -265,7 +265,7 @@ namespace Leto.Tls13.Handshake
                     return;
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Searching version extension could not find a valid version");
         }
         private static void ReadSupportedGroups(ReadableBuffer buffer, IConnectionState connectionState)
         {
@@ -301,7 +301,7 @@ namespace Leto.Tls13.Handshake
                     return;
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Failed to find a signature scheme that matches");
         }
     }
 }

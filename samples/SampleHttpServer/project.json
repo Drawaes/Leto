@@ -2,19 +2,22 @@
   "version": "1.0.0-*",
   "buildOptions": {
     "emitEntryPoint": true,
-    "copyToOutput": "../../data/*.pfx"
+    "copyToOutput": [ "../../data/*.pfx", "./Content/*/*" ]
   },
 
   "dependencies": {
     "Leto.Tls13": { "target": "project" },
+    "Microsoft.AspNetCore.Http.Features": "1.1.0",
     "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
-    "Microsoft.NETCore.App":{"version" : "1.1.0", "type": "platform" },
+    "Microsoft.NETCore.App":{"version" : "1.1.0"},
     "System.IO.Pipelines": "0.1.0-e170114-1",
-    "System.IO.Pipelines.Networking.Sockets": "0.1.0-e170114-1"
+    "System.IO.Pipelines.Networking.Sockets": "0.1.0-e170114-1",
+    "System.Text.Formatting": "0.1.0-e170114-1"
   },
 
   "frameworks": {
     "netcoreapp1.0": {
     }
-  }
+  },
+  "runtimes": { "win8-x64": {} }
 }

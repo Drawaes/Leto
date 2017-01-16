@@ -117,7 +117,7 @@ namespace Leto.Tls13
         {
             if (buffer.Length % 2 != 0)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Cipher suite extension is not divisable by zero");
             }
             var numberOfCiphers = buffer.Length / 2;
             var peerCipherList = stackalloc ushort[numberOfCiphers];
@@ -125,6 +125,7 @@ namespace Leto.Tls13
             {
                 peerCipherList[i] = buffer.ReadBigEndian<ushort>();
                 buffer = buffer.Slice(sizeof(ushort));
+                Console.WriteLine($"Cipher type {peerCipherList[i]}");
             }
 
             for (var i = 0; i < _priorityOrderedCipherSuites.Length; i++)
@@ -137,7 +138,7 @@ namespace Leto.Tls13
                     }
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security,"Failed to get a bulk cipher from the cipher extensions");
             return null;
         }
 
@@ -145,7 +146,7 @@ namespace Leto.Tls13
         {
             if (buffer.Length % 2 != 0)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter);
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "The buffer for supported groups is not divisable by 2");
             }
             var numberOfGroups = buffer.Length / 2;
             var peerGroupList = stackalloc NamedGroup[numberOfGroups];
@@ -169,7 +170,7 @@ namespace Leto.Tls13
                     }
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security);
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security, "Could not agree on a keyshare from named groups");
             return null;
         }
 
