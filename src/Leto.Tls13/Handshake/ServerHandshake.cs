@@ -18,9 +18,24 @@ namespace Leto.Tls13.Handshake
                 BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, state);
                 return buffer;
             });
+
+
+        }
+
+        public static void SendFlightOne2(ref WritableBuffer writer, IConnectionState connectionState)
+        {
             if (connectionState.PskIdentity == -1)
             {
+
                 connectionState.WriteHandshake(ref writer, HandshakeType.certificate, WriteCertificate);
+            }
+        }
+
+        public static void SendFlightOne3(ref WritableBuffer writer, IConnectionState connectionState)
+        {
+            if (connectionState.PskIdentity == -1)
+            {
+
                 connectionState.WriteHandshake(ref writer, HandshakeType.certificate_verify, SendCertificateVerify);
             }
         }
@@ -30,18 +45,22 @@ namespace Leto.Tls13.Handshake
             writer.WriteBigEndian<byte>(0);
             BufferExtensions.WriteVector24Bit(ref writer, (buffer, state) =>
             {
-                WriteCertificateEntry(ref buffer, state.Certificate);
+                WriteCertificateEntry(ref buffer, state.Certificate.CertificateData);
+                for (int i = 0; i < state.Certificate.CertificateChain.Length; i++)
+                {
+                    WriteCertificateEntry(ref buffer, state.Certificate.CertificateChain[i]);
+                }
                 return buffer;
             }, connectionState);
             return writer;
         }
 
-        public static void WriteCertificateEntry(ref WritableBuffer writer, ICertificate certificate)
+        public static void WriteCertificateEntry(ref WritableBuffer writer, byte[] certificate)
         {
             writer.Ensure(3);
-            writer.Memory.Write24BitNumber(certificate.CertificateData.Length);
+            writer.Memory.Write24BitNumber(certificate.Length);
             writer.Advance(3);
-            writer.Write(certificate.CertificateData);
+            writer.Write(certificate);
             writer.WriteBigEndian<ushort>(0);
         }
 

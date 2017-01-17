@@ -28,7 +28,8 @@ namespace Leto.Tls13Facts
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 {
                     serverContext.CertificateValidation = CertificateValidation;
-                    var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 443);
+                    var addresses = Dns.GetHostAddressesAsync("tls13.cloudflare.com").Result;
+                    var ipEndPoint = new IPEndPoint(addresses.First(), 443);
 
                     var socket = await System.IO.Pipelines.Networking.Sockets.SocketConnection.ConnectAsync(ipEndPoint);
                     var clientPipe = serverContext.CreateSecureClientPipeline(socket);

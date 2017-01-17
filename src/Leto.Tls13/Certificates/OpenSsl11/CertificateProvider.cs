@@ -12,25 +12,76 @@ namespace Leto.Tls13.Certificates.OpenSsl11
     {
         public unsafe ICertificate LoadCertificate(X509Certificate2 certificate)
         {
-            var data = certificate.Export(X509ContentType.Pkcs12, "");
+            //var data = certificate.Export(X509ContentType.Pkcs12, "");
+            //IntPtr pk12Pointer = IntPtr.Zero;
+            //fixed (byte* ptr = data)
+            //{
+            //    byte* ptr2 = ptr;
+            //    pk12Pointer = d2i_PKCS12(ref pk12Pointer, ref ptr2, data.Length);
+            //}
+            //try
+            //{
+            //    EVP_PKEY key;
+            //    X509 x509;
+            //    ThrowOnError(PKCS12_parse(pk12Pointer, "", out key, out x509, IntPtr.Zero));
+            //    var altString = GetNameString(x509);
+            //    return GetCertificate(key, x509, certificate.RawData,altString);
+            //}
+            //finally
+            //{
+            //    PKCS12_free(pk12Pointer);
+            //}
+            return null;
+        }
+
+        public unsafe ICertificate LoadPfx12(string filename, string password)
+        {
+            var bytes = System.IO.File.ReadAllBytes(filename);
             IntPtr pk12Pointer = IntPtr.Zero;
-            fixed (byte* ptr = data)
+            IntPtr stackPtr;
+            fixed (byte* ptr = bytes)
             {
                 byte* ptr2 = ptr;
-                pk12Pointer = d2i_PKCS12(ref pk12Pointer, ref ptr2, data.Length);
+                pk12Pointer = d2i_PKCS12(ref pk12Pointer, ref ptr2, bytes.Length);
             }
             try
             {
                 EVP_PKEY key;
                 X509 x509;
-                ThrowOnError(PKCS12_parse(pk12Pointer, "", out key, out x509, IntPtr.Zero));
+                ThrowOnError(PKCS12_parse(pk12Pointer, password, out key, out x509, out stackPtr));
                 var altString = GetNameString(x509);
-                return GetCertificate(key, x509, certificate.RawData,altString);
+                var numberinstack = OPENSSL_sk_num(stackPtr);
+                var certlist = new byte[numberinstack][];
+                for(int i = 0; i < numberinstack;i++)
+                {
+                    var currentCert = OPENSSL_sk_pop(stackPtr);
+                    certlist[i] = GetCertDER(currentCert);
+                    var c = new X509();
+                    c.Ptr = currentCert;
+                    var tring = GetNameString(c);
+                }
+                OPENSSL_sk_free(stackPtr);
+                
+                return GetCertificate(key, x509, GetCertDER(x509.Ptr), altString, certlist.Reverse().ToArray());
             }
             finally
             {
                 PKCS12_free(pk12Pointer);
             }
+        }
+
+        private unsafe byte[] GetCertDER(IntPtr cert)
+        {
+            var certDerSize = i2d_X509(cert, null);
+            var derData = new byte[certDerSize];
+
+            fixed (byte* cerPtr = derData)
+            {
+                byte* outPtr = cerPtr;
+                certDerSize = i2d_X509(cert, &outPtr);
+                derData = derData.Slice(0,certDerSize).ToArray();
+            }
+            return derData;
         }
 
         public unsafe ICertificate LoadCertificate(string certificate, string privateKey)
@@ -56,7 +107,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                         byte* outPtr = cerPtr;
                         certDerSize = i2d_X509(x509, &outPtr);
                         var altString = GetNameString(x509);
-                        return GetCertificate(pKey, x509, derData, altString);
+                        return GetCertificate(pKey, x509, derData, altString, null);
                     }
                 }
             }
@@ -67,13 +118,13 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             throw new NotImplementedException();
         }
 
-        private static ICertificate GetCertificate(EVP_PKEY key, X509 x509, byte[] derCertificateData, string altName)
+        private static ICertificate GetCertificate(EVP_PKEY key, X509 x509, byte[] derCertificateData, string altName, byte[][] certChain)
         {
             var name = OBJ_nid2ln(EVP_PKEY_base_id(key));
             switch (name)
             {
                 case "id-ecPublicKey":
-                    return new EcdsaCertificate(key, x509, derCertificateData, altName);
+                    return new EcdsaCertificate(key, x509, derCertificateData, altName, certChain);
                 case "rsaEncryption":
                     return new RsaCertificate(key, x509, derCertificateData, altName);
                 default:

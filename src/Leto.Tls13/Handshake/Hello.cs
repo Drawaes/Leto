@@ -99,6 +99,7 @@ namespace Leto.Tls13.Handshake
         public static WritableBuffer SendServerHello(WritableBuffer buffer, IConnectionState connectionState)
         {
             buffer.Ensure(RandomLength + sizeof(ushort));
+            Console.WriteLine($"Writing server hello, version is {connectionState.Version}");
             buffer.WriteBigEndian(connectionState.Version);
             var memoryToFill = buffer.Memory.Slice(0, RandomLength);
             connectionState.CryptoProvider.FillWithRandom(memoryToFill);

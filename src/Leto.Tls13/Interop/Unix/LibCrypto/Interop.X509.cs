@@ -10,12 +10,12 @@ internal partial class Interop
         [StructLayout(LayoutKind.Sequential)]
         internal struct X509
         {
-            private IntPtr _ptr;
+            public IntPtr Ptr;
 
             public void Free()
             {
-                X509_free(_ptr);
-                _ptr = IntPtr.Zero;
+                X509_free(Ptr);
+                Ptr = IntPtr.Zero;
             }
         }
     }

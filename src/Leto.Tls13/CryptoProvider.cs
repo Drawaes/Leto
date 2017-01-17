@@ -39,9 +39,10 @@ namespace Leto.Tls13
 
             _priorityOrderedKeyExchanges = new NamedGroup[]
             {
-                 NamedGroup.secp256r1,
+                 
                  NamedGroup.x25519,
                  NamedGroup.x448,
+                 NamedGroup.secp256r1,
                  NamedGroup.secp521r1,
                  NamedGroup.secp384r1,
                  NamedGroup.ffdhe8192,
@@ -53,9 +54,9 @@ namespace Leto.Tls13
 
             _priorityOrderedCipherSuites = new CipherSuite[]
                 {
+                    new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, CipherCode = 0x1302, HashType = HashType.SHA384},
-                    new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM, CipherCode = 0x1304, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM_8, CipherCode = 0x1305, HashType = HashType.SHA256}
                 };
@@ -125,7 +126,6 @@ namespace Leto.Tls13
             {
                 peerCipherList[i] = buffer.ReadBigEndian<ushort>();
                 buffer = buffer.Slice(sizeof(ushort));
-                Console.WriteLine($"Cipher type {peerCipherList[i]}");
             }
 
             for (var i = 0; i < _priorityOrderedCipherSuites.Length; i++)

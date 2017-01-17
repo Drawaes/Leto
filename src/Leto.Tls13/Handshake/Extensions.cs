@@ -19,12 +19,12 @@ namespace Leto.Tls13.Handshake
         {
             if (connectionState.State == StateType.SendServerHello)
             {
-                if (connectionState.PskIdentity != -1)
-                {
-                    buffer.WriteBigEndian(ExtensionType.pre_shared_key);
-                    buffer.WriteBigEndian<ushort>(sizeof(ushort));
-                    buffer.WriteBigEndian((ushort)connectionState.PskIdentity);
-                }
+                //if (connectionState.PskIdentity != -1)
+                //{
+                //    buffer.WriteBigEndian(ExtensionType.pre_shared_key);
+                //    buffer.WriteBigEndian<ushort>(sizeof(ushort));
+                //    buffer.WriteBigEndian((ushort)connectionState.PskIdentity);
+                //}
                 if (connectionState.KeyShare != null)
                 {
                     WriteServerKeyshare(ref buffer, connectionState);
@@ -44,6 +44,7 @@ namespace Leto.Tls13.Handshake
             if (connectionState.State == StateType.ServerAuthentication)
             {
                 WriteServerEarlyData(ref buffer, connectionState);
+                //WriteServerName(ref buffer, connectionState);
             }
             return buffer;
         }
@@ -121,10 +122,10 @@ namespace Leto.Tls13.Handshake
                         ReadSupportedGroups(extensionBuffer, connectionState);
                         break;
                     case ExtensionType.supported_versions:
-                        signatureAlgoBuffer = extensionBuffer;
+                        ReadSupportedVersion(extensionBuffer, connectionState);
                         break;
                     case ExtensionType.signature_algorithms:
-                        ReadSignatureScheme(extensionBuffer, connectionState);
+                        signatureAlgoBuffer = extensionBuffer;
                         break;
                     case ExtensionType.application_layer_protocol_negotiation:
                         ReadApplicationProtocolExtension(extensionBuffer, connectionState);
@@ -147,7 +148,7 @@ namespace Leto.Tls13.Handshake
             //as well as the trusted CA roots.
             if (signatureAlgoBuffer.Length != 0)
             {
-                ReadSupportedVersion(signatureAlgoBuffer, connectionState);
+                ReadSignatureScheme(signatureAlgoBuffer, connectionState);
             }
             //We only check if we want to use a PSK at the end because we need the 
             //entire state (ciphers okay, and all the other information is correct
@@ -224,6 +225,15 @@ namespace Leto.Tls13.Handshake
         {
             connectionState.Listener.ServerNameProvider.MatchServerName(buffer, connectionState);
         }
+
+        private static void WriteServerName(ref WritableBuffer buffer, IConnectionState connectionState)
+        {
+            buffer.WriteBigEndian(ExtensionType.server_name);
+            buffer.WriteBigEndian((ushort)(sizeof(ushort) + connectionState.ServerName.Length));
+            buffer.WriteBigEndian((ushort)connectionState.ServerName.Length);
+            buffer.Write(Encoding.UTF8.GetBytes(connectionState.ServerName));
+        }
+
         private static void ReadPskKeyExchangeMode(ReadableBuffer buffer, IConnectionState connectionState)
         {
             buffer = BufferExtensions.SliceVector<byte>(ref buffer);
@@ -259,7 +269,7 @@ namespace Leto.Tls13.Handshake
             {
                 ushort version;
                 buffer = buffer.SliceBigEndian(out version);
-                if (version > 0x0304 && version < 0x7fff)
+                if (version == 0x7f12)
                 {
                     connectionState.Version = version;
                     return;

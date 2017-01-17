@@ -48,7 +48,7 @@ namespace Leto.Tls13.Sessions
             writer.WriteBigEndian(_randomId);
             var sequence = System.Threading.Interlocked.Increment(ref _sequence);
             writer.WriteBigEndian(_nounceStart ^ sequence);
-            writer.Write(new Span<byte>(_nounceBase,8));
+            writer.Write(_nounceBase.Slice(8));
 
             //Now we have to encrypt the data
             writer.WriteBigEndian(state.CipherSuite.CipherCode);

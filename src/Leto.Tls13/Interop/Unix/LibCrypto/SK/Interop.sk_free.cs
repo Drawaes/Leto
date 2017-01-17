@@ -8,8 +8,10 @@ internal partial class Interop
     internal partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern unsafe int i2d_X509(X509 a, byte** pp);
+        internal static extern void OPENSSL_sk_free(IntPtr stack);
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern unsafe int i2d_X509(IntPtr a, byte** pp);
+        internal static extern int OPENSSL_sk_num(IntPtr stack);
+        [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr OPENSSL_sk_pop(IntPtr stack);
     }
 }

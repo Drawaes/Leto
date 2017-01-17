@@ -28,6 +28,14 @@ namespace Leto.Tls13.Certificates.OpenSsl11
         public byte[] CertificateData => _derCertData;
         public string HostName => _altNameString;
 
+        public byte[][] CertificateChain
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public void Dispose()
         {
             _key.Free();

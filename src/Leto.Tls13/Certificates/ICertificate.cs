@@ -10,6 +10,7 @@ namespace Leto.Tls13.Certificates
     public interface ICertificate : IDisposable
     {
         byte[] CertificateData { get; }
+        byte[][] CertificateChain { get; }
         CertificateType CertificateType { get; }
         string HostName { get; }
         bool SupportsSignatureScheme(SignatureScheme scheme);

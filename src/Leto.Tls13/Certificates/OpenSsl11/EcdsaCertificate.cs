@@ -21,13 +21,15 @@ namespace Leto.Tls13.Certificates.OpenSsl11
         private SignatureScheme _scheme;
         private HashType _hashType;
         private EC_KEY _ecKey;
+        private byte[][] _chain;
         
-        internal EcdsaCertificate(EVP_PKEY privateKey, X509 certificate, byte[] derCertData, string altNameString)
+        internal EcdsaCertificate(EVP_PKEY privateKey, X509 certificate, byte[] derCertData, string altNameString, byte[][] chain)
         {
             _certData = derCertData;
             _key = privateKey;
             _certificate = certificate;
             _altNameString = altNameString;
+            _chain = chain ?? new byte[0][];
 
             _ecKey = EVP_PKEY_get0_EC_KEY(_key);
             var group = EC_KEY_get0_group(_ecKey);
@@ -61,6 +63,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
         public CertificateType CertificateType => CertificateType.Ecdsa_secp256r1;
         public byte[] CertificateData => _certData;
         public string HostName => _altNameString;
+        public byte[][] CertificateChain => _chain;
 
         public void Dispose()
         {

@@ -18,6 +18,11 @@ namespace Leto.Tls13
             _certificates.Add(_certificateProvider.LoadCertificate(certificate));
         }
 
+        public void AddCertificateFile(string filename, string password)
+        {
+            _certificates.Add(_certificateProvider.LoadPfx12(filename,password));
+        }
+
         public void AddPEMCertificate(string certificate, string privateKey)
         {
             _certificates.Add(_certificateProvider.LoadCertificate(certificate, privateKey));

@@ -57,7 +57,8 @@ namespace Leto.Tls13.Internal
             var buffer2 = buffer as SecureMemory;
             if (buffer2 == null)
             {
-                throw new InvalidCastException("Buffer not from this pool");
+                Debug.Fail("Buffer was empty");
+                return;
             }
             Debug.Assert(buffer2.Rented, "Returning a buffer that isn't rented!");
             if(!buffer2.Rented)

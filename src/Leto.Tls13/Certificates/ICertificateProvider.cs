@@ -10,5 +10,6 @@ namespace Leto.Tls13.Certificates
     {
         ICertificate LoadCertificate(string certificate, string privateKey);
         ICertificate LoadCertificate(X509Certificate2 certificate);
+        ICertificate LoadPfx12(string filename, string password);
     }
 }

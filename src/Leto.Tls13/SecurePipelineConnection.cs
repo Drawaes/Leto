@@ -146,9 +146,9 @@ namespace Leto.Tls13
                         _state.DataForCurrentScheduleSent.Set();
                         if (result.IsCompleted && buffer.IsEmpty)
                         {
-                            var output = _lowerConnection.Output.Alloc();
-                            Alerts.AlertException.WriteAlert(_recordHandler, ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify);
-                            await output.FlushAsync();
+                            //var output = _lowerConnection.Output.Alloc();
+                            //Alerts.AlertException.WriteAlert(_recordHandler, ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify);
+                            //await output.FlushAsync();
                             break;
                         }
                     }

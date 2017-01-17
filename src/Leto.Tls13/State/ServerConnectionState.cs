@@ -20,6 +20,7 @@ namespace Leto.Tls13.State
         private SecurePipelineListener _listener;
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
+        private StateType _state;
 
         public ServerConnectionState(SecurePipelineListener listener)
         {
@@ -40,7 +41,15 @@ namespace Leto.Tls13.State
         public IBulkCipherInstance WriteKey => _writeKey;
         public CertificateList CertificateList => _listener.CertificateList;
         public CipherSuite CipherSuite { get; set; }
-        public StateType State { get; set; }
+        public StateType State
+        {
+            get { return _state;}
+            set
+            {
+                Console.WriteLine($"State changed {_state}");
+                _state = value;
+            }
+        }
         public ushort Version { get; set; }
         public ICertificate Certificate { get; set; }
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
@@ -106,6 +115,17 @@ namespace Leto.Tls13.State
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
                     ServerHandshake.SendFlightOne(ref writer, this);
+                    _dataForCurrentScheduleSent.Reset();
+                    await writer.FlushAsync();
+                    await _dataForCurrentScheduleSent;
+                    writer = pipe.Alloc();
+                    ServerHandshake.SendFlightOne2(ref writer, this);
+                    _dataForCurrentScheduleSent.Reset();
+                    await writer.FlushAsync();
+                    await _dataForCurrentScheduleSent;
+                    writer = pipe.Alloc();
+                    ServerHandshake.SendFlightOne3(ref writer, this);
+                    
                     ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
@@ -135,9 +155,9 @@ namespace Leto.Tls13.State
                     HandshakeHash.Dispose();
                     HandshakeHash = null;
                     //Send a new session ticket
-                    writer = pipe.Alloc();
-                    this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
-                    await writer.FlushAsync();
+                    //writer = pipe.Alloc();
+                    //this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
+                    //await writer.FlushAsync();
                     State = StateType.HandshakeComplete;
                     break;
                 default:

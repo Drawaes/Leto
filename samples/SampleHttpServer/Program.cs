@@ -67,18 +67,19 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
 -----END RSA PRIVATE KEY-----
 ";
         public static readonly string _rsaCertPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "TestCert.pfx");
-        public static readonly string _ecdsaCertPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "certificate.pfx");
+        public static readonly string _ecdsaCertPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "new.pfx");
         public static readonly string _certificatePassword = "Test123t";
 
         public static void Main(string[] args)
         {
-            using (var cert = new X509Certificate2(_rsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
-            using (var cert2 = new X509Certificate2(_ecdsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
+            //using (var cert = new X509Certificate2(_rsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
+            //using (var cert2 = new X509Certificate2(_ecdsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
+                
                 //list.AddCertificate(cert);
-                list.AddCertificate(cert2);
+                list.AddCertificateFile(_ecdsaCertPath, _certificatePassword);
                 //list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
                 //list.AddPEMCertificate(ecdsaCertPEM,ecdsaKeyPEM);
                 using (var serverContext = new SecurePipelineListener(factory, list))
