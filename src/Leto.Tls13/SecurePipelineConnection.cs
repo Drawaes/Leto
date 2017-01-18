@@ -79,6 +79,7 @@ namespace Leto.Tls13
                             }
                             if (recordType == RecordType.Application)
                             {
+                                Console.WriteLine("Writing Application Data");
                                 var writer = _outputPipe.Alloc();
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();

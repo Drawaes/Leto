@@ -18,8 +18,6 @@ namespace Leto.Tls13.Handshake
                 BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, state);
                 return buffer;
             });
-
-
         }
 
         public static void SendFlightOne2(ref WritableBuffer writer, IConnectionStateTls13 connectionState)

@@ -92,6 +92,7 @@ namespace Leto.Tls13.State
                     if (PskIdentity != -1 && EarlyDataSupported)
                     {
                         KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
+                        Console.WriteLine("Generated Early Traffic Key");
                     }
                     //Write the server hello, the last of the unencrypted messages
                     State = StateType.SendServerHello;
@@ -116,7 +117,6 @@ namespace Leto.Tls13.State
                     await _dataForCurrentScheduleSent;
                     writer = pipe.Alloc();
                     ServerHandshake.SendFlightOne3(ref writer, this);
-                    
                     ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
@@ -146,9 +146,9 @@ namespace Leto.Tls13.State
                     HandshakeHash.Dispose();
                     HandshakeHash = null;
                     //Send a new session ticket
-                    //writer = pipe.Alloc();
-                    //this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
-                    //await writer.FlushAsync();
+                    writer = pipe.Alloc();
+                    this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
+                    await writer.FlushAsync();
                     State = StateType.HandshakeComplete;
                     break;
                 default:

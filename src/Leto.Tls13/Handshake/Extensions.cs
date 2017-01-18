@@ -19,12 +19,12 @@ namespace Leto.Tls13.Handshake
         {
             if (connectionState.State == StateType.SendServerHello)
             {
-                //if (connectionState.PskIdentity != -1)
-                //{
-                //    buffer.WriteBigEndian(ExtensionType.pre_shared_key);
-                //    buffer.WriteBigEndian<ushort>(sizeof(ushort));
-                //    buffer.WriteBigEndian((ushort)connectionState.PskIdentity);
-                //}
+                if (connectionState.PskIdentity != -1)
+                {
+                    buffer.WriteBigEndian(ExtensionType.pre_shared_key);
+                    buffer.WriteBigEndian<ushort>(sizeof(ushort));
+                    buffer.WriteBigEndian((ushort)connectionState.PskIdentity);
+                }
                 if (connectionState.KeyShare != null)
                 {
                     WriteServerKeyshare(ref buffer, connectionState);
