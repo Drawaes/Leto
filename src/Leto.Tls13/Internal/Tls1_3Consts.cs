@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Leto.Tls13.Internal
 {
-    public class Tls1_3Labels
+    public class Tls1_3Consts
     {
         public const string Prefix = "TLS 1.3, ";
 

@@ -77,7 +77,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
-                
+
                 //list.AddCertificate(cert);
                 list.AddCertificateFile(_ecdsaCertPath, _certificatePassword);
                 //list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);

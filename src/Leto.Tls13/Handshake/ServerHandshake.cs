@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
 {
     public class ServerHandshake
     {
-        public static void SendFlightOne(ref WritableBuffer writer, IConnectionState connectionState)
+        public static void SendFlightOne(ref WritableBuffer writer, IConnectionStateTls13 connectionState)
         {
             connectionState.WriteHandshake(ref writer, HandshakeType.encrypted_extensions, (buffer, state) =>
             {
@@ -22,7 +22,7 @@ namespace Leto.Tls13.Handshake
 
         }
 
-        public static void SendFlightOne2(ref WritableBuffer writer, IConnectionState connectionState)
+        public static void SendFlightOne2(ref WritableBuffer writer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.PskIdentity == -1)
             {
@@ -31,7 +31,7 @@ namespace Leto.Tls13.Handshake
             }
         }
 
-        public static void SendFlightOne3(ref WritableBuffer writer, IConnectionState connectionState)
+        public static void SendFlightOne3(ref WritableBuffer writer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.PskIdentity == -1)
             {
@@ -40,7 +40,7 @@ namespace Leto.Tls13.Handshake
             }
         }
 
-        public static WritableBuffer WriteCertificate(WritableBuffer writer, IConnectionState connectionState)
+        public static WritableBuffer WriteCertificate(WritableBuffer writer, IConnectionStateTls13 connectionState)
         {
             writer.WriteBigEndian<byte>(0);
             BufferExtensions.WriteVector24Bit(ref writer, (buffer, state) =>
@@ -64,17 +64,17 @@ namespace Leto.Tls13.Handshake
             writer.WriteBigEndian<ushort>(0);
         }
 
-        public unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, IConnectionState state)
+        public unsafe static WritableBuffer SendCertificateVerify(WritableBuffer writer, IConnectionStateTls13 state)
         {
             writer.WriteBigEndian(state.SignatureScheme);
             var bookMark = writer.Memory;
             writer.WriteBigEndian((ushort)0);
-            var hash = new byte[state.HandshakeHash.HashSize + Tls1_3Labels.SignatureDigestPrefix.Length + Tls1_3Labels.ServerCertificateVerify.Length];
-            Tls1_3Labels.SignatureDigestPrefix.CopyTo(hash, 0);
-            Tls1_3Labels.ServerCertificateVerify.CopyTo(hash, Tls1_3Labels.SignatureDigestPrefix.Length);
+            var hash = new byte[state.HandshakeHash.HashSize + Tls1_3Consts.SignatureDigestPrefix.Length + Tls1_3Consts.ServerCertificateVerify.Length];
+            Tls1_3Consts.SignatureDigestPrefix.CopyTo(hash, 0);
+            Tls1_3Consts.ServerCertificateVerify.CopyTo(hash, Tls1_3Consts.SignatureDigestPrefix.Length);
             fixed (byte* hPtr = hash)
             {
-                var sigPtr = hPtr + Tls1_3Labels.SignatureDigestPrefix.Length + Tls1_3Labels.ServerCertificateVerify.Length;
+                var sigPtr = hPtr + Tls1_3Consts.SignatureDigestPrefix.Length + Tls1_3Consts.ServerCertificateVerify.Length;
                 state.HandshakeHash.InterimHash(sigPtr, state.HandshakeHash.HashSize);
                 var sigSize = state.Certificate.SignHash(state.CryptoProvider.HashProvider, state.SignatureScheme, ref writer, hPtr, hash.Length);
                 bookMark.Span.Write16BitNumber((ushort)sigSize);
@@ -82,7 +82,7 @@ namespace Leto.Tls13.Handshake
             return writer;
         }
 
-        public static unsafe void ServerFinished(ref WritableBuffer writer, IConnectionState connectionState, byte[] finishedKey)
+        public static unsafe void ServerFinished(ref WritableBuffer writer, IConnectionStateTls13 connectionState, byte[] finishedKey)
         {
             var hash = new byte[connectionState.HandshakeHash.HashSize];
             fixed (byte* hPtr = hash)

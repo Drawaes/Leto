@@ -10,9 +10,9 @@ namespace Leto.Tls13.Handshake
 {
     public class Hello
     {
-        private const int RandomLength = 32;
+        public const int RandomLength = 32;
 
-        public static WritableBuffer WriteClientHello(WritableBuffer buffer, IConnectionState connectionState)
+        public static WritableBuffer WriteClientHello(WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian<ushort>(0x0303);
             buffer.Ensure(RandomLength);
@@ -29,15 +29,15 @@ namespace Leto.Tls13.Handshake
             return buffer;
         }
 
-        public static void ReadClientHello(ReadableBuffer readable, IConnectionState connectionState)
+        public static void ReadClientHelloTls12(ReadableBuffer readable, IConnectionState connectionState)
+        {
+
+        }
+
+        public static void ReadClientHelloTls13(ReadableBuffer readable, IConnectionStateTls13 connectionState)
         {
             var buffer = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
-            var version = buffer.ReadBigEndian<ushort>();
-            //for TLS 1.3 it has to name TLS 1.2 as the legacy version number
-            if (version != 0x0303)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "The version of the client is not TLS 1.2");
-            }
+            //Ignore version because it is already checked
             buffer = buffer.Slice(sizeof(ushort));
             //Random is legacy, it is just included in the secrets via the entire message MAC
             buffer = buffer.Slice(RandomLength);
@@ -47,7 +47,7 @@ namespace Leto.Tls13.Handshake
             var ciphers = BufferExtensions.SliceVector<ushort>(ref buffer);
             if (connectionState.CipherSuite == null)
             {
-                connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers);
+                connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState.Version);
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref buffer);
@@ -58,20 +58,16 @@ namespace Leto.Tls13.Handshake
             Extensions.ReadExtensionList(ref buffer, connectionState);
         }
 
-        public static void ReadServerHello(ReadableBuffer readable, IConnectionState connectionState)
+        public static void ReadServerHello(ReadableBuffer readable, IConnectionStateTls13 connectionState)
         {
             var original = readable;
             ushort version, cipherCode;
             readable = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
             readable = readable.SliceBigEndian(out version);
-            if (version != connectionState.Version)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Server did not respond with the same version of TLS");
-            }
             //skip random
             readable = readable.Slice(RandomLength);
             readable = readable.SliceBigEndian(out cipherCode);
-            connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromCode(cipherCode);
+            connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromCode(cipherCode, connectionState.Version);
             if (connectionState.CipherSuite == null)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Could not get a cipher suite during server hello");
@@ -96,7 +92,12 @@ namespace Leto.Tls13.Handshake
 
         }
 
-        public static WritableBuffer SendServerHello(WritableBuffer buffer, IConnectionState connectionState)
+        public static WritableBuffer SendServerHello12(WritableBuffer buffer, IConnectionState connectionState)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static WritableBuffer SendServerHello13(WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.Ensure(RandomLength + sizeof(ushort));
             Console.WriteLine($"Writing server hello, version is {connectionState.Version}");
@@ -109,13 +110,12 @@ namespace Leto.Tls13.Handshake
             return buffer;
         }
 
-        public static WritableBuffer SendHelloRetry(WritableBuffer buffer, IConnectionState connectionState)
+        public static WritableBuffer SendHelloRetry(WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             if(connectionState.State == StateType.WaitHelloRetry)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "need to send a hello retry but have already sent one");
             }
-            connectionState.State = StateType.WaitHelloRetry;
             buffer.WriteBigEndian(connectionState.Version);
             BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
             return buffer;

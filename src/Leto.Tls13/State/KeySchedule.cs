@@ -20,12 +20,12 @@ namespace Leto.Tls13.State
         private byte* _serverHandshakeTrafficSecret;
         private byte* _clientApplicationTrafficSecret;
         private byte* _serverApplicationTrafficSecret;
-        private IConnectionState _state;
+        private IConnectionStateTls13 _state;
         private byte[] _resumptionSecret;
         private SecureBufferPool _pool;
         private OwnedMemory<byte> _stateData;
 
-        public unsafe KeySchedule(IConnectionState state, SecureBufferPool pool, ReadableBuffer resumptionSecret)
+        public unsafe KeySchedule(IConnectionStateTls13 state, SecureBufferPool pool, ReadableBuffer resumptionSecret)
         {
             _pool = pool;
             _stateData = pool.Rent();
@@ -94,10 +94,10 @@ namespace Leto.Tls13.State
             var iv = stackalloc byte[newKey.IVLength];
             var ivSpan = new Span<byte>(iv, newKey.IVLength);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
-                    , secret, secretLength, Tls1_3Labels.TrafficKey, new Span<byte>(), keySpan);
+                    , secret, secretLength, Tls1_3Consts.TrafficKey, new Span<byte>(), keySpan);
             newKey.SetKey(keySpan);
             HkdfFunctions.HkdfExpandLabel(CryptoProvider.HashProvider, CipherSuite.HashType
-                    , secret, secretLength, Tls1_3Labels.TrafficIv, new Span<byte>(), ivSpan);
+                    , secret, secretLength, Tls1_3Consts.TrafficIv, new Span<byte>(), ivSpan);
             newKey.SetIV(ivSpan);
             return newKey;
         }

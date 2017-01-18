@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         public const int HandshakeHeaderSize = 4;
                 
-        public static bool TryGetFrame(ref ReadableBuffer buffer, IConnectionState state, out ReadableBuffer messageBuffer, out HandshakeType messageType)
+        public static bool TryGetFrame(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType)
         {
             messageType = HandshakeType.certificate;
             messageBuffer = default(ReadableBuffer);

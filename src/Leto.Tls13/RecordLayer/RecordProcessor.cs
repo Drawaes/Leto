@@ -9,17 +9,11 @@ namespace Leto.Tls13.RecordLayer
 {
     public class RecordProcessor
     {
-        public const int RecordHeaderLength = 5;
-        public const int PlainTextMaxSize = 2 << 12;
+        public const int PlainTextMaxSize = 2 << 13;
         private const ushort TlsRecordVersion = 0x0301;
-        private State.IConnectionState _state;
-        
-        public RecordProcessor(State.IConnectionState state)
-        {
-            _state = state;
-        }
+        public const int RecordHeaderLength = 5;
 
-        public RecordType ReadRecord(ref ReadableBuffer messageBuffer)
+        public static RecordType ReadRecord(ref ReadableBuffer messageBuffer, State.IConnectionState state)
         {
             if (messageBuffer.Length < RecordHeaderLength)
             {
@@ -29,22 +23,21 @@ namespace Leto.Tls13.RecordLayer
             var version = messageBuffer.Slice(sizeof(RecordType)).ReadBigEndian<ushort>();
             var size = messageBuffer.Slice(sizeof(RecordType) + sizeof(ushort)).ReadBigEndian<ushort>();
             messageBuffer = messageBuffer.Slice(RecordHeaderLength);
-            if (_state.ReadKey == null)
+            if (state?.ReadKey == null)
             {
                 return recordType;
             }
-            _state.ReadKey.Decrypt(ref messageBuffer);
+            state.ReadKey.Decrypt(ref messageBuffer);
             RemovePadding(ref messageBuffer);
             recordType = messageBuffer.Slice(messageBuffer.Length - sizeof(RecordType)).ReadBigEndian<RecordType>();
             messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - sizeof(RecordType));
-            _state.ReadKey.IncrementSequence();
             return recordType;
         }
 
-        public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, Span<byte> plainText)
+        public static void WriteRecord(ref WritableBuffer buffer, RecordType recordType, Span<byte> plainText, State.IConnectionState state)
         {
             buffer.Ensure(RecordHeaderLength);
-            if(_state.WriteKey == null)
+            if(state.WriteKey == null)
             {
                 buffer.WriteBigEndian(recordType);
                 buffer.WriteBigEndian(TlsRecordVersion);
@@ -54,16 +47,15 @@ namespace Leto.Tls13.RecordLayer
             }
             buffer.WriteBigEndian(RecordType.Application);
             buffer.WriteBigEndian(TlsRecordVersion);
-            var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
+            var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
             buffer.WriteBigEndian((ushort)totalSize);
-            _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
-            _state.WriteKey.IncrementSequence();
+            state.WriteKey.Encrypt(ref buffer, plainText, recordType);
         }
 
-        public void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer plainText)
+        public static void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer plainText, State.IConnectionState state)
         {
             buffer.Ensure(RecordHeaderLength);
-            if (_state.WriteKey == null)
+            if (state.WriteKey == null)
             {
                 buffer.WriteBigEndian(recordType);
                 buffer.WriteBigEndian(TlsRecordVersion);
@@ -73,13 +65,20 @@ namespace Leto.Tls13.RecordLayer
             }
             buffer.WriteBigEndian(RecordType.Application);
             buffer.WriteBigEndian(TlsRecordVersion);
-            var totalSize = plainText.Length + _state.WriteKey.Overhead + sizeof(RecordType);
+            var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
             buffer.WriteBigEndian((ushort)totalSize);
-            _state.WriteKey.Encrypt(ref buffer, plainText, recordType);
-            _state.WriteKey.IncrementSequence();
+            state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+        }
+        
+        private static void RemovePadding(ref ReadableBuffer buffer)
+        {
+            while (buffer.Slice(buffer.Length - 1).Peek() == 0)
+            {
+                buffer = buffer.Slice(0, buffer.Length - 1);
+            }
         }
 
-        public bool TryGetFrame(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer)
+        public static bool TryGetFrame(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer)
         {
             messageBuffer = default(ReadableBuffer);
             if (buffer.Length < 5)
@@ -105,14 +104,6 @@ namespace Leto.Tls13.RecordLayer
                 return true;
             }
             return false;
-        }
-
-        private void RemovePadding(ref ReadableBuffer buffer)
-        {
-            while (buffer.Slice(buffer.Length - 1).Peek() == 0)
-            {
-                buffer = buffer.Slice(0, buffer.Length - 1);
-            }
         }
     }
 }

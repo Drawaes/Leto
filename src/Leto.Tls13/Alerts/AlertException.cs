@@ -25,7 +25,7 @@ namespace Leto.Tls13.Alerts
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerHidden()]
-        public static void ThrowAlert(AlertLevel alertLeve, AlertDescription description,string message)
+        public static void ThrowAlert(AlertLevel alertLeve, AlertDescription description, string message)
         {
             Console.WriteLine($"Writing alert {alertLeve}-{description} message {message}");
             throw new AlertException(alertLeve, description);
@@ -43,15 +43,15 @@ namespace Leto.Tls13.Alerts
         {
             return Message;
         }
-        
-        public static void WriteAlert(RecordProcessor recordHandler, ref WritableBuffer output, AlertLevel level, AlertDescription description)
+
+        public static void WriteAlert(ref WritableBuffer output, AlertLevel level, AlertDescription description, State.IConnectionState connectionState)
         {
             var buffer = new byte[sizeof(AlertLevel) + sizeof(AlertDescription)];
             var span = new Span<byte>(buffer);
             span.Write(level);
             span = span.Slice(sizeof(AlertLevel));
             span.Write(description);
-            recordHandler.WriteRecord(ref output, RecordType.Alert, buffer);
+            RecordProcessor.WriteRecord(ref output, RecordType.Alert, buffer, connectionState);
         }
     }
 }

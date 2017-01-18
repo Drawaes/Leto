@@ -47,10 +47,9 @@ namespace Leto.Tls13Facts
                 buffer.FlushAsync().Wait();
                 var reader = pipe.ReadAsync();
                 var result = reader.GetResult().Buffer;
-                var state = new ServerConnectionState(_listener);
-                var recordHandler = new RecordProcessor(state);
+                var state = new ServerStateTls13Draft18(_listener);
                 //state.ReadKey = bKey;
-                var header = recordHandler.ReadRecord(ref result);
+                var header = RecordProcessor.ReadRecord(ref result, state);
                 Assert.Equal(RecordType.Alert, header);
                 Assert.Equal<byte>(plainText.Skip(5), result.ToArray());
             }
@@ -67,14 +66,13 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ServerConnectionState(_listener);
-                var recordHandler = new RecordProcessor(state);
+                var state = new ServerStateTls13Draft18(_listener);
                 //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);
                 var reader = buffWrite.AsReadableBuffer();
-                recordHandler.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5));
+                RecordProcessor.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5), state);
                 var result = buff.AsReadableBuffer().ToArray();
                 Assert.Equal<byte>(message0, result);
                 buff.FlushAsync().Wait();
@@ -93,14 +91,13 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ServerConnectionState(_listener);
-                var recordHandler = new RecordProcessor(state);
+                var state = new ServerStateTls13Draft18(_listener);
                 //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);
                 var reader = buffWrite.AsReadableBuffer();
-                recordHandler.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5));
+                RecordProcessor.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5), state);
                 var result = buff.AsReadableBuffer().ToArray();
                 buff.FlushAsync().Wait();
                 Assert.Equal<byte>(message1, result);
@@ -111,7 +108,7 @@ namespace Leto.Tls13Facts
         public void TestRecordEncryptSequenceChange()
         {
             var prov = new BulkCipherProvider();
-            var bKey = prov.GetCipherKey(BulkCipherType.AES_128_GCM);
+            var bKey = (AeadBulkCipherInstance)prov.GetCipherKey(BulkCipherType.AES_128_GCM);
             bKey.SetKey(key);
             bKey.SetIV(iv);
             bKey.WithPadding(paddingLength);
@@ -123,14 +120,13 @@ namespace Leto.Tls13Facts
             {
                 var pipe = factory.Create();
                 var pipeWriter = factory.Create();
-                var state = new ServerConnectionState(_listener);
-                var recordHandler = new RecordProcessor(state);
+                var state = new ServerStateTls13Draft18(_listener);
                 //state.WriteKey = bKey;
                 var buff = pipe.Alloc();
                 var buffWrite = pipeWriter.Alloc();
                 buffWrite.Write(plainText);
                 var reader = buffWrite.AsReadableBuffer();
-                recordHandler.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5));
+                RecordProcessor.WriteRecord(ref buff, (RecordType)plainText[0], reader.Slice(5), state);
                 var result = buff.AsReadableBuffer().ToArray();
                 Assert.Equal<byte>(message2, result);
                 buff.FlushAsync().Wait();

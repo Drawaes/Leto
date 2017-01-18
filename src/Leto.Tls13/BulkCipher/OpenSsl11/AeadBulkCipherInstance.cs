@@ -94,6 +94,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             }
             outLength = 0;
             ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
+            IncrementSequence();
         }
 
 
@@ -137,6 +138,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
             ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_GET_TAG, _overhead, writePtr));
             buffer.Advance(_overhead);
+            IncrementSequence();
         }
 
         public unsafe void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType)
@@ -188,6 +190,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
             ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_GET_TAG, _overhead, writePtr));
             buffer.Advance(_overhead);
+            IncrementSequence();
         }
 
         public unsafe void IncrementSequence()

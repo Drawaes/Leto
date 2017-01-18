@@ -85,36 +85,36 @@ namespace Leto.Tls13.KeyExchange
         public static unsafe void ClientServerApplicationTrafficSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash
             , Span<byte> clientSecret, Span<byte> serverSecret)
         {
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ClientApplicationTrafficSecret, hash, clientSecret);
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ServerApplicationTrafficSecret, hash, serverSecret);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Consts.ClientApplicationTrafficSecret, hash, clientSecret);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Consts.ServerApplicationTrafficSecret, hash, serverSecret);
         }
 
         public static unsafe void ServerHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash, Span<byte> output)
         {
-            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ServerHandshakeTrafficSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Consts.ServerHandshakeTrafficSecret, hash, output);
         }
 
         public static unsafe void ClientEarlyTrafficSecret(IHashProvider provider, HashType hashType, void* earlySecret, Span<byte> hash, Span<byte> output)
         {
-            HkdfExpandLabel(provider, hashType, earlySecret, hash.Length, Tls1_3Labels.ClientEarlyTrafficSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, earlySecret, hash.Length, Tls1_3Consts.ClientEarlyTrafficSecret, hash, output);
         }
 
         public static unsafe void ClientHandshakeTrafficSecret(IHashProvider provider, HashType hashType, void* handshakeSecret, Span<byte> hash, Span<byte> output)
         {
-            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Labels.ClientHandshakeTrafficSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, handshakeSecret, hash.Length, Tls1_3Consts.ClientHandshakeTrafficSecret, hash, output);
         }
 
         public static unsafe byte[] ResumptionSecret(IHashProvider provider, HashType hashType, void* masterSecret, Span<byte> hash)
         {
             var output = new byte[hash.Length];
-            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Labels.ResumptionSecret, hash, output);
+            HkdfExpandLabel(provider, hashType, masterSecret, hash.Length, Tls1_3Consts.ResumptionSecret, hash, output);
             return output;
         }
 
         public unsafe static byte[] FinishedKey(IHashProvider provider, HashType hashType, byte* handshakeTrafficSecret)
         {
             var output = new byte[provider.HashSize(hashType)];
-            HkdfExpandLabel(provider, hashType, handshakeTrafficSecret, output.Length, Tls1_3Labels.ServerFinishedKey, new Span<byte>(), output);
+            HkdfExpandLabel(provider, hashType, handshakeTrafficSecret, output.Length, Tls1_3Consts.ServerFinishedKey, new Span<byte>(), output);
             return output;
         }
     }

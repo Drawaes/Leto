@@ -10,7 +10,7 @@ namespace Leto.Tls13.Handshake
 {
     public class Finished
     {
-        internal unsafe static void ReadClientFinished(ReadableBuffer messageBuffer, ServerConnectionState state)
+        internal unsafe static void ReadClientFinished(ReadableBuffer messageBuffer, ServerStateTls13Draft18 state)
         {
             messageBuffer = messageBuffer.Slice(4);
             var hashSize = state.HandshakeHash.HashSize;

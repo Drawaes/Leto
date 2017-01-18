@@ -15,7 +15,7 @@ namespace Leto.Tls13.Handshake
 {
     public class Extensions
     {
-        public static WritableBuffer WriteExtensionList(WritableBuffer buffer, IConnectionState connectionState)
+        public static WritableBuffer WriteExtensionList(WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.State == StateType.SendServerHello)
             {
@@ -44,12 +44,11 @@ namespace Leto.Tls13.Handshake
             if (connectionState.State == StateType.ServerAuthentication)
             {
                 WriteServerEarlyData(ref buffer, connectionState);
-                //WriteServerName(ref buffer, connectionState);
             }
             return buffer;
         }
 
-        private static void WriteSupportedGroups(ref WritableBuffer buffer, IConnectionState connectionState)
+        private static void WriteSupportedGroups(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian(ExtensionType.supported_groups);
             BufferExtensions.WriteVector<ushort>(ref buffer, (writer, state) =>
@@ -59,7 +58,7 @@ namespace Leto.Tls13.Handshake
             }, connectionState);
         }
 
-        private static void WriteSignatureSchemes(ref WritableBuffer buffer, IConnectionState connectionState)
+        private static void WriteSignatureSchemes(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian(ExtensionType.signature_algorithms);
             BufferExtensions.WriteVector<ushort>(ref buffer, (writer, state) =>
@@ -69,7 +68,7 @@ namespace Leto.Tls13.Handshake
             }, connectionState);
         }
 
-        public static void WriteServerEarlyData(ref WritableBuffer buffer, IConnectionState connectionState)
+        public static void WriteServerEarlyData(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.EarlyDataSupported)
             {
@@ -77,13 +76,13 @@ namespace Leto.Tls13.Handshake
                 buffer.WriteBigEndian<ushort>(0);
             }
         }
-        public static void WriteRetryKeyshare(ref WritableBuffer buffer, IConnectionState connectionState)
+        public static void WriteRetryKeyshare(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian(ExtensionType.key_share);
             buffer.WriteBigEndian((ushort)sizeof(NamedGroup));
             buffer.WriteBigEndian(connectionState.KeyShare.NamedGroup);
         }
-        public static void ReadExtensionList(ref ReadableBuffer buffer, IConnectionState connectionState)
+        public static void ReadExtensionList(ref ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             ReadableBuffer signatureAlgoBuffer = default(ReadableBuffer);
             ReadableBuffer pskBuffer = default(ReadableBuffer);
@@ -120,9 +119,6 @@ namespace Leto.Tls13.Handshake
                         break;
                     case ExtensionType.supported_groups:
                         ReadSupportedGroups(extensionBuffer, connectionState);
-                        break;
-                    case ExtensionType.supported_versions:
-                        ReadSupportedVersion(extensionBuffer, connectionState);
                         break;
                     case ExtensionType.signature_algorithms:
                         signatureAlgoBuffer = extensionBuffer;
@@ -162,11 +158,11 @@ namespace Leto.Tls13.Handshake
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "there was data after the extension list which is invalid");
             }
         }
-        private static void ReadEarlyData(ReadableBuffer earlyData, IConnectionState connectionState)
+        private static void ReadEarlyData(ReadableBuffer earlyData, IConnectionStateTls13 connectionState)
         {
             connectionState.EarlyDataSupported = true;
         }
-        private static void ReadPskKey(ReadableBuffer pskBuffer, IConnectionState connectionState)
+        private static void ReadPskKey(ReadableBuffer pskBuffer, IConnectionStateTls13 connectionState)
         {
             var identities = BufferExtensions.SliceVector<ushort>(ref pskBuffer);
             while (identities.Length > 0)
@@ -190,7 +186,7 @@ namespace Leto.Tls13.Handshake
             }
         }
 
-        private static void WriteClientKeyshares(ref WritableBuffer buffer, IConnectionState connectionState)
+        private static void WriteClientKeyshares(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian(ExtensionType.key_share);
             BufferExtensions.WriteVector<ushort>(ref buffer, (innerWriter, innerState) =>
@@ -221,12 +217,12 @@ namespace Leto.Tls13.Handshake
             keyshare.WritePublicKey(ref buffer);
         }
 
-        private static void ReadServerName(ReadableBuffer buffer, IConnectionState connectionState)
+        private static void ReadServerName(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             connectionState.Listener.ServerNameProvider.MatchServerName(buffer, connectionState);
         }
 
-        private static void WriteServerName(ref WritableBuffer buffer, IConnectionState connectionState)
+        private static void WriteServerName(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.WriteBigEndian(ExtensionType.server_name);
             buffer.WriteBigEndian((ushort)(sizeof(ushort) + connectionState.ServerName.Length));
@@ -234,7 +230,7 @@ namespace Leto.Tls13.Handshake
             buffer.Write(Encoding.UTF8.GetBytes(connectionState.ServerName));
         }
 
-        private static void ReadPskKeyExchangeMode(ReadableBuffer buffer, IConnectionState connectionState)
+        private static void ReadPskKeyExchangeMode(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer = BufferExtensions.SliceVector<byte>(ref buffer);
             while (buffer.Length > 0)
@@ -262,22 +258,25 @@ namespace Leto.Tls13.Handshake
             writer.WriteBigEndian((byte)2);
             writer.WriteBigEndian(connectionState.Version);
         }
-        private static void ReadSupportedVersion(ReadableBuffer buffer, IConnectionState connectionState)
+        public static TlsVersion ReadSupportedVersion(ReadableBuffer buffer, TlsVersion[] supportedVersions)
         {
+            TlsVersion returnVersion = 0;
             buffer = BufferExtensions.SliceVector<byte>(ref buffer);
             while (buffer.Length > 1)
             {
-                ushort version;
+                TlsVersion version;
                 buffer = buffer.SliceBigEndian(out version);
-                if (version == 0x7f12)
+                if (supportedVersions.Contains(version))
                 {
-                    connectionState.Version = version;
-                    return;
+                    if(version > returnVersion)
+                    {
+                        returnVersion = version;
+                    }
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Searching version extension could not find a valid version");
+            return returnVersion;
         }
-        private static void ReadSupportedGroups(ReadableBuffer buffer, IConnectionState connectionState)
+        private static void ReadSupportedGroups(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.KeyShare != null)
             {
@@ -286,7 +285,7 @@ namespace Leto.Tls13.Handshake
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
             connectionState.KeyShare = connectionState.CryptoProvider.GetKeyshareFromNamedGroups(buffer);
         }
-        private static void ReadKeyshare(ReadableBuffer buffer, IConnectionState connectionState)
+        private static void ReadKeyshare(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             if (connectionState.KeyShare?.HasPeerKey == true)
             {
@@ -296,7 +295,7 @@ namespace Leto.Tls13.Handshake
             var ks = connectionState.CryptoProvider.GetKeyshareFromKeyshare(buffer);
             connectionState.KeyShare = ks ?? connectionState.KeyShare;
         }
-        private static void ReadSignatureScheme(ReadableBuffer buffer, IConnectionState connectionState)
+        private static void ReadSignatureScheme(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
             while (buffer.Length > 1)

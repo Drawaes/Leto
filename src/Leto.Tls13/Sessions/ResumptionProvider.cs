@@ -37,7 +37,7 @@ namespace Leto.Tls13.Sessions
             }
         }
 
-        public void GenerateSessionTicket(ref WritableBuffer writer, IConnectionState state)
+        public void GenerateSessionTicket(ref WritableBuffer writer, IConnectionStateTls13 state)
         {
             var key = _keyset[_currentIndex];
             key.WriteSessionKey(ref writer, state);
@@ -58,7 +58,7 @@ namespace Leto.Tls13.Sessions
             AddNewKey(DateTime.UtcNow.AddHours(4), DateTime.UtcNow.AddHours(-1), newKey);
         }
 
-        public bool TryToResume(long serviceId, long keyId, ReadableBuffer identity, IConnectionState state)
+        public bool TryToResume(long serviceId, long keyId, ReadableBuffer identity, IConnectionStateTls13 state)
         {
             for(int i = 0; i < _keyset.Length;i++)
             {

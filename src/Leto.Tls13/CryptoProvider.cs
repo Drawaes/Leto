@@ -17,7 +17,8 @@ namespace Leto.Tls13
         private IHashProvider _hashProvider;
         private IKeyshareProvider _keyShareProvider;
         private IBulkCipherProvider _bulkCipherProvider;
-        private CipherSuite[] _priorityOrderedCipherSuites;
+        private CipherSuite[] _priorityOrderedCipherSuitesTls13;
+        private CipherSuite[] _priorityOrderedCipherSuitesTls12;
         private NamedGroup[] _priorityOrderedKeyExchanges;
         private SignatureScheme[] _prioritySignatureSchemes;
 
@@ -39,7 +40,7 @@ namespace Leto.Tls13
 
             _priorityOrderedKeyExchanges = new NamedGroup[]
             {
-                 
+
                  NamedGroup.x25519,
                  NamedGroup.x448,
                  NamedGroup.secp256r1,
@@ -52,7 +53,7 @@ namespace Leto.Tls13
                  NamedGroup.ffdhe2048
             };
 
-            _priorityOrderedCipherSuites = new CipherSuite[]
+            _priorityOrderedCipherSuitesTls13 = new CipherSuite[]
                 {
                     new CipherSuite() { BulkCipherType = BulkCipherType.CHACHA20_POLY1305, CipherCode = 0x1303, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, CipherCode = 0x1301, HashType = HashType.SHA256},
@@ -60,7 +61,27 @@ namespace Leto.Tls13
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM, CipherCode = 0x1304, HashType = HashType.SHA256},
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_CCM_8, CipherCode = 0x1305, HashType = HashType.SHA256}
                 };
+
+            _priorityOrderedCipherSuitesTls12 = new CipherSuite[]
+                {
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherName = "TLS_RSA_WITH_AES_128_GCM_SHA256", CipherCode = 0x009C },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0x009D, CipherName = "TLS_RSA_WITH_AES_256_GCM_SHA384" },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0x009E, CipherName = "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256" },
+                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0x009F, CipherName = "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384" },
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02B, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256" },
+                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC02C, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02F, CipherName = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC030, CipherName = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA8, CipherName ="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256" },
+                    new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA9, CipherName ="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256" },
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCAA, CipherName = "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256" },
+                };
         }
+
+        public IHashProvider HashProvider => _hashProvider;
+        public IKeyshareProvider KeyShareProvider => _keyShareProvider;
+        public IBulkCipherProvider CipherProvider => _bulkCipherProvider;
+        public NamedGroup[] SupportedNamedGroups => _priorityOrderedKeyExchanges;
 
         public void WriteSupportedGroups(ref WritableBuffer buffer)
         {
@@ -89,33 +110,30 @@ namespace Leto.Tls13
 
         public void WriteCipherSuites(ref WritableBuffer buffer)
         {
-            var length = _priorityOrderedCipherSuites.Length * sizeof(ushort);
+            var length = _priorityOrderedCipherSuitesTls13.Length * sizeof(ushort);
             buffer.WriteBigEndian((ushort)length);
-            for (int i = 0; i < _priorityOrderedCipherSuites.Length; i++)
+            for (int i = 0; i < _priorityOrderedCipherSuitesTls13.Length; i++)
             {
-                buffer.WriteBigEndian(_priorityOrderedCipherSuites[i].CipherCode);
+                buffer.WriteBigEndian(_priorityOrderedCipherSuitesTls13[i].CipherCode);
             }
         }
 
-        internal CipherSuite GetCipherSuiteFromCode(ushort cipherCode)
+        public CipherSuite GetCipherSuiteFromCode(ushort cipherCode, TlsVersion version)
         {
-            for (int i = 0; i < _priorityOrderedCipherSuites.Length; i++)
+            var list = GetCipherSuites(version);
+            for (int i = 0; i < list.Length; i++)
             {
-                if (_priorityOrderedCipherSuites[i] != null)
+                if (list[i] != null)
                 {
-                    return _priorityOrderedCipherSuites[i];
+                    return list[i];
                 }
             }
             return null;
         }
-
-        public IHashProvider HashProvider => _hashProvider;
-        public IKeyshareProvider KeyShareProvider => _keyShareProvider;
-        public IBulkCipherProvider CipherProvider => _bulkCipherProvider;
-        public NamedGroup[] SupportedNamedGroups => _priorityOrderedKeyExchanges;
-
-        public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer)
+        
+        public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer, TlsVersion version)
         {
+            var list = GetCipherSuites(version);
             if (buffer.Length % 2 != 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Cipher suite extension is not divisable by zero");
@@ -128,17 +146,30 @@ namespace Leto.Tls13
                 buffer = buffer.Slice(sizeof(ushort));
             }
 
-            for (var i = 0; i < _priorityOrderedCipherSuites.Length; i++)
+            for (var i = 0; i < list.Length; i++)
             {
                 for (var x = 0; x < numberOfCiphers; x++)
                 {
-                    if (peerCipherList[x] == _priorityOrderedCipherSuites[i].CipherCode)
+                    if (peerCipherList[x] == list[i].CipherCode)
                     {
-                        return _priorityOrderedCipherSuites[i];
+                        return list[i];
                     }
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security,"Failed to get a bulk cipher from the cipher extensions");
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security, "Failed to get a bulk cipher from the cipher extensions");
+            return null;
+        }
+
+        private CipherSuite[] GetCipherSuites(TlsVersion version)
+        {
+            if(version == TlsVersion.Tls12)
+            {
+                return _priorityOrderedCipherSuitesTls12;
+            }
+            if(version == TlsVersion.Tls13Draft18)
+            {
+                return _priorityOrderedCipherSuitesTls13;
+            }
             return null;
         }
 

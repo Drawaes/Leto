@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Leto.Tls13.State
+namespace Leto.Tls13.Internal
 {
-    public class InitialVersionSelect
+    public class Tls1_2Consts
     {
+
     }
 }

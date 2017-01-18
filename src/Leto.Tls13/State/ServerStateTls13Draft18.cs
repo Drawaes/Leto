@@ -14,7 +14,7 @@ using Leto.Tls13.Sessions;
 
 namespace Leto.Tls13.State
 {
-    public class ServerConnectionState : IConnectionState
+    public class ServerStateTls13Draft18 : IConnectionStateTls13
     {
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         private SecurePipelineListener _listener;
@@ -22,7 +22,7 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _writeKey;
         private StateType _state;
 
-        public ServerConnectionState(SecurePipelineListener listener)
+        public ServerStateTls13Draft18(SecurePipelineListener listener)
         {
             State = StateType.None;
             _listener = listener;
@@ -50,22 +50,13 @@ namespace Leto.Tls13.State
                 _state = value;
             }
         }
-        public ushort Version { get; set; }
+        public TlsVersion Version => TlsVersion.Tls13Draft18;
         public ICertificate Certificate { get; set; }
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
         public SignatureScheme SignatureScheme { get; set; }
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
-
-        public void StartHandshakeHash(ReadableBuffer readable)
-        {
-            if (HandshakeHash == null)
-            {
-                HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
-            }
-            HandshakeHash.HashData(readable);
-        }
-
+        
         public void HandshakeContext(ReadableBuffer readable)
         {
             HandshakeHash?.HashData(readable);
@@ -82,18 +73,19 @@ namespace Leto.Tls13.State
                     {
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"State is wait hello retry but got {handshakeMessageType}");
                     }
-                    Hello.ReadClientHello(buffer, this);
+                    Hello.ReadClientHelloTls13(buffer, this);
                     if (CipherSuite == null)
                     {
                         //Couldn't agree a set of ciphers
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
                     }
-                    StartHandshakeHash(buffer);
+                    this.StartHandshakeHash(buffer);
                     //If we can't agree on a schedule we will have to send a hello retry and try again
                     if (!NegotiationComplete())
                     {
                         writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
+                        State = StateType.WaitHelloRetry;
                         await writer.FlushAsync();
                         return;
                     }
@@ -101,11 +93,10 @@ namespace Leto.Tls13.State
                     {
                         KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
                     }
-
                     //Write the server hello, the last of the unencrypted messages
                     State = StateType.SendServerHello;
                     writer = pipe.Alloc();
-                    this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello);
+                    this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello13);
                     //block our next actions because we need to have sent the message before changing keys
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
@@ -245,7 +236,7 @@ namespace Leto.Tls13.State
         {
         }
 
-        ~ServerConnectionState()
+        ~ServerStateTls13Draft18()
         {
             Dispose();
         }

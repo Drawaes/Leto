@@ -13,7 +13,7 @@ using Leto.Tls13.Sessions;
 
 namespace Leto.Tls13.State
 {
-    public class ClientConnectionState : IConnectionState
+    public class ClientConnectionState : IConnectionStateTls13
     {
         private SecurePipelineListener _securePipelineListener;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
@@ -26,7 +26,6 @@ namespace Leto.Tls13.State
         {
             State = StateType.SendClientHello;
             _securePipelineListener = securePipelineListener;
-            Version = 0x7f00 | 18;
         }
 
         public ICertificate Certificate { get; set; }
@@ -46,7 +45,7 @@ namespace Leto.Tls13.State
         public string ServerName { get; set; }
         public SignatureScheme SignatureScheme { get; set; }
         public StateType State { get; set; }
-        public ushort Version { get; set; }
+        public TlsVersion Version => TlsVersion.Tls13Draft18;
         public IBulkCipherInstance WriteKey => _writeKey;
         public bool EarlyDataSupported { get; set; }
 
@@ -131,16 +130,7 @@ namespace Leto.Tls13.State
             _helloBuffer = writer.AsReadableBuffer().ToArray();
             State = StateType.WaitServerHello;
         }
-
-        public void StartHandshakeHash(ReadableBuffer readable)
-        {
-            _dataForCurrentScheduleSent.Set();
-            HandshakeHash = CryptoProvider.HashProvider.GetHashInstance(CipherSuite.HashType);
-            HandshakeHash.HashData(_helloBuffer);
-            _helloBuffer = null;
-            HandshakeHash.HashData(readable);
-        }
-
+        
         private unsafe void GenerateHandshakeKeys()
         {
             if (KeySchedule == null)

@@ -13,24 +13,22 @@ namespace Leto.Tls13
     public class SecurePipelineConnection : IPipelineConnection
     {
         private IPipelineConnection _lowerConnection;
-        private RecordProcessor _recordHandler;
         private readonly Pipe _outputPipe;
         private readonly Pipe _inputPipe;
         private readonly Pipe _handshakePipe;
         private readonly Pipe _handshakeOutpipe;
         private IConnectionState _state;
         private bool _startedApplicationWrite;
+        private SecurePipelineListener _listener;
 
-        public SecurePipelineConnection(IConnectionState state, IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
+        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
         {
+            _listener = listener;
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
             _handshakeOutpipe = factory.Create();
-            _state = state;
-            _recordHandler = new RecordProcessor(_state);
-            HandshakeWriting();
             StartReading();
         }
 
@@ -48,9 +46,18 @@ namespace Leto.Tls13
                     try
                     {
                         ReadableBuffer messageBuffer;
-                        while (_recordHandler.TryGetFrame(ref buffer, out messageBuffer))
+                        while (RecordProcessor.TryGetFrame(ref buffer, out messageBuffer))
                         {
-                            var recordType = _recordHandler.ReadRecord(ref messageBuffer);
+                            var recordType = RecordProcessor.ReadRecord(ref messageBuffer, _state);
+                            if (_state == null)
+                            {
+                                if (recordType != RecordType.Handshake)
+                                {
+                                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
+                                }
+                                _state = VersionStateFactory.GetNewStateMacine(messageBuffer, _listener);
+                                HandshakeWriting();
+                            }
                             Console.WriteLine($"Received TLS frame {recordType}");
                             if (recordType == RecordType.Handshake)
                             {
@@ -105,7 +112,7 @@ namespace Leto.Tls13
             {
                 ReadableBuffer messageBuffer;
                 Handshake.HandshakeType handshakeType;
-                while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, _state, out messageBuffer, out handshakeType))
+                while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, out messageBuffer, out handshakeType))
                 {
                     await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe);
                 }
@@ -140,15 +147,15 @@ namespace Leto.Tls13
                                 buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
                             }
                             var writer = _lowerConnection.Output.Alloc();
-                            _recordHandler.WriteRecord(ref writer, RecordType.Application, messageBuffer);
+                            RecordProcessor.WriteRecord(ref writer, RecordType.Application, messageBuffer, _state);
                             await writer.FlushAsync();
                         }
                         _state.DataForCurrentScheduleSent.Set();
                         if (result.IsCompleted && buffer.IsEmpty)
                         {
-                            //var output = _lowerConnection.Output.Alloc();
-                            //Alerts.AlertException.WriteAlert(_recordHandler, ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify);
-                            //await output.FlushAsync();
+                            var output = _lowerConnection.Output.Alloc();
+                            Alerts.AlertException.WriteAlert(ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify, _state);
+                            await output.FlushAsync();
                             break;
                         }
                     }
@@ -158,7 +165,7 @@ namespace Leto.Tls13
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Exception was thrown {ex}");
                 //Nom Nom
@@ -204,7 +211,7 @@ namespace Leto.Tls13
                                 buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
                             }
                             writer = _lowerConnection.Output.Alloc();
-                            _recordHandler.WriteRecord(ref writer, RecordType.Handshake, messageBuffer);
+                            RecordProcessor.WriteRecord(ref writer, RecordType.Handshake, messageBuffer, _state);
                             await writer.FlushAsync();
                         }
                         _state.DataForCurrentScheduleSent.Set();

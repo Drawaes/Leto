@@ -51,6 +51,10 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                 ThrowOnError(PKCS12_parse(pk12Pointer, password, out key, out x509, out stackPtr));
                 var altString = GetNameString(x509);
                 var numberinstack = OPENSSL_sk_num(stackPtr);
+                if(numberinstack == -1)
+                {
+                    numberinstack = 0;
+                }
                 var certlist = new byte[numberinstack][];
                 for(int i = 0; i < numberinstack;i++)
                 {

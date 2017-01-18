@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         const int TicketLifeTimeInHours = 24;
 
-        public static WritableBuffer CreateNewSessionKey(WritableBuffer buffer, IConnectionState state)
+        public static WritableBuffer CreateNewSessionKey(WritableBuffer buffer, IConnectionStateTls13 state)
         {
             var lifetime = TicketLifeTimeInHours * 60 * 60;
             buffer.WriteBigEndian((uint)lifetime);
