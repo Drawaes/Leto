@@ -160,6 +160,11 @@ namespace Leto.Tls13.State
             throw new NotImplementedException();
         }
 
+        public void SetClientRandom(ReadableBuffer readableBuffer)
+        {
+            //Not required in Tls13 as the whole message context is used to seed the secrets
+        }
+
         ~ClientConnectionState()
         {
             Dispose();

@@ -24,5 +24,6 @@ namespace Leto.Tls13.State
         SignatureScheme SignatureScheme { get; set; }
         bool EarlyDataSupported { get; set; }
         void HandshakeContext(ReadableBuffer readable);
+        void SetClientRandom(ReadableBuffer readableBuffer);
     }
 }

@@ -18,6 +18,7 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
         private StateType _state;
+        private byte[] _clientRandom;
 
         public ServerStateTls12(SecurePipelineListener listener)
         {
@@ -40,10 +41,23 @@ namespace Leto.Tls13.State
             throw new NotImplementedException();
         }
 
-        public void HandleAlertMessage(ReadableBuffer readable)
+        public void SetClientRandom(ReadableBuffer readableBuffer)
         {
-            throw new NotImplementedException();
+            if(readableBuffer.Length != Hello.RandomLength)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Invalid client random length");
+            }
+            _clientRandom = readableBuffer.ToArray();
         }
+
+        public void HandleAlertMessage(ReadableBuffer messageBuffer)
+        {
+            var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
+            messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
+            var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
+            Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");
+        }
+    
 
         public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {

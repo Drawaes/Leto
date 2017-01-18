@@ -15,7 +15,7 @@ namespace Leto.Tls13.State
             TlsVersion.Tls13Draft18
         };
         
-        public static IConnectionState GetNewStateMacine(ReadableBuffer buffer, SecurePipelineListener listener)
+        public static IConnectionState GetNewStateMachine(ReadableBuffer buffer, SecurePipelineListener listener)
         {
             switch(GetVersion(ref buffer))
             {
@@ -63,7 +63,7 @@ namespace Leto.Tls13.State
                 if(type == ExtensionType.supported_versions)
                 {
                     //Scan the version for supported ones
-                    return Extensions.ReadSupportedVersion(ext, _supportedVersion);
+                    return ExtensionsRead.ReadSupportedVersion(ext, _supportedVersion);
                 }
             }
             return version;

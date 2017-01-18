@@ -25,12 +25,26 @@ namespace Leto.Tls13.Handshake
             buffer.WriteBigEndian((byte)1);
             buffer.WriteBigEndian((byte)0);
             connectionState.KeyShare = connectionState.CryptoProvider.GetDefaultKeyShare();
-            BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
+            BufferExtensions.WriteVector<ushort>(ref buffer, ExtensionsWrite.WriteExtensionList, connectionState);
             return buffer;
         }
 
-        public static void ReadClientHelloTls12(ReadableBuffer readable, IConnectionState connectionState)
+        public static void ReadClientHelloTls12(ReadableBuffer readable, ServerStateTls12 connectionState)
         {
+            readable = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
+            readable = readable.Slice(sizeof(ushort));
+            connectionState.SetClientRandom(readable.Slice(0,RandomLength));
+            readable = readable.Slice(RandomLength);
+            //We don't support sessions so slice and throw
+            BufferExtensions.SliceVector<byte>(ref readable);
+            //Slice Cipher Suite
+            var ciphers = BufferExtensions.SliceVector<ushort>(ref readable);
+            if(connectionState.CipherSuite == null)
+            {
+                connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState.Version);
+            }
+            //Skip compression
+            BufferExtensions.SliceVector<byte>(ref readable);
 
         }
 
@@ -55,7 +69,7 @@ namespace Leto.Tls13.Handshake
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "There is no extensions but we need them for Tls 1.3");
             }
-            Extensions.ReadExtensionList(ref buffer, connectionState);
+            ExtensionsRead.ReadExtensionList(ref buffer, connectionState);
         }
 
         public static void ReadServerHello(ReadableBuffer readable, IConnectionStateTls13 connectionState)
@@ -94,7 +108,16 @@ namespace Leto.Tls13.Handshake
 
         public static WritableBuffer SendServerHello12(WritableBuffer buffer, IConnectionState connectionState)
         {
-            throw new NotImplementedException();
+            buffer.Ensure(RandomLength + sizeof(ushort));
+            buffer.WriteBigEndian(connectionState.Version);
+            var memoryToFill = buffer.Memory.Slice(0, RandomLength);
+            connectionState.CryptoProvider.FillWithRandom(memoryToFill);
+            buffer.Advance(RandomLength);
+            buffer.WriteBigEndian<byte>(0);
+            buffer.WriteBigEndian(connectionState.CipherSuite.CipherCode);
+            buffer.WriteBigEndian<byte>(0);
+            BufferExtensions.WriteVector<ushort>(ref buffer, ExtensionsWrite.WriteExtensionListTls12, connectionState);
+            return buffer;
         }
 
         public static WritableBuffer SendServerHello13(WritableBuffer buffer, IConnectionStateTls13 connectionState)
@@ -106,7 +129,7 @@ namespace Leto.Tls13.Handshake
             connectionState.CryptoProvider.FillWithRandom(memoryToFill);
             buffer.Advance(RandomLength);
             buffer.WriteBigEndian(connectionState.CipherSuite.CipherCode);
-            BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
+            BufferExtensions.WriteVector<ushort>(ref buffer, ExtensionsWrite.WriteExtensionList, connectionState);
             return buffer;
         }
 
@@ -117,7 +140,7 @@ namespace Leto.Tls13.Handshake
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "need to send a hello retry but have already sent one");
             }
             buffer.WriteBigEndian(connectionState.Version);
-            BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, connectionState);
+            BufferExtensions.WriteVector<ushort>(ref buffer, ExtensionsWrite.WriteExtensionList, connectionState);
             return buffer;
         }
     }

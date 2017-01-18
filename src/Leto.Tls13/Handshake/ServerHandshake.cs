@@ -15,7 +15,7 @@ namespace Leto.Tls13.Handshake
         {
             connectionState.WriteHandshake(ref writer, HandshakeType.encrypted_extensions, (buffer, state) =>
             {
-                BufferExtensions.WriteVector<ushort>(ref buffer, Extensions.WriteExtensionList, state);
+                BufferExtensions.WriteVector<ushort>(ref buffer, ExtensionsWrite.WriteExtensionList, state);
                 return buffer;
             });
         }

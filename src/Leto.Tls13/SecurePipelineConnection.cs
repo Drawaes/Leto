@@ -55,7 +55,7 @@ namespace Leto.Tls13
                                 {
                                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
                                 }
-                                _state = VersionStateFactory.GetNewStateMacine(messageBuffer, _listener);
+                                _state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener);
                                 HandshakeWriting();
                             }
                             Console.WriteLine($"Received TLS frame {recordType}");

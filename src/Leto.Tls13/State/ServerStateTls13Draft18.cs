@@ -236,6 +236,11 @@ namespace Leto.Tls13.State
         {
         }
 
+        public void SetClientRandom(ReadableBuffer readableBuffer)
+        {
+            //Not used by itself in Tls 1.3 as the entire context is used for the random. 
+        }
+
         ~ServerStateTls13Draft18()
         {
             Dispose();
