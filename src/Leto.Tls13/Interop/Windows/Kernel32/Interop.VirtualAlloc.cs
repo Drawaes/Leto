@@ -15,8 +15,6 @@ internal partial class Interop
         internal extern static bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, int dwFreeType);
         [DllImport(Libraries.Kernel32, CharSet = CharSet.Unicode, SetLastError = true)]
         internal extern static bool VirtualLock(IntPtr lpAddress, UIntPtr dwSize);
-        [DllImport(Libraries.Kernel32, CharSet = CharSet.Unicode)]
-        internal extern static uint GetLastError();
         [DllImport(Libraries.Kernel32)]
         internal extern static void RtlZeroMemory(IntPtr ptr, UIntPtr cnt);
     }

@@ -7,7 +7,8 @@
   "dependencies": {
     "NETStandard.Library": "1.6.1",
     "System.IO.Pipelines": "0.1.0-e170114-1",
-    "System.IO.Pipelines.Text.Primitives": "0.1.0-e170114-1"
+    "System.IO.Pipelines.Text.Primitives": "0.1.0-e170114-1",
+    "System.Binary" :  "0.1.0-e170114-1"
   },
 
   "frameworks": {

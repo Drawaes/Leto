@@ -11,7 +11,7 @@ namespace Leto.Tls13.Handshake
 {
     public class ExtensionsRead
     {
-        public static void ReadExtensionList(ref ReadableBuffer buffer, IConnectionStateTls13 connectionState)
+        public static void ReadExtensionListTls13(ref ReadableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             ReadableBuffer signatureAlgoBuffer = default(ReadableBuffer);
             ReadableBuffer pskBuffer = default(ReadableBuffer);
@@ -85,6 +85,36 @@ namespace Leto.Tls13.Handshake
             if (currentbuffer.Length != 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "there was data after the extension list which is invalid");
+            }
+        }
+
+        public static void ReadExtensionListTls(ref ReadableBuffer buffer, IConnectionState connectionState)
+        {
+            var listLength = buffer.ReadBigEndian<ushort>();
+            buffer = buffer.Slice(sizeof(ushort));
+            if (buffer.Length < listLength)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "The extension list is not as long as the header says");
+            }
+            var currentbuffer = buffer.Slice(0, listLength);
+            buffer = buffer.Slice(currentbuffer.End);
+            while (currentbuffer.Length > 3)
+            {
+                var extensionType = currentbuffer.ReadBigEndian<ExtensionType>();
+                var extensionLength = currentbuffer.Slice(sizeof(ExtensionType)).ReadBigEndian<ushort>();
+                currentbuffer = currentbuffer.Slice(sizeof(ExtensionType) + sizeof(ushort));
+                if (currentbuffer.Length < extensionLength)
+                {
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"The extension of type {extensionType} is too long for the remaining buffer");
+                }
+                var extensionBuffer = currentbuffer.Slice(0, extensionLength);
+                currentbuffer = currentbuffer.Slice(extensionLength);
+                switch (extensionType)
+                {
+                    case ExtensionType.server_name:
+                        ReadServerName(extensionBuffer, connectionState);
+                        break;
+                }
             }
         }
 
@@ -198,7 +228,7 @@ namespace Leto.Tls13.Handshake
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Failed to find a signature scheme that matches");
         }
 
-        public static void ReadServerName(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
+        public static void ReadServerName(ReadableBuffer buffer, IConnectionState connectionState)
         {
             connectionState.Listener.ServerNameProvider.MatchServerName(buffer, connectionState);
         }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Leto.Tls13.Internal;
 using Leto.Tls13.State;
 
 namespace Leto.Tls13
@@ -71,6 +72,10 @@ namespace Leto.Tls13
             {
                 buffer.WriteBigEndian((byte)0);
             }
+            else if(typeof(T) == typeof(UInt24))
+            {
+                buffer.WriteBigEndian((UInt24)0);
+            }
             else
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.internal_error, $"Unkown vector type {typeof(T).Name}");
@@ -81,6 +86,10 @@ namespace Leto.Tls13
             if (typeof(T) == typeof(ushort))
             {
                 bookMark.Span.Write16BitNumber((ushort)sizeofVector);
+            }
+            else if (typeof(T) == typeof(UInt24))
+            {
+                bookMark.Write24BitNumber(sizeofVector);
             }
             else
             {
@@ -130,7 +139,7 @@ namespace Leto.Tls13
             return (int)contentSize;
         }
 
-        public static void Write24BitNumber(this Memory<byte> buffer,int numberToWrite)
+        public static void Write24BitNumber(this Memory<byte> buffer, int numberToWrite)
         {
             buffer.Span.Write((byte)(((numberToWrite & 0xFF0000) >> 16)));
             buffer.Span.Slice(1).Write((byte)(((numberToWrite & 0x00ff00) >> 8)));
@@ -161,30 +170,9 @@ namespace Leto.Tls13
 
         public static Span<byte> Write16BitNumber(this Span<byte> span, ushort value)
         {
-            value = Reverse(value);
+            value = System.Runtime.UnsafeUtilities.Reverse(value);
             span.Write(value);
             return span.Slice(sizeof(ushort));
-        }
-
-        private static ushort Reverse(ushort value)
-        {
-            value = (ushort)((value >> 8) | (value << 8));
-            return value;
-        }
-
-        private static ulong Reverse(ulong value)
-        {
-            value = (value << 32) | (value >> 32);
-            value = ((value & 0xFFFF0000FFFF0000) >> 16) | ((value & 0x0000FFFF0000FFFF) << 16);
-            value = ((value & 0xFF00FF00FF00FF00) >> 8) | ((value & 0x00FF00FF00FF00FF) << 8);
-            return value;
-        }
-
-        private static uint Reverse(uint value)
-        {
-            value = ((value & 0xFFFF0000) >> 16) | ((value & 0x0000FFFF) << 16);
-            value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-            return value;
         }
     }
 }

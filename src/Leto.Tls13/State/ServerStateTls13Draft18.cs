@@ -14,55 +14,27 @@ using Leto.Tls13.Sessions;
 
 namespace Leto.Tls13.State
 {
-    public class ServerStateTls13Draft18 : IConnectionStateTls13
+    public class ServerStateTls13Draft18 : AbstractServerState, IConnectionStateTls13
     {
-        private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
-        private SecurePipelineListener _listener;
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
-        private StateType _state;
-
+        
         public ServerStateTls13Draft18(SecurePipelineListener listener)
+            :base(listener)
         {
-            State = StateType.None;
-            _listener = listener;
             PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
 
-        public SecurePipelineListener Listener => _listener;
-        public string ServerName { get; set; }
         public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
-        public IKeyshareInstance KeyShare { get; set; }
         public KeySchedule KeySchedule { get; set; }
-        public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
-        public IHashInstance HandshakeHash { get; set; }
-        public CryptoProvider CryptoProvider => _listener.CryptoProvider;
-        public IBulkCipherInstance ReadKey => _readKey;
-        public IBulkCipherInstance WriteKey => _writeKey;
-        public CertificateList CertificateList => _listener.CertificateList;
-        public CipherSuite CipherSuite { get; set; }
-        public StateType State
-        {
-            get { return _state;}
-            set
-            {
-                Console.WriteLine($"State changed {_state}");
-                _state = value;
-            }
-        }
-        public TlsVersion Version => TlsVersion.Tls13Draft18;
-        public ICertificate Certificate { get; set; }
-        public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
+        public override IBulkCipherInstance ReadKey => _readKey;
+        public override IBulkCipherInstance WriteKey => _writeKey;
+        public override TlsVersion Version => TlsVersion.Tls13Draft18;
         public SignatureScheme SignatureScheme { get; set; }
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
         
-        public void HandshakeContext(ReadableBuffer readable)
-        {
-            HandshakeHash?.HashData(readable);
-        }
-
-        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
             switch (State)
@@ -85,7 +57,7 @@ namespace Leto.Tls13.State
                     {
                         writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
-                        State = StateType.WaitHelloRetry;
+                        _state = StateType.WaitHelloRetry;
                         await writer.FlushAsync();
                         return;
                     }
@@ -95,40 +67,40 @@ namespace Leto.Tls13.State
                         Console.WriteLine("Generated Early Traffic Key");
                     }
                     //Write the server hello, the last of the unencrypted messages
-                    State = StateType.SendServerHello;
+                    _state = StateType.SendServerHello;
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello13);
                     //block our next actions because we need to have sent the message before changing keys
-                    _dataForCurrentScheduleSent.Reset();
+                    DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
-                    State = StateType.ServerAuthentication;
+                    await DataForCurrentScheduleSent;
+                    _state = StateType.ServerAuthentication;
                     //Generate the encryption keys and send the next set of messages
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
                     ServerHandshakeTls13.SendFlightOne(ref writer, this);
-                    _dataForCurrentScheduleSent.Reset();
+                    DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
+                    await DataForCurrentScheduleSent;
                     writer = pipe.Alloc();
                     ServerHandshakeTls13.SendFlightOne2(ref writer, this);
-                    _dataForCurrentScheduleSent.Reset();
+                    DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
+                    await DataForCurrentScheduleSent;
                     writer = pipe.Alloc();
                     ServerHandshakeTls13.SendFlightOne3(ref writer, this);
                     ServerHandshakeTls13.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
-                    _dataForCurrentScheduleSent.Reset();
+                    DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
+                    await DataForCurrentScheduleSent;
                     GenerateServerApplicationKey();
                     if (EarlyDataSupported && PskIdentity != -1)
                     {
-                        State = StateType.WaitEarlyDataFinished;
+                        _state = StateType.WaitEarlyDataFinished;
                     }
                     else
                     {
-                        State = StateType.WaitClientFinished;
+                        _state = StateType.WaitClientFinished;
                     }
                     return;
                 case StateType.WaitClientFinished:
@@ -149,7 +121,7 @@ namespace Leto.Tls13.State
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
                     await writer.FlushAsync();
-                    State = StateType.HandshakeComplete;
+                    _state = StateType.HandshakeComplete;
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message,$"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}" );
@@ -157,7 +129,7 @@ namespace Leto.Tls13.State
             }
         }
 
-        public void HandleAlertMessage(ReadableBuffer messageBuffer)
+        public override void HandleAlertMessage(ReadableBuffer messageBuffer)
         {
             var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
             messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
@@ -168,7 +140,7 @@ namespace Leto.Tls13.State
                 //the client to send it's finish message
                 _readKey?.Dispose();
                 _readKey = KeySchedule.GenerateClientHandshakeKey();
-                State = StateType.WaitClientFinished;
+                _state = StateType.WaitClientFinished;
                 return;
             }
             Alerts.AlertException.ThrowAlert(level, description,"Alert from the client");
@@ -222,7 +194,7 @@ namespace Leto.Tls13.State
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             HandshakeHash?.Dispose();
             KeySchedule?.Dispose();
@@ -231,12 +203,8 @@ namespace Leto.Tls13.State
             WriteKey?.Dispose();
             GC.SuppressFinalize(this);
         }
-
-        public void StartHandshake(ref WritableBuffer writer)
-        {
-        }
-
-        public void SetClientRandom(ReadableBuffer readableBuffer)
+        
+        public override void SetClientRandom(ReadableBuffer readableBuffer)
         {
             //Not used by itself in Tls 1.3 as the entire context is used for the random. 
         }

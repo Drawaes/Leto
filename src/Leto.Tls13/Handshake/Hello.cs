@@ -45,7 +45,10 @@ namespace Leto.Tls13.Handshake
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref readable);
-
+            if(readable.Length > 0)
+            {
+                ExtensionsRead.ReadExtensionListTls(ref readable, connectionState);
+            }
         }
 
         public static void ReadClientHelloTls13(ReadableBuffer readable, IConnectionStateTls13 connectionState)
@@ -69,7 +72,7 @@ namespace Leto.Tls13.Handshake
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "There is no extensions but we need them for Tls 1.3");
             }
-            ExtensionsRead.ReadExtensionList(ref buffer, connectionState);
+            ExtensionsRead.ReadExtensionListTls13(ref buffer, connectionState);
         }
 
         public static void ReadServerHello(ReadableBuffer readable, IConnectionStateTls13 connectionState)

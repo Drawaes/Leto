@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.BulkCipher;
+using Leto.Tls13.Certificates;
 using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
@@ -11,55 +12,39 @@ using Leto.Tls13.KeyExchange;
 
 namespace Leto.Tls13.State
 {
-    public class ServerStateTls12 : IConnectionState
+    public class ServerStateTls12 : AbstractServerState
     {
-        private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
-        private SecurePipelineListener _listener;
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
-        private StateType _state;
         private byte[] _clientRandom;
 
         public ServerStateTls12(SecurePipelineListener listener)
+            :base(listener)
         {
-            _state = StateType.None;
-            _listener = listener;
         }
 
-        public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
-        public IBulkCipherInstance ReadKey => _readKey;
-        public StateType State => _state;
-        public TlsVersion Version => TlsVersion.Tls12;
-        public IBulkCipherInstance WriteKey => _writeKey;
-        public CipherSuite CipherSuite { get; set; }
-        public CryptoProvider CryptoProvider => _listener.CryptoProvider;
-        public IHashInstance HandshakeHash { get; set; }
-        public IKeyshareInstance KeyShare { get;set;}
-
-        public void Dispose()
+        public override IBulkCipherInstance ReadKey => _readKey;
+        public override TlsVersion Version => TlsVersion.Tls12;
+        public override IBulkCipherInstance WriteKey => _writeKey;
+                
+        public override void SetClientRandom(ReadableBuffer readableBuffer)
         {
-            throw new NotImplementedException();
-        }
-
-        public void SetClientRandom(ReadableBuffer readableBuffer)
-        {
-            if(readableBuffer.Length != Hello.RandomLength)
+            if (readableBuffer.Length != Hello.RandomLength)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Invalid client random length");
             }
             _clientRandom = readableBuffer.ToArray();
         }
 
-        public void HandleAlertMessage(ReadableBuffer messageBuffer)
+        public override void HandleAlertMessage(ReadableBuffer messageBuffer)
         {
             var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
             messageBuffer = messageBuffer.Slice(sizeof(Alerts.AlertLevel));
             var description = messageBuffer.ReadBigEndian<Alerts.AlertDescription>();
             Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");
         }
-    
-
-        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        
+        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
             switch (State)
@@ -88,9 +73,10 @@ namespace Leto.Tls13.State
                     break;
             }
         }
-
-        public void StartHandshake(ref WritableBuffer writer)
+        
+        public override void Dispose()
         {
+            throw new NotImplementedException();
         }
     }
 }
