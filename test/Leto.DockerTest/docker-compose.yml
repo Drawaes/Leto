@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  leto.dockertest:
+    image: user/leto.dockertest${TAG}
+    build:
+      context: .
+      dockerfile: Dockerfile

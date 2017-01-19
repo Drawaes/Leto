@@ -9,7 +9,7 @@ using Leto.Tls13.State;
 
 namespace Leto.Tls13.Handshake
 {
-    public class ServerHandshake
+    public class ServerHandshakeTls13
     {
         public static void SendFlightOne(ref WritableBuffer writer, IConnectionStateTls13 connectionState)
         {

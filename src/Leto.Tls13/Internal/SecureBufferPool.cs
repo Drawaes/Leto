@@ -78,9 +78,9 @@ namespace Leto.Tls13.Internal
             public new IntPtr Pointer => base.Pointer;
         }
         
-        public void Dispose()
+        public unsafe void Dispose()
         {
-            //var ptr = SecureZeroMemory(_memory, _totalAllocated);
+            RtlZeroMemory(_memory, _totalAllocated);
             VirtualFree(_memory, _totalAllocated, 0x8000);
             GC.SuppressFinalize(this);
         }

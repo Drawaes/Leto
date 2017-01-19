@@ -1,7 +1,8 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
-    "allowUnsafe": true
+    "allowUnsafe": true,
+      "debugType": "portable"
   },
   "dependencies": {
     "NETStandard.Library": "1.6.1",
@@ -9,8 +10,8 @@
     "System.IO.Pipelines.Text.Primitives": "0.1.0-e170114-1"
   },
 
-    "frameworks": {
-      "netstandard1.6": {
-      }
+  "frameworks": {
+    "netstandard1.6": {
     }
   }
+}

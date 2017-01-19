@@ -80,10 +80,8 @@ namespace Leto.Tls13.State
                     _state = StateType.SendServerHello;
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello12);
-                    //block our next actions because we need to have sent the message before changing keys
-                    _dataForCurrentScheduleSent.Reset();
+                    this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
                     await writer.FlushAsync();
-                    await _dataForCurrentScheduleSent;
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");

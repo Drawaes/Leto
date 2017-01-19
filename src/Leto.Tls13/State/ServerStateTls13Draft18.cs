@@ -106,18 +106,18 @@ namespace Leto.Tls13.State
                     //Generate the encryption keys and send the next set of messages
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
-                    ServerHandshake.SendFlightOne(ref writer, this);
+                    ServerHandshakeTls13.SendFlightOne(ref writer, this);
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await _dataForCurrentScheduleSent;
                     writer = pipe.Alloc();
-                    ServerHandshake.SendFlightOne2(ref writer, this);
+                    ServerHandshakeTls13.SendFlightOne2(ref writer, this);
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await _dataForCurrentScheduleSent;
                     writer = pipe.Alloc();
-                    ServerHandshake.SendFlightOne3(ref writer, this);
-                    ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
+                    ServerHandshakeTls13.SendFlightOne3(ref writer, this);
+                    ServerHandshakeTls13.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
                     _dataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await _dataForCurrentScheduleSent;

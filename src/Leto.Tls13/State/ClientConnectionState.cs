@@ -91,7 +91,7 @@ namespace Leto.Tls13.State
                         var hash = new byte[HandshakeHash.HashSize];
                         HandshakeHash.InterimHash(hash);
                         var writer = pipe.Alloc();
-                        ServerHandshake.ServerFinished(ref writer, this, KeySchedule.GenerateClientFinishedKey());
+                        ServerHandshakeTls13.ServerFinished(ref writer, this, KeySchedule.GenerateClientFinishedKey());
                         _dataForCurrentScheduleSent.Reset();
                         await writer.FlushAsync();
                         await _dataForCurrentScheduleSent;
