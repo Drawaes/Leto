@@ -12,7 +12,7 @@ namespace Leto.Tls13.BulkCipher.Windows
     public class BulkCipherProvider : IBulkCipherProvider
     {
         private static readonly int _bufferSize = 12;
-        private readonly SecureBufferPool _bufferPool = new SecureBufferPool(_bufferSize, 10000);
+        private readonly EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(_bufferSize, 10000);
 
         private SafeBCryptAlgorithmHandle _aesProvider;
 

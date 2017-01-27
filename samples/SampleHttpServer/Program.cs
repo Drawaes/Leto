@@ -72,16 +72,12 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
 
         public static void Main(string[] args)
         {
-            //using (var cert = new X509Certificate2(_rsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
-            //using (var cert2 = new X509Certificate2(_ecdsaCertPath, _certificatePassword, X509KeyStorageFlags.Exportable))
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
-
-                //list.AddCertificate(cert);
-                list.AddCertificateFile(_ecdsaCertPath, _certificatePassword);
-                //list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
-                //list.AddPEMCertificate(ecdsaCertPEM,ecdsaKeyPEM);
+                var thumb = "48026c976caaf7f3a72d38c17d16ce69d04a6053".ToUpper();
+                var provider = new Leto.Tls13.Certificates.Windows.CertificateProvider();
+                list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
                 using (var serverContext = new SecurePipelineListener(factory, list))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {

@@ -37,7 +37,7 @@ namespace Leto.Tls13.Sessions
             }
         }
 
-        public void GenerateSessionTicket(ref WritableBuffer writer, IConnectionStateTls13 state)
+        public void GenerateSessionTicket(ref WritableBuffer writer, IConnectionState state)
         {
             var key = _keyset[_currentIndex];
             key.WriteSessionKey(ref writer, state);

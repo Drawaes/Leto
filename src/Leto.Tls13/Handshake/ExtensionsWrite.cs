@@ -15,8 +15,9 @@ namespace Leto.Tls13.Handshake
 {
     public class ExtensionsWrite
     {
-        public static WritableBuffer WriteExtensionList(WritableBuffer buffer, IConnectionStateTls13 connectionState)
+        public static WritableBuffer WriteExtensionList(WritableBuffer buffer, IConnectionState connection)
         {
+            var connectionState = (IConnectionStateTls13)connection;
             if (connectionState.State == StateType.SendServerHello)
             {
                 if (connectionState.PskIdentity != -1)

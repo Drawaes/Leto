@@ -15,9 +15,10 @@ namespace Leto.Tls13Facts
         [Fact]
         public void LoadRSACertificateFromPEM()
         {
-            using (var list = new CertificateList())
+            var prov = new Tls13.Certificates.OpenSsl11.CertificateProvider();
+            using (var cert = prov.LoadCertificate(rsaCertPEM, rsaKeyPEM))
             {
-                list.AddPEMCertificate(rsaCertPEM, rsaKeyPEM);
+
             }
         }
 
@@ -25,19 +26,24 @@ namespace Leto.Tls13Facts
         public void LoadRSACertificateFromX509Certificate2()
         {
             using (var cert = new X509Certificate2(_certificatePath, _certificatePassword, X509KeyStorageFlags.Exportable))
-            using (var list = new CertificateList())
             {
-                list.AddCertificate(cert);
+                var prov = new Tls13.Certificates.OpenSsl11.CertificateProvider();
+                using (var cert2 = prov.LoadCertificate(cert, new X509CertificateCollection()))
+                {
+                }
             }
+
         }
 
         [Fact]
         public void LoadEcdsaCertificateFromX509Certificate2()
         {
             using (var cert = new X509Certificate2(_ecdsaCertificate, _certificatePassword, X509KeyStorageFlags.Exportable))
-            using (var list = new CertificateList())
             {
-                list.AddCertificate(cert);
+                var prov = new Tls13.Certificates.OpenSsl11.CertificateProvider();
+                using (var cert2 = prov.LoadCertificate(cert, new X509CertificateCollection()))
+                {
+                }
             }
         }
 

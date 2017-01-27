@@ -20,6 +20,7 @@ namespace Leto.Tls13.State
         IBulkCipherInstance WriteKey { get; }
         StateType State { get; }
         string ServerName { get; set; }
+        SignatureScheme SignatureScheme { get; set; }
         TlsVersion Version { get; }
         ResumptionProvider ResumptionProvider { get; }
         CertificateList CertificateList { get; }

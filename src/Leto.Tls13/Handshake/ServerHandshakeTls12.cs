@@ -11,6 +11,7 @@ namespace Leto.Tls13.Handshake
     {
         public static WritableBuffer SendCertificates(WritableBuffer buffer, IConnectionState connectionState)
         {
+            var startOfMessage = buffer.BytesWritten;
             BufferExtensions.WriteVector24Bit(ref buffer, (writer, state) =>
             {
                 WriteCertificateEntry(ref writer, connectionState.Certificate.CertificateData);
@@ -29,6 +30,13 @@ namespace Leto.Tls13.Handshake
             writer.Memory.Write24BitNumber(certificate.Length);
             writer.Advance(3);
             writer.Write(certificate);
+        }
+
+        public static WritableBuffer SendKeyExchange(WritableBuffer buffer, IConnectionState connectionState)
+        {
+            connectionState.KeyShare.WritePublicKey(ref buffer);
+
+            return buffer;
         }
     }
 }

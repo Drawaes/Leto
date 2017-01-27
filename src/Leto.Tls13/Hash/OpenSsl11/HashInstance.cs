@@ -47,7 +47,13 @@ namespace Leto.Tls13.Hash.OpenSsl11
             _ctx.Free();
             GC.SuppressFinalize(this);
         }
-        
+
+        public unsafe void FinishHash(byte* hash, int hashSize)
+        {
+            ThrowOnError(EVP_DigestFinal_ex(_ctx, hash, ref hashSize));
+            Dispose();
+        }
+
         ~HashInstance()
         {
             Dispose();

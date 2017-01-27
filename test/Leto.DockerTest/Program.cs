@@ -11,7 +11,7 @@ namespace Leto.DockerTest
     {
         public static void Main(string[] args)
         {
-            using (var buffer = new SecureBufferPoolUnix(100, 1000))
+            using (var buffer = new EphemeralBufferPoolUnix(100, 1000))
             {
 
             }

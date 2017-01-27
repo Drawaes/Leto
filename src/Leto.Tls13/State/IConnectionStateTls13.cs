@@ -16,7 +16,6 @@ namespace Leto.Tls13.State
         KeySchedule KeySchedule { get; set; }
         int PskIdentity { get; set; }
         PskKeyExchangeMode PskKeyExchangeMode { get; set; }
-        SignatureScheme SignatureScheme { get; set; }
         bool EarlyDataSupported { get; set; }
     }
 }

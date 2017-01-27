@@ -9,21 +9,19 @@ using static Interop.Kernel32;
 
 namespace Leto.Tls13.Internal
 {
-    public class SecureBufferPool:IDisposable
+    public class EphemeralBufferPoolWindows : IDisposable
     {
         private IntPtr _memory;
         private int _bufferCount;
         private int _bufferSize;
-        private ConcurrentQueue<SecureMemory> _buffers = new ConcurrentQueue<SecureMemory>();
+        private ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
         private UIntPtr _totalAllocated;
-        private byte[] _emptyData;
 
-        public SecureBufferPool(int bufferSize, int bufferCount)
+        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount)
         {
             if (bufferSize < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
             if (bufferCount < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
-            _emptyData = new byte[bufferSize];
             SYSTEM_INFO sysInfo;
             GetSystemInfo(out sysInfo);
             var pages = (int)Math.Ceiling((bufferCount * bufferSize) / (double)sysInfo.dwPageSize);
@@ -36,14 +34,14 @@ namespace Leto.Tls13.Internal
             VirtualLock(_memory, _totalAllocated);
             for (var i = 0; i < totalAllocated; i += bufferSize)
             {
-                var mem = new SecureMemory(IntPtr.Add(_memory, i), bufferSize);
+                var mem = new EphemeralMemory(IntPtr.Add(_memory, i), bufferSize);
                 _buffers.Enqueue(mem);
             }
         }
 
         public OwnedMemory<byte> Rent()
         {
-            SecureMemory returnValue;
+            EphemeralMemory returnValue;
             if (!_buffers.TryDequeue(out returnValue))
             {
                 ExceptionHelper.ThrowException(new OutOfMemoryException());
@@ -51,33 +49,33 @@ namespace Leto.Tls13.Internal
             returnValue.Rented = true;
             return returnValue;
         }
-        
+
         public void Return(OwnedMemory<byte> buffer)
         {
-            var buffer2 = buffer as SecureMemory;
+            var buffer2 = buffer as EphemeralMemory;
             if (buffer2 == null)
             {
-                Debug.Fail("Buffer was empty");
+                Debug.Fail("The buffer was not ephemeral");
                 return;
             }
             Debug.Assert(buffer2.Rented, "Returning a buffer that isn't rented!");
-            if(!buffer2.Rented)
+            if (!buffer2.Rented)
             {
                 return;
             }
             buffer2.Rented = false;
-            _emptyData.CopyTo(buffer.Span);
+            RtlZeroMemory(buffer2.Pointer, (UIntPtr)buffer2.Length);
             _buffers.Enqueue(buffer2);
         }
 
-        sealed class SecureMemory : OwnedMemory<byte>
+        sealed class EphemeralMemory : OwnedMemory<byte>
         {
-            public SecureMemory(IntPtr memory, int length) : base(null, 0, length, memory)
+            public EphemeralMemory(IntPtr memory, int length) : base(null, 0, length, memory)
             { }
             internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
         }
-        
+
         public unsafe void Dispose()
         {
             RtlZeroMemory(_memory, _totalAllocated);
@@ -85,7 +83,7 @@ namespace Leto.Tls13.Internal
             GC.SuppressFinalize(this);
         }
 
-        ~SecureBufferPool()
+        ~EphemeralBufferPoolWindows()
         {
             Dispose();
         }

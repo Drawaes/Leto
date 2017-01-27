@@ -36,34 +36,6 @@ namespace Leto.Tls13
         public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionState, WritableBuffer> writeContent, IConnectionState state) where T : struct
         {
             var bookMark = buffer.Memory;
-            if(typeof(T) == typeof(ushort))
-            {
-                buffer.WriteBigEndian((ushort)0);
-            }
-            else if (typeof(T) == typeof(byte))
-            {
-                buffer.WriteBigEndian((byte)0);
-            }
-            else
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.internal_error, $"Unkown vector type {typeof(T).Name}");
-            }
-            var sizeofVector = buffer.BytesWritten;
-            buffer = writeContent(buffer, state);
-            sizeofVector = buffer.BytesWritten - sizeofVector;
-            if(typeof(T) == typeof(ushort))
-            {
-                bookMark.Span.Write16BitNumber((ushort)sizeofVector);
-            }
-            else
-            {
-                bookMark.Span.Write((byte)sizeofVector);
-            }
-        }
-
-        public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionStateTls13, WritableBuffer> writeContent, IConnectionStateTls13 state) where T : struct
-        {
-            var bookMark = buffer.Memory;
             if (typeof(T) == typeof(ushort))
             {
                 buffer.WriteBigEndian((ushort)0);

@@ -29,22 +29,27 @@ namespace Leto.Tls13.Handshake
             return buffer;
         }
 
-        public static void ReadClientHelloTls12(ReadableBuffer readable, ServerStateTls12 connectionState)
+        public static void ReadClientHello(ref ReadableBuffer readable, IConnectionState connectionState)
         {
             readable = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
             readable = readable.Slice(sizeof(ushort));
-            connectionState.SetClientRandom(readable.Slice(0,RandomLength));
+            connectionState.SetClientRandom(readable.Slice(0, RandomLength));
             readable = readable.Slice(RandomLength);
-            //We don't support sessions so slice and throw
+            //We don't support sessions via id so slice and throw
             BufferExtensions.SliceVector<byte>(ref readable);
             //Slice Cipher Suite
             var ciphers = BufferExtensions.SliceVector<ushort>(ref readable);
-            if(connectionState.CipherSuite == null)
+            if (connectionState.CipherSuite == null)
             {
                 connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState.Version);
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref readable);
+        }
+
+        public static void ReadClientHelloTls12(ReadableBuffer readable, ServerStateTls12 connectionState)
+        {
+            ReadClientHello(ref readable, connectionState);
             if(readable.Length > 0)
             {
                 ExtensionsRead.ReadExtensionListTls(ref readable, connectionState);
@@ -53,26 +58,12 @@ namespace Leto.Tls13.Handshake
 
         public static void ReadClientHelloTls13(ReadableBuffer readable, IConnectionStateTls13 connectionState)
         {
-            var buffer = readable.Slice(HandshakeProcessor.HandshakeHeaderSize);
-            //Ignore version because it is already checked
-            buffer = buffer.Slice(sizeof(ushort));
-            //Random is legacy, it is just included in the secrets via the entire message MAC
-            buffer = buffer.Slice(RandomLength);
-            //We don't support sessions so slice it out and throw it away
-            BufferExtensions.SliceVector<byte>(ref buffer);
-            //Slice Cipher Suite
-            var ciphers = BufferExtensions.SliceVector<ushort>(ref buffer);
-            if (connectionState.CipherSuite == null)
-            {
-                connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState.Version);
-            }
-            //Skip compression
-            BufferExtensions.SliceVector<byte>(ref buffer);
-            if (buffer.Length == 0)
+            ReadClientHello(ref readable, connectionState);
+            if (readable.Length == 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "There is no extensions but we need them for Tls 1.3");
             }
-            ExtensionsRead.ReadExtensionListTls13(ref buffer, connectionState);
+            ExtensionsRead.ReadExtensionListTls13(ref readable, connectionState);
         }
 
         public static void ReadServerHello(ReadableBuffer readable, IConnectionStateTls13 connectionState)
@@ -126,7 +117,6 @@ namespace Leto.Tls13.Handshake
         public static WritableBuffer SendServerHello13(WritableBuffer buffer, IConnectionStateTls13 connectionState)
         {
             buffer.Ensure(RandomLength + sizeof(ushort));
-            Console.WriteLine($"Writing server hello, version is {connectionState.Version}");
             buffer.WriteBigEndian(connectionState.Version);
             var memoryToFill = buffer.Memory.Slice(0, RandomLength);
             connectionState.CryptoProvider.FillWithRandom(memoryToFill);

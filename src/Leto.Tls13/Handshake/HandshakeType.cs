@@ -14,6 +14,7 @@ namespace Leto.Tls13.Handshake
         hello_retry_request = 6,
         encrypted_extensions = 8,
         certificate = 11,
+        server_key_exchange = 12,
         certificate_request = 13,
         certificate_verify = 15,
         finished = 20,

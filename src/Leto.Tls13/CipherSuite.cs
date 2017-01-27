@@ -15,5 +15,6 @@ namespace Leto.Tls13
         public NamedGroup KeyExchangeGroup { get; set; }
         public ushort CipherCode { get; set; }
         public string CipherName { get; set; }
+        public KeyExchangeType ExchangeType { get;set;}
     }
 }

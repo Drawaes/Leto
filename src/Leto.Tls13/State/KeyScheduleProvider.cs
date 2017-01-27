@@ -12,7 +12,7 @@ namespace Leto.Tls13.State
         private const int MaxHashSize = 64;
         private const int StateSize = MaxHashSize * 6;
         private const int MaxConnections = 10000;
-        private SecureBufferPool _bufferPool = new SecureBufferPool(StateSize, MaxConnections);
+        private EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(StateSize, MaxConnections);
 
         public KeySchedule GetKeySchedule(IConnectionStateTls13 state, ReadableBuffer resumptionSecret)
         {

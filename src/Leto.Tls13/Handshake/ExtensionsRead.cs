@@ -91,6 +91,7 @@ namespace Leto.Tls13.Handshake
         public static void ReadExtensionListTls(ref ReadableBuffer buffer, IConnectionState connectionState)
         {
             var listLength = buffer.ReadBigEndian<ushort>();
+            ReadableBuffer signatureAlgoBuffer = default(ReadableBuffer);
             buffer = buffer.Slice(sizeof(ushort));
             if (buffer.Length < listLength)
             {
@@ -114,7 +115,17 @@ namespace Leto.Tls13.Handshake
                     case ExtensionType.server_name:
                         ReadServerName(extensionBuffer, connectionState);
                         break;
+                    case ExtensionType.signature_algorithms:
+                        signatureAlgoBuffer = extensionBuffer;
+                        break;
                 }
+            }
+            //Wait until the end to check the signature, here we select the
+            //certificate and this could depend on the server name indication
+            //as well as the trusted CA roots.
+            if (signatureAlgoBuffer.Length != 0)
+            {
+                ReadSignatureScheme(signatureAlgoBuffer, connectionState);
             }
         }
 
@@ -210,7 +221,7 @@ namespace Leto.Tls13.Handshake
             connectionState.KeyShare = ks ?? connectionState.KeyShare;
         }
 
-        public static void ReadSignatureScheme(ReadableBuffer buffer, IConnectionStateTls13 connectionState)
+        public static void ReadSignatureScheme(ReadableBuffer buffer, IConnectionState connectionState)
         {
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
             while (buffer.Length > 1)

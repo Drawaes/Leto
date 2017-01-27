@@ -41,7 +41,7 @@ namespace Leto.Tls13.Sessions
             state.KeySchedule = state.Listener.KeyScheduleProvider.GetKeySchedule(state, buffer);
         }
 
-        internal void WriteSessionKey(ref WritableBuffer writer, IConnectionStateTls13 state)
+        internal void WriteSessionKey(ref WritableBuffer writer, IConnectionState state)
         {
             writer.WriteBigEndian(_randomServiceId);
             writer.WriteBigEndian(_randomId);
@@ -52,7 +52,7 @@ namespace Leto.Tls13.Sessions
             //Now we have to encrypt the data
             writer.WriteBigEndian(state.CipherSuite.CipherCode);
             writer.WriteBigEndian(state.Version);
-            writer.Write(state.KeySchedule.ResumptionSecret);
+            //writer.Write(state.KeySchedule.ResumptionSecret);
         }
     }
 }

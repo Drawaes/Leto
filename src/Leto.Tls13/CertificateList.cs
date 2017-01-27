@@ -4,30 +4,20 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
-using Leto.Tls13.Certificates.OpenSsl11;
+using Leto.Tls13.Certificates.Windows;
+using Leto.Tls13.Internal;
 
 namespace Leto.Tls13
 {
     public sealed class CertificateList:IDisposable
     {
         private List<ICertificate> _certificates = new List<ICertificate>();
-        private ICertificateProvider _certificateProvider = new CertificateProvider();
-
-        public void AddCertificate(X509Certificate2 certificate)
+        
+        public void AddCertificate(ICertificate certificate)
         {
-            _certificates.Add(_certificateProvider.LoadCertificate(certificate));
+            _certificates.Add(certificate);
         }
-
-        public void AddCertificateFile(string filename, string password)
-        {
-            _certificates.Add(_certificateProvider.LoadPfx12(filename,password));
-        }
-
-        public void AddPEMCertificate(string certificate, string privateKey)
-        {
-            _certificates.Add(_certificateProvider.LoadCertificate(certificate, privateKey));
-        }
-
+        
         public ICertificate GetCertificate(string host, SignatureScheme type)
         {
             for (int i = 0; i < _certificates.Count; i++)

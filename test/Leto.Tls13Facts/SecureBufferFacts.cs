@@ -12,7 +12,7 @@ namespace Leto.Tls13Facts
         [Fact]
         public void SecureBufferDisposes()
         {
-            using (var pool = new SecureBufferPool(100, 100))
+            using (var pool = new EphemeralBufferPoolWindows(100, 100))
             {
 
             }

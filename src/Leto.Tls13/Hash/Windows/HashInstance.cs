@@ -34,6 +34,12 @@ namespace Leto.Tls13.Hash.Windows
             ExceptionHelper.CheckReturnCode(BCryptFinishHash(returnPtr, (IntPtr)hash, hashSize, 0));
         }
 
+        public unsafe void FinishHash(byte* hash, int hashSize)
+        {
+            ExceptionHelper.CheckReturnCode(BCryptFinishHash(_hash, (IntPtr)hash, hashSize, 0));
+            Dispose();
+        }
+
         public void Dispose()
         {
             _hash.Dispose();

@@ -9,8 +9,8 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
 {
     public class BulkCipherProvider:IBulkCipherProvider
     {
-        private static readonly int _bufferSize = 32 + 12 + 12;
-        private readonly SecureBufferPool _bufferPool = new SecureBufferPool(_bufferSize, 10000);
+        private const int MaxBufferSize = 32 + 12 + 12;
+        private readonly EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(MaxBufferSize, 10000);
 
         public IBulkCipherInstance GetCipherKey(BulkCipherType cipher)
         {

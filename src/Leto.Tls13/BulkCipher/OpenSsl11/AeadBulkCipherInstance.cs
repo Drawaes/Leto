@@ -18,7 +18,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         private int _iVLength;
         private int _keyLength;
         private EVP_CIPHER_CTX _ctx;
-        private SecureBufferPool _bufferPool;
+        private EphemeralBufferPoolWindows _bufferPool;
         private OwnedMemory<byte> _keyStore;
         private IntPtr _ivPointer;
         private IntPtr _keyPointer;
@@ -32,7 +32,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             Marshal.Copy(array,0, s_zeroBuffer, array.Length);
         }
 
-        internal unsafe AeadBulkCipherInstance(IntPtr cipherType, SecureBufferPool bufferPool, int ivLength, int keySize, int overhead)
+        internal unsafe AeadBulkCipherInstance(IntPtr cipherType, EphemeralBufferPoolWindows bufferPool, int ivLength, int keySize, int overhead)
         {
             _overhead = overhead;
             _bufferPool = bufferPool;

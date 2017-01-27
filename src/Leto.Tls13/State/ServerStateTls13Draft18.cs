@@ -30,7 +30,6 @@ namespace Leto.Tls13.State
         public override IBulkCipherInstance ReadKey => _readKey;
         public override IBulkCipherInstance WriteKey => _writeKey;
         public override TlsVersion Version => TlsVersion.Tls13Draft18;
-        public SignatureScheme SignatureScheme { get; set; }
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
         

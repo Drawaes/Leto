@@ -8,30 +8,34 @@ using static Interop.LibCrypto;
 
 namespace Leto.Tls13.Certificates.OpenSsl11
 {
-    public class CertificateProvider : ICertificateProvider
+    public class CertificateProvider
     {
-        public unsafe ICertificate LoadCertificate(X509Certificate2 certificate)
+        public unsafe ICertificate LoadCertificate(X509Certificate2 certificate, X509CertificateCollection certificateChain)
         {
-            //var data = certificate.Export(X509ContentType.Pkcs12, "");
-            //IntPtr pk12Pointer = IntPtr.Zero;
-            //fixed (byte* ptr = data)
-            //{
-            //    byte* ptr2 = ptr;
-            //    pk12Pointer = d2i_PKCS12(ref pk12Pointer, ref ptr2, data.Length);
-            //}
-            //try
-            //{
-            //    EVP_PKEY key;
-            //    X509 x509;
-            //    ThrowOnError(PKCS12_parse(pk12Pointer, "", out key, out x509, IntPtr.Zero));
-            //    var altString = GetNameString(x509);
-            //    return GetCertificate(key, x509, certificate.RawData,altString);
-            //}
-            //finally
-            //{
-            //    PKCS12_free(pk12Pointer);
-            //}
-            return null;
+            var data = certificate.Export(X509ContentType.Pkcs12, "");
+            IntPtr pk12Pointer = IntPtr.Zero;
+            fixed (byte* ptr = data)
+            {
+                byte* ptr2 = ptr;
+                pk12Pointer = d2i_PKCS12(ref pk12Pointer, ref ptr2, data.Length);
+            }
+            try
+            {
+                EVP_PKEY key;
+                X509 x509;
+                ThrowOnError(PKCS12_parse(pk12Pointer, "", out key, out x509, IntPtr.Zero));
+                var altString = GetNameString(x509);
+                byte[][] certChain = new byte[certificateChain.Count][];
+                for(int i = 0; i < certChain.Length;i++)
+                {
+                    certChain[i] = certificateChain[i].Export(X509ContentType.Cert);
+                }
+                return GetCertificate(key, x509, certificate.RawData, altString, certChain);
+            }
+            finally
+            {
+                PKCS12_free(pk12Pointer);
+            }
         }
 
         public unsafe ICertificate LoadPfx12(string filename, string password)

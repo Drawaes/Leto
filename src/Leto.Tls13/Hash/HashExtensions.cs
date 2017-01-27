@@ -9,9 +9,9 @@ namespace Leto.Tls13.Hash
 {
     public static class HashExtensions
     {
-        public static void HashData(this IHashInstance hash, ReadableBuffer datatToHash)
+        public static void HashData(this IHashInstance hash, ReadableBuffer dataToHash)
         {
-            foreach (var m in datatToHash)
+            foreach (var m in dataToHash)
             {
                 hash.HashData(m);
             }

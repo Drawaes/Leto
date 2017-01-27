@@ -23,14 +23,14 @@ namespace Leto.Tls13.BulkCipher.Windows
         private SafeBCryptKeyHandle _key;
         private string _chainingMode;
         private int _paddingSize = 0;
-        private SecureBufferPool _bufferPool;
+        private EphemeralBufferPoolWindows _bufferPool;
         private OwnedMemory<byte> _keyStore;
         private IntPtr _ivPointer;
         private byte[] _sequence;
         private int _blockLength;
         private int _maxTagLength;
         
-        internal unsafe AeadBulkCipherInstance(SafeBCryptAlgorithmHandle algo, SecureBufferPool bufferPool, BulkCipherType cipherType)
+        internal unsafe AeadBulkCipherInstance(SafeBCryptAlgorithmHandle algo, EphemeralBufferPoolWindows bufferPool, BulkCipherType cipherType)
         {
             _bufferPool = bufferPool;
             _algo = algo;

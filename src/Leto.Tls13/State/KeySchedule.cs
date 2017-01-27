@@ -22,10 +22,10 @@ namespace Leto.Tls13.State
         private byte* _serverApplicationTrafficSecret;
         private IConnectionStateTls13 _state;
         private byte[] _resumptionSecret;
-        private SecureBufferPool _pool;
+        private EphemeralBufferPoolWindows _pool;
         private OwnedMemory<byte> _stateData;
 
-        public unsafe KeySchedule(IConnectionStateTls13 state, SecureBufferPool pool, ReadableBuffer resumptionSecret)
+        public unsafe KeySchedule(IConnectionStateTls13 state, EphemeralBufferPoolWindows pool, ReadableBuffer resumptionSecret)
         {
             _pool = pool;
             _stateData = pool.Rent();

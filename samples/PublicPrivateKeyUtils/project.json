@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "allowUnsafe": true
+  },
+
+  "dependencies": {
+    "Microsoft.NETCore.App": {
+      "version": "1.1.0"
+    },
+    "Leto.Tls13": { "target": "project" }
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {}
+  },
+  "runtimes": { "win8-x64": {} }
+}

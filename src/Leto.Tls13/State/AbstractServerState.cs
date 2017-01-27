@@ -31,6 +31,7 @@ namespace Leto.Tls13.State
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
         public IHashInstance HandshakeHash { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
+        public SignatureScheme SignatureScheme { get; set; }
         public SecurePipelineListener Listener => _listener;
         public CertificateList CertificateList => _listener.CertificateList;
         public virtual IBulkCipherInstance ReadKey { get;}

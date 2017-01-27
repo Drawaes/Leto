@@ -9,5 +9,7 @@ internal partial class Interop
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
         internal static extern unsafe int PKCS12_parse(IntPtr p12, string pass, out EVP_PKEY pkey, out X509 cert, out IntPtr certStack);
+        [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern unsafe int PKCS12_parse(IntPtr p12, string pass, out EVP_PKEY pkey, out X509 cert, IntPtr certStack);
     }
 }
