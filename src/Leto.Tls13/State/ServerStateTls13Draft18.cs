@@ -78,10 +78,6 @@ namespace Leto.Tls13.State
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
                     ServerHandshakeTls13.SendFlightOne(ref writer, this);
-                    DataForCurrentScheduleSent.Reset();
-                    await writer.FlushAsync();
-                    await DataForCurrentScheduleSent;
-                    writer = pipe.Alloc();
                     ServerHandshakeTls13.SendFlightOne2(ref writer, this);
                     DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();

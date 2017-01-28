@@ -24,9 +24,24 @@ namespace Leto.Tls13
 
         public CryptoProvider()
         {
-            _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); //new KeyExchange.Windows.KeyshareProvider();//
-            _hashProvider = new Hash.OpenSsl11.HashProvider(); //new Hash.Windows.HashProvider(); // 
-            _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); 
+                _hashProvider = new Hash.OpenSsl11.HashProvider();
+                _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _keyShareProvider = new KeyExchange.Windows.KeyshareProvider();
+                _hashProvider = new Hash.Windows.HashProvider();
+
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            
 
             _prioritySignatureSchemes = new SignatureScheme[]
             {
