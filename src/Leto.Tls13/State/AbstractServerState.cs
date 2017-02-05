@@ -18,6 +18,8 @@ namespace Leto.Tls13.State
         private SecurePipelineListener _listener;
         protected StateType _state;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
+        private byte[] _clientRandom;
+        private byte[] _serverRandom;
 
         public AbstractServerState(SecurePipelineListener listener)
         {
@@ -36,18 +38,38 @@ namespace Leto.Tls13.State
         public CertificateList CertificateList => _listener.CertificateList;
         public virtual IBulkCipherInstance ReadKey { get;}
         public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
+        public byte[] ClientRandom => _clientRandom;
+        public byte[] ServerRandom => _serverRandom;
         public string ServerName { get;set;}
         public StateType State => _state;
         public abstract TlsVersion Version { get; }
         public virtual IBulkCipherInstance WriteKey {get; }
-                
+        public abstract ushort TlsRecordVersion { get; }
+
         public abstract void HandleAlertMessage(ReadableBuffer readable);
         public abstract Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
         public void StartHandshake(ref WritableBuffer writer)
         {
 
         }
-        public abstract void SetClientRandom(ReadableBuffer buffer);
+        public void SetClientRandom(ReadableBuffer readableBuffer)
+        {
+            if (readableBuffer.Length != Hello.RandomLength)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Invalid client random length");
+            }
+            _clientRandom = readableBuffer.ToArray();
+        }
+
+        public void SetServerRandom(byte[] readableBuffer)
+        {
+            if (readableBuffer.Length != Hello.RandomLength)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Invalid client random length");
+            }
+            _serverRandom = readableBuffer;
+        }
+
         public abstract void Dispose();
     }
 }

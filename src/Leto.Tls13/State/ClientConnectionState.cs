@@ -49,6 +49,30 @@ namespace Leto.Tls13.State
         public IBulkCipherInstance WriteKey => _writeKey;
         public bool EarlyDataSupported { get; set; }
 
+        public ushort TlsRecordVersion
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public byte[] ClientRandom
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public byte[] ServerRandom
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             switch (State)
@@ -163,6 +187,16 @@ namespace Leto.Tls13.State
         public void SetClientRandom(ReadableBuffer readableBuffer)
         {
             //Not required in Tls13 as the whole message context is used to seed the secrets
+        }
+
+        public void SetServerRandom(ReadableBuffer readableBuffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetServerRandom(byte[] readableBuffer)
+        {
+            throw new NotImplementedException();
         }
 
         ~ClientConnectionState()

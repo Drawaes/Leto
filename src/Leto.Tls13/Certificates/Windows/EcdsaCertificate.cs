@@ -15,7 +15,6 @@ namespace Leto.Tls13.Certificates.Windows
         private byte[][] _certificateChain;
         private X509Certificate2 _certificate;
         private System.Security.Cryptography.ECDsa _privateKey;
-        private CertificateType _certificateType;
         private SignatureScheme _supportedSignatureScheme;
         private HashType _hashType;
 
@@ -31,17 +30,15 @@ namespace Leto.Tls13.Certificates.Windows
             switch(curve.Curve.Oid.FriendlyName)
             {
                 case "nistP256":
-                    _certificateType = CertificateType.Ecdsa_secp256r1;
+                    
                     _supportedSignatureScheme = SignatureScheme.ecdsa_secp256r1_sha256;
                     _hashType = HashType.SHA256;
                     break;
                 case "nistP384":
-                    _certificateType = CertificateType.Ecdsa_secp384r1;
                     _supportedSignatureScheme = SignatureScheme.ecdsa_secp384r1_sha384;
                     _hashType = HashType.SHA384;
                     break;
                 case "nistP521":
-                    _certificateType = CertificateType.Ecdsa_secp521r1;
                     _supportedSignatureScheme = SignatureScheme.ecdsa_secp521r1_sha512;
                     _hashType = HashType.SHA512;
                     break;
@@ -59,7 +56,7 @@ namespace Leto.Tls13.Certificates.Windows
 
         public byte[][] CertificateChain => _certificateChain;
         public byte[] CertificateData => _certificate.RawData;
-        public CertificateType CertificateType => CertificateType.Ecdsa_secp384r1;
+        public CertificateType CertificateType => CertificateType.ecdsa;
 
         public string HostName
         {
@@ -71,7 +68,7 @@ namespace Leto.Tls13.Certificates.Windows
 
         public int SignatureSize(SignatureScheme scheme)
         {
-            return _privateKey.KeySize;
+            return _privateKey.KeySize /8;
         }
 
         public unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer, byte* message, int messageLength)

@@ -8,6 +8,7 @@ using Leto.Tls13.Certificates;
 using Leto.Tls13.Internal;
 using Leto.Tls13.Sessions;
 using Leto.Tls13.State;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13
 {
@@ -20,13 +21,17 @@ namespace Leto.Tls13
         private ResumptionProvider _resumptionProvider;
         private bool _allowTicketResumption;
         private ServerNameProvider _serverNameProvider;
+        private ILoggerFactory _logFactory;
+        private ILogger<SecurePipelineListener> _logger;
 
-        public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList)
+        public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
         {
+            _logFactory = logFactory;
+            _logger = logFactory?.CreateLogger<SecurePipelineListener>();
             _factory = factory;
             _serverNameProvider = new ServerNameProvider();
             _keyscheduleProvider = new KeyScheduleProvider();
-            _cryptoProvider = new CryptoProvider();
+            _cryptoProvider = new CryptoProvider(certificateList);
             _resumptionProvider = new ResumptionProvider(4, _cryptoProvider);
             _certificateList = certificateList;
         }
@@ -40,6 +45,7 @@ namespace Leto.Tls13
 
         public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
         {
+            _logger?.LogTrace("Created new secure server pipeline");
             return new SecurePipelineConnection(pipeline, _factory, this);
         }
 

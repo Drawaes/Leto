@@ -38,6 +38,7 @@ namespace Leto.Tls13.State
         {
             if (state.HandshakeHash == null)
             {
+                var t = typeof(string);
                 state.HandshakeHash = state.CryptoProvider.HashProvider.GetHashInstance(state.CipherSuite.HashType);
             }
             state.HandshakeHash.HashData(readable);

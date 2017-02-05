@@ -20,37 +20,49 @@ namespace Leto.Tls13
         private CipherSuite[] _priorityOrderedCipherSuitesTls13;
         private CipherSuite[] _priorityOrderedCipherSuitesTls12;
         private NamedGroup[] _priorityOrderedKeyExchanges;
+        private NamedGroup[] _priorityOrderedEchdeExchanges;
         private SignatureScheme[] _prioritySignatureSchemes;
+        private CertificateList _certificateList;
 
-        public CryptoProvider()
+        public CryptoProvider(CertificateList certificateList)
         {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            _certificateList = certificateList;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider(); 
+                _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
                 _hashProvider = new Hash.OpenSsl11.HashProvider();
                 _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 _keyShareProvider = new KeyExchange.Windows.KeyshareProvider();
+                //_keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
                 _hashProvider = new Hash.Windows.HashProvider();
-
+                _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
             }
             else
             {
                 throw new NotImplementedException();
             }
 
-            
+            _priorityOrderedEchdeExchanges = new NamedGroup[]
+            {
+                NamedGroup.secp256r1,
+                NamedGroup.secp384r1,
+                NamedGroup.secp521r1
+            };
 
             _prioritySignatureSchemes = new SignatureScheme[]
             {
                 SignatureScheme.ecdsa_secp256r1_sha256,
                 SignatureScheme.ecdsa_secp384r1_sha384,
                 SignatureScheme.ecdsa_secp521r1_sha512,
-                SignatureScheme.rsa_pss_sha256,
-                SignatureScheme.rsa_pss_sha384,
-                SignatureScheme.rsa_pss_sha512
+                SignatureScheme.rsa_pkcs1_sha256,
+                SignatureScheme.rsa_pkcs1_sha384,
+                SignatureScheme.rsa_pkcs1_sha512,
+                //SignatureScheme.rsa_pss_sha256,
+                //SignatureScheme.rsa_pss_sha384,
+                //SignatureScheme.rsa_pss_sha512
             };
 
             _priorityOrderedKeyExchanges = new NamedGroup[]
@@ -83,14 +95,26 @@ namespace Leto.Tls13
                     //new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0x009D, CipherName = "TLS_RSA_WITH_AES_256_GCM_SHA384" },
                     //new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0x009E, CipherName = "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256" },
                     //new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0x009F, CipherName = "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384" },
-                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02B, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", ExchangeType = KeyExchangeType.Ecdhe },
-                    new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC02C, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", ExchangeType = KeyExchangeType.Ecdhe },
-                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02F, CipherName = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" },
-                    //new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC030, CipherName = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" },
-                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA8, CipherName ="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256" },
-                    new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA9, CipherName ="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", ExchangeType = KeyExchangeType.Ecdhe },
+                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02B, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", ExchangeType = KeyExchangeType.Ecdhe },
+                    //new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC02C, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", ExchangeType = KeyExchangeType.Ecdhe },
+                    new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02F, CipherName = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" , ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.rsa},
+                    new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC030, CipherName = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" , ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.rsa},
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA8, CipherName ="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256" , ExchangeType = KeyExchangeType.Ecdhe},
+                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA9, CipherName ="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", ExchangeType = KeyExchangeType.Ecdhe },
                     //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCAA, CipherName = "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256" },
                 };
+        }
+
+        public IKeyshareInstance GetDefaultKeyShare(KeyExchangeType exchangeType)
+        {
+            switch (exchangeType)
+            {
+                case KeyExchangeType.Ecdhe:
+                    return KeyShareProvider.GetKeyShareInstance(_priorityOrderedEchdeExchanges[0]);
+                default:
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"No matching key exchange for {exchangeType}");
+                    return null;
+            }
         }
 
         public IHashProvider HashProvider => _hashProvider;
@@ -145,7 +169,7 @@ namespace Leto.Tls13
             }
             return null;
         }
-        
+
         public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer, TlsVersion version)
         {
             var list = GetCipherSuites(version);
@@ -165,9 +189,14 @@ namespace Leto.Tls13
             {
                 for (var x = 0; x < numberOfCiphers; x++)
                 {
-                    if (peerCipherList[x] == list[i].CipherCode)
+                    var suite = list[i];
+                    
+                    if (peerCipherList[x] == suite.CipherCode)
                     {
-                        return list[i];
+                        if (suite.RequiredCertificateType == CertificateType.anonymous || _certificateList.GetCertificate(null, (SignatureScheme)((ushort)suite.HashType << 8 | (ushort)suite.RequiredCertificateType)) != null)
+                        {
+                            return list[i];
+                        }
                     }
                 }
             }
@@ -177,11 +206,11 @@ namespace Leto.Tls13
 
         private CipherSuite[] GetCipherSuites(TlsVersion version)
         {
-            if(version == TlsVersion.Tls12)
+            if (version == TlsVersion.Tls12)
             {
                 return _priorityOrderedCipherSuitesTls12;
             }
-            if(version == TlsVersion.Tls13Draft18)
+            if (version == TlsVersion.Tls13Draft18)
             {
                 return _priorityOrderedCipherSuitesTls13;
             }

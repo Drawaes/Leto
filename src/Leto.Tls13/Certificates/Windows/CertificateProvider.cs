@@ -17,19 +17,19 @@ namespace Leto.Tls13.Certificates.Windows
         public ICertificate LoadCertificate(X509Certificate2 cert, X509Certificate2Collection chainCertificates)
         {
             var rsaKey = cert.GetRSAPrivateKey();
-            
-            if(rsaKey != null)
+
+            if (rsaKey != null)
             {
                 return new RsaCertificate(cert, chainCertificates);
             }
             var ecdsaKey = cert.GetECDsaPrivateKey();
-            if(ecdsaKey != null)
+            if (ecdsaKey != null)
             {
                 return new EcdsaCertificate(cert, chainCertificates);
             }
             throw new NotSupportedException();
         }
-        
+
         public ICertificate LoadCertificateFromStore(string thumbprint, bool pullChain, StoreLocation storeLocation = StoreLocation.CurrentUser, StoreName storeName = StoreName.My)
         {
             using (var store = new X509Store(storeName, storeLocation))
@@ -47,7 +47,7 @@ namespace Leto.Tls13.Certificates.Windows
                 {
                     //We have a chain so we can reverse the chain (we need to send the certificates with the 
                     //root last for TLS
-                    for (int i = chain.ChainElements.Count - 1; i > -1; i--)
+                    for (int i = 0; i < chain.ChainElements.Count; i++)
                     {
                         chainCertificates.Add(chain.ChainElements[i].Certificate);
                     }

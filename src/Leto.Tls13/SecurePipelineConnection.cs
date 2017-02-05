@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Leto.Tls13.Internal;
 using Leto.Tls13.RecordLayer;
 using Leto.Tls13.State;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13
 {
@@ -20,9 +21,11 @@ namespace Leto.Tls13
         private IConnectionState _state;
         private bool _startedApplicationWrite;
         private SecurePipelineListener _listener;
+        private ILogger<SecurePipelineConnection> _logger;
 
-        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener)
+        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener, ILogger<SecurePipelineConnection> logger)
         {
+            _logger = logger;
             _listener = listener;
             _lowerConnection = pipeline;
             _outputPipe = factory.Create();
@@ -58,7 +61,7 @@ namespace Leto.Tls13
                                 _state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener);
                                 HandshakeWriting();
                             }
-                            Console.WriteLine($"Received TLS frame {recordType}");
+                            _logger?.LogTrace($"Received TLS frame {recordType}");
                             if (recordType == RecordType.Handshake)
                             {
                                 var writer = _handshakePipe.Alloc();
@@ -79,10 +82,17 @@ namespace Leto.Tls13
                             }
                             if (recordType == RecordType.Application)
                             {
-                                Console.WriteLine("Writing Application Data");
+                                _logger?.LogTrace("Writing Application Data");
                                 var writer = _outputPipe.Alloc();
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();
+                                continue;
+                            }
+                            if(recordType == RecordType.ChangeCipherSpec)
+                            {
+                                var writer = _outputPipe.Alloc();
+                                _state.HandleChangeCipherSpec(messageBuffer, ref writer);
+                                
                                 continue;
                             }
                             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Unknown message type {recordType}");
@@ -168,7 +178,7 @@ namespace Leto.Tls13
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception was thrown {ex}");
+                _logger?.LogDebug($"Exception was thrown {ex}");
                 //Nom Nom
             }
             _lowerConnection.Output.Complete();
@@ -227,7 +237,7 @@ namespace Leto.Tls13
 
         public void Dispose()
         {
-            Console.WriteLine("Disposed connection");
+            _logger?.LogTrace("Disposed connection");
             _lowerConnection.Dispose();
             GC.SuppressFinalize(this);
         }

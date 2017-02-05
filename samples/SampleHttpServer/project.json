@@ -8,6 +8,9 @@
   "dependencies": {
     "Leto.Tls13": { "target": "project" },
     "Microsoft.AspNetCore.Http.Features": "1.1.0",
+    "Microsoft.Extensions.Logging": "1.1.0",
+    "Microsoft.Extensions.Logging.Console": "1.1.0",
+    "Microsoft.Extensions.Logging.Debug": "1.1.0",
     "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
     "Microsoft.NETCore.App":{"version" : "1.1.0"},
     "System.IO.Pipelines": "0.1.0-e170114-1",

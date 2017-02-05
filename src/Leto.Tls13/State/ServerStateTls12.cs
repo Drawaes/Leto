@@ -26,16 +26,8 @@ namespace Leto.Tls13.State
         public override IBulkCipherInstance ReadKey => _readKey;
         public override TlsVersion Version => TlsVersion.Tls12;
         public override IBulkCipherInstance WriteKey => _writeKey;
-                
-        public override void SetClientRandom(ReadableBuffer readableBuffer)
-        {
-            if (readableBuffer.Length != Hello.RandomLength)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Invalid client random length");
-            }
-            _clientRandom = readableBuffer.ToArray();
-        }
-
+        public override ushort TlsRecordVersion => 0x0303;
+        
         public override void HandleAlertMessage(ReadableBuffer messageBuffer)
         {
             var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
@@ -68,9 +60,23 @@ namespace Leto.Tls13.State
                     this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
                     if (CipherSuite.ExchangeType == KeyExchangeType.Ecdhe || CipherSuite.ExchangeType == KeyExchangeType.Dhe)
                     {
+                        if(KeyShare == null)
+                        {
+                            KeyShare = CryptoProvider.GetDefaultKeyShare(CipherSuite.ExchangeType);
+                        }
                         this.WriteHandshake(ref writer, HandshakeType.server_key_exchange, ServerHandshakeTls12.SendKeyExchange);
                     }
+                    this.WriteHandshake(ref writer, HandshakeType.server_hello_done, (w,state) => w );
                     await writer.FlushAsync();
+                    _state = StateType.WaitClientKeyExchange;
+                    break;
+                case StateType.WaitClientKeyExchange:
+                    if(handshakeMessageType != HandshakeType.client_key_exchange)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Received a {handshakeMessageType} when we expected a {HandshakeType.client_key_exchange}");
+                    }
+                    this.HandshakeHash.HashData(buffer);
+                    KeyShare.SetPeerKey(buffer.Slice(5));
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");

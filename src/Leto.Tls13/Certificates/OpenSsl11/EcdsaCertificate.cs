@@ -60,7 +60,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             return scheme == _scheme;
         }
 
-        public CertificateType CertificateType => CertificateType.Ecdsa_secp256r1;
+        public CertificateType CertificateType => CertificateType.ecdsa;
         public byte[] CertificateData => _certData;
         public string HostName => _altNameString;
         public byte[][] CertificateChain => _chain;

@@ -62,12 +62,17 @@ namespace Leto.Tls13.KeyExchange.Windows
 
         private void GenerateKeys()
         {
+            if (_key != null)
+            {
+                return;
+            }
             ExceptionHelper.CheckReturnCode(BCryptGenerateKeyPair(_algo, out _key, 0, 0));
             ExceptionHelper.CheckReturnCode(BCryptFinalizeKeyPair(_key, 0));
         }
 
         public unsafe void WritePublicKey(ref WritableBuffer keyBuffer)
         {
+            GenerateKeys();
             var tmpBuffer = stackalloc byte[_keyExchangeSize + 8];
             int resultSize;
             ExceptionHelper.CheckReturnCode(BCryptExportKey(_key, IntPtr.Zero, KeyBlobType.BCRYPT_ECCPUBLIC_BLOB, (IntPtr)tmpBuffer, _keyExchangeSize + 8, out resultSize, 0));

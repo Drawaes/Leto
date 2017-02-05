@@ -27,7 +27,7 @@ namespace Leto.Tls13.Certificates.Windows
 
         public byte[][] CertificateChain => _certificateChain;
         public byte[] CertificateData => _certificate.RawData;
-        public CertificateType CertificateType => CertificateType.Rsa;
+        public CertificateType CertificateType => CertificateType.rsa;
 
         public string HostName
         {
@@ -39,22 +39,65 @@ namespace Leto.Tls13.Certificates.Windows
         
         public int SignatureSize(SignatureScheme scheme)
         {
-            return _privateKey.KeySize;
+            return _privateKey.KeySize / 8;
         }
 
         public unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer, byte* message, int messageLength)
         {
-            throw new NotImplementedException();
+            var span = new Span<byte>(message, messageLength);
+            var result = _privateKey.SignData(span.ToArray(), GetHashName(scheme), GetPaddingMode(scheme));
+            writer.Write(result);
+            return result.Length;
+        }
+
+        private System.Security.Cryptography.RSASignaturePadding GetPaddingMode(SignatureScheme scheme)
+        {
+            switch(scheme)
+            {
+                case SignatureScheme.rsa_pkcs1_sha256:
+                case SignatureScheme.rsa_pkcs1_sha384:
+                case SignatureScheme.rsa_pkcs1_sha512:
+                    return System.Security.Cryptography.RSASignaturePadding.Pkcs1;
+                case SignatureScheme.rsa_pss_sha256:
+                case SignatureScheme.rsa_pss_sha384:
+                case SignatureScheme.rsa_pss_sha512:
+                    return System.Security.Cryptography.RSASignaturePadding.Pss;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private System.Security.Cryptography.HashAlgorithmName GetHashName(SignatureScheme scheme)
+        {
+            switch(scheme)
+            {
+                case SignatureScheme.rsa_pkcs1_sha256:
+                case SignatureScheme.rsa_pss_sha256:
+                    return System.Security.Cryptography.HashAlgorithmName.SHA256;
+                case SignatureScheme.rsa_pkcs1_sha384:
+                case SignatureScheme.rsa_pss_sha384:
+                    return System.Security.Cryptography.HashAlgorithmName.SHA384;
+                case SignatureScheme.rsa_pkcs1_sha512:
+                case SignatureScheme.rsa_pss_sha512:
+                    return System.Security.Cryptography.HashAlgorithmName.SHA512;
+            }
+            throw new InvalidOperationException();
         }
 
         public bool SupportsSignatureScheme(SignatureScheme scheme)
         {
-            throw new NotImplementedException();
+            switch(scheme)
+            {
+                case SignatureScheme.rsa_pkcs1_sha256:
+                case SignatureScheme.rsa_pkcs1_sha384:
+                case SignatureScheme.rsa_pkcs1_sha512:
+                    return true;
+            }
+            return false;
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }

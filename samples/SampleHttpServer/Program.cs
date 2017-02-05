@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using SampleHttpServer.Http;
 
@@ -72,13 +73,19 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
 
         public static void Main(string[] args)
         {
+            var logFactory = new LoggerFactory();
+            logFactory.AddConsole().AddDebug(LogLevel.Trace);
+
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
             {
                 var thumb = "48026c976caaf7f3a72d38c17d16ce69d04a6053".ToUpper();
                 var provider = new Leto.Tls13.Certificates.Windows.CertificateProvider();
-                list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
-                using (var serverContext = new SecurePipelineListener(factory, list))
+                list.AddCertificate(provider.LoadCertificate(new X509Certificate2(_rsaCertPath, _certificatePassword)));
+                //list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
+                //var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
+                //list.AddCertificate(provider.LoadCertificate(ecdsaCertPEM, ecdsaKeyPEM));
+                using (var serverContext = new SecurePipelineListener(factory, list, logFactory))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
                     var ip = IPAddress.Any;
@@ -125,7 +132,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
             }
             finally
             {
-                
+
             }
         }
     }

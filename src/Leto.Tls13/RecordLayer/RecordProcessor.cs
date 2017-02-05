@@ -10,7 +10,6 @@ namespace Leto.Tls13.RecordLayer
     public class RecordProcessor
     {
         public const int PlainTextMaxSize = 2 << 13;
-        private const ushort TlsRecordVersion = 0x0301;
         public const int RecordHeaderLength = 5;
 
         public static RecordType ReadRecord(ref ReadableBuffer messageBuffer, State.IConnectionState state)
@@ -40,13 +39,13 @@ namespace Leto.Tls13.RecordLayer
             if(state.WriteKey == null)
             {
                 buffer.WriteBigEndian(recordType);
-                buffer.WriteBigEndian(TlsRecordVersion);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
                 buffer.WriteBigEndian((ushort)plainText.Length);
                 buffer.Write(plainText);
                 return;
             }
             buffer.WriteBigEndian(RecordType.Application);
-            buffer.WriteBigEndian(TlsRecordVersion);
+            buffer.WriteBigEndian(state.TlsRecordVersion);
             var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
             buffer.WriteBigEndian((ushort)totalSize);
             state.WriteKey.Encrypt(ref buffer, plainText, recordType);
@@ -58,13 +57,13 @@ namespace Leto.Tls13.RecordLayer
             if (state.WriteKey == null)
             {
                 buffer.WriteBigEndian(recordType);
-                buffer.WriteBigEndian(TlsRecordVersion);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
                 buffer.WriteBigEndian((ushort)plainText.Length);
                 buffer.Append(plainText);
                 return;
             }
             buffer.WriteBigEndian(RecordType.Application);
-            buffer.WriteBigEndian(TlsRecordVersion);
+            buffer.WriteBigEndian(state.TlsRecordVersion);
             var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
             buffer.WriteBigEndian((ushort)totalSize);
             state.WriteKey.Encrypt(ref buffer, plainText, recordType);
@@ -87,7 +86,7 @@ namespace Leto.Tls13.RecordLayer
             }
             var frameType = buffer.ReadBigEndian<RecordType>();
             if (frameType != RecordType.Alert && frameType != RecordType.Application
-                && frameType != RecordType.Handshake)
+                && frameType != RecordType.Handshake && frameType != RecordType.ChangeCipherSpec)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, $"unknown frame type {frameType}");
             }

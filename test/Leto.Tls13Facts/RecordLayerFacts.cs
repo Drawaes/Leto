@@ -30,7 +30,7 @@ namespace Leto.Tls13Facts
         static byte[] message1 = HkdfFacts.StringToByteArray(ciphertext1Hex);
         static byte[] message2 = HkdfFacts.StringToByteArray(ciphertext2Hex);
         static byte[] plainText = HkdfFacts.StringToByteArray(plaintextHex);
-        private static SecurePipelineListener _listener = new SecurePipelineListener(null, null);
+        private static SecurePipelineListener _listener = new SecurePipelineListener(null, null, null);
 
         [Fact]
         public void TestRecordDecrypt()

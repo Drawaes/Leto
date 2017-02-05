@@ -30,9 +30,14 @@ namespace Leto.Tls13.State
         CipherSuite CipherSuite { get; set; }
         IHashInstance HandshakeHash { get; set; }
         SecurePipelineListener Listener { get; }
+        byte[] ClientRandom { get;}
+        byte[] ServerRandom { get;}
+        ushort TlsRecordVersion { get; }
         void SetClientRandom(ReadableBuffer readableBuffer);
+        void SetServerRandom(byte[] readableBuffer);
         void StartHandshake(ref WritableBuffer writer);
         void HandleAlertMessage(ReadableBuffer readable);
+        void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe);
         Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
     }
 }

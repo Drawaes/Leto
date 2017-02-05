@@ -24,7 +24,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             _derCertData = derCertData;
         }
 
-        public CertificateType CertificateType => CertificateType.Rsa;
+        public CertificateType CertificateType => CertificateType.rsa;
         public byte[] CertificateData => _derCertData;
         public string HostName => _altNameString;
 

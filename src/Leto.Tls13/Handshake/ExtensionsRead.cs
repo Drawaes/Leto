@@ -115,8 +115,14 @@ namespace Leto.Tls13.Handshake
                     case ExtensionType.server_name:
                         ReadServerName(extensionBuffer, connectionState);
                         break;
-                    case ExtensionType.signature_algorithms:
-                        signatureAlgoBuffer = extensionBuffer;
+                    //case ExtensionType.signature_algorithms:
+                    //    signatureAlgoBuffer = extensionBuffer;
+                    //    break;
+                    case ExtensionType.supported_groups:
+                        if(connectionState.CipherSuite.ExchangeType == KeyExchange.KeyExchangeType.Ecdhe)
+                        {
+                            connectionState.CryptoProvider.GetKeyshareFromNamedGroups(extensionBuffer);
+                        }
                         break;
                 }
             }

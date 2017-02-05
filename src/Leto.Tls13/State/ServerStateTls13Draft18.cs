@@ -32,7 +32,8 @@ namespace Leto.Tls13.State
         public override TlsVersion Version => TlsVersion.Tls13Draft18;
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
-        
+        public override ushort TlsRecordVersion => 0x0301;
+
         public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
@@ -199,11 +200,6 @@ namespace Leto.Tls13.State
             GC.SuppressFinalize(this);
         }
         
-        public override void SetClientRandom(ReadableBuffer readableBuffer)
-        {
-            //Not used by itself in Tls 1.3 as the entire context is used for the random. 
-        }
-
         ~ServerStateTls13Draft18()
         {
             Dispose();

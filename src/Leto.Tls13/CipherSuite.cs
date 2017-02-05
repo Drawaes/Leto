@@ -12,9 +12,9 @@ namespace Leto.Tls13
     {
         public HashType HashType { get; set; }
         public BulkCipherType BulkCipherType { get; set; }
-        public NamedGroup KeyExchangeGroup { get; set; }
         public ushort CipherCode { get; set; }
         public string CipherName { get; set; }
         public KeyExchangeType ExchangeType { get;set;}
+        public Certificates.CertificateType RequiredCertificateType { get;set;}
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Certificates;
 using Leto.Tls13.KeyExchange;
 using Leto.Tls13.State;
 
@@ -54,6 +55,8 @@ namespace Leto.Tls13.Handshake
             {
                 ExtensionsRead.ReadExtensionListTls(ref readable, connectionState);
             }
+            connectionState.SignatureScheme = (SignatureScheme)((ushort)connectionState.CipherSuite.HashType << 8 | (ushort)connectionState.CipherSuite.RequiredCertificateType);
+            connectionState.Certificate = connectionState.CertificateList.GetCertificate(null, connectionState.SignatureScheme);
         }
 
         public static void ReadClientHelloTls13(ReadableBuffer readable, IConnectionStateTls13 connectionState)
@@ -106,6 +109,7 @@ namespace Leto.Tls13.Handshake
             buffer.WriteBigEndian(connectionState.Version);
             var memoryToFill = buffer.Memory.Slice(0, RandomLength);
             connectionState.CryptoProvider.FillWithRandom(memoryToFill);
+            connectionState.SetServerRandom(memoryToFill.ToArray());
             buffer.Advance(RandomLength);
             buffer.WriteBigEndian<byte>(0);
             buffer.WriteBigEndian(connectionState.CipherSuite.CipherCode);
