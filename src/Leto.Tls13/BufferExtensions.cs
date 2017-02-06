@@ -118,7 +118,7 @@ namespace Leto.Tls13
             buffer.Span.Slice(2).Write((byte)(numberToWrite & 0x0000ff));
         }
 
-        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionState, WritableBuffer> writeContent, IConnectionState state)
+        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionStateTls12, WritableBuffer> writeContent, IConnectionStateTls12 state)
         {
             buffer.Ensure(3);
             var bookmark = buffer.Memory;

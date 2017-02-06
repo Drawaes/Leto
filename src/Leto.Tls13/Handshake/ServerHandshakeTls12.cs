@@ -12,13 +12,13 @@ namespace Leto.Tls13.Handshake
 {
     public class ServerHandshakeTls12
     {
-        public static WritableBuffer SendCertificates(WritableBuffer buffer, IConnectionState connectionState)
+        public static WritableBuffer SendCertificates(WritableBuffer buffer, IConnectionStateTls12 connectionState)
         {
             var startOfMessage = buffer.BytesWritten;
             BufferExtensions.WriteVector24Bit(ref buffer, (writer, state) =>
             {
                 WriteCertificateEntry(ref writer, connectionState.Certificate.CertificateData);
-                foreach(var b in connectionState.Certificate.CertificateChain)
+                foreach (var b in connectionState.Certificate.CertificateChain)
                 {
                     WriteCertificateEntry(ref writer, b);
                 }
@@ -35,7 +35,7 @@ namespace Leto.Tls13.Handshake
             writer.Write(certificate);
         }
 
-        public unsafe static WritableBuffer SendKeyExchange(WritableBuffer buffer, IConnectionState connectionState)
+        public unsafe static WritableBuffer SendKeyExchange(WritableBuffer buffer, IConnectionStateTls12 connectionState)
         {
             var messageLength = 4 + connectionState.KeyShare.KeyExchangeSize;
             buffer.Ensure(messageLength);
@@ -45,20 +45,17 @@ namespace Leto.Tls13.Handshake
             buffer.WriteBigEndian((byte)connectionState.KeyShare.KeyExchangeSize);
             connectionState.KeyShare.WritePublicKey(ref buffer);
 
-
-
-
             buffer.WriteBigEndian(connectionState.SignatureScheme);
             buffer.WriteBigEndian((ushort)connectionState.Certificate.SignatureSize(connectionState.SignatureScheme));
-                var tempBuffer = stackalloc byte[connectionState.ClientRandom.Length * 2 + messageLength];
-                var tmpSpan = new Span<byte>(tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
-                connectionState.ClientRandom.CopyTo(tmpSpan);
-                tmpSpan = tmpSpan.Slice(connectionState.ClientRandom.Length);
-                connectionState.ServerRandom.CopyTo(tmpSpan);
-                tmpSpan = tmpSpan.Slice(connectionState.ServerRandom.Length);
-                bookMark.Span.Slice(0,messageLength).CopyTo(tmpSpan);
-                connectionState.Certificate.SignHash(connectionState.CryptoProvider.HashProvider,
-                    connectionState.SignatureScheme, ref buffer, tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
+            var tempBuffer = stackalloc byte[connectionState.ClientRandom.Length * 2 + messageLength];
+            var tmpSpan = new Span<byte>(tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
+            connectionState.ClientRandom.CopyTo(tmpSpan);
+            tmpSpan = tmpSpan.Slice(connectionState.ClientRandom.Length);
+            connectionState.ServerRandom.CopyTo(tmpSpan);
+            tmpSpan = tmpSpan.Slice(connectionState.ServerRandom.Length);
+            bookMark.Span.Slice(0, messageLength).CopyTo(tmpSpan);
+            connectionState.Certificate.SignHash(connectionState.CryptoProvider.HashProvider,
+                connectionState.SignatureScheme, ref buffer, tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
             return buffer;
         }
     }

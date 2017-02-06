@@ -17,11 +17,11 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         private EVP_PKEY _peerKey;
         private EVP_PKEY _publicPrivateKey;
         private NamedGroup _namedGroup;
-        
+
         public ECFunctionInstance(NamedGroup namedGroup)
         {
             _namedGroup = namedGroup;
-            switch(namedGroup)
+            switch (namedGroup)
             {
                 case NamedGroup.x25519:
                     _keyExchangeSize = 32;
@@ -40,7 +40,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void SetPeerKey(ReadableBuffer buffer)
         {
-            if(buffer.Length != _keyExchangeSize)
+            if (buffer.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The peer key is not the length of the keyexchange size {buffer.Length} - {_keyExchangeSize}");
             }
@@ -60,8 +60,8 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             _peerKey = EVP_PKEY_new();
             ThrowOnError(EVP_PKEY_set_type(_peerKey, _nid));
             ThrowOnError(EVP_PKEY_set1_tls_encodedpoint(_peerKey, ptr, (UIntPtr)buffer.Length));
-            
-            if(!_publicPrivateKey.IsValid())
+
+            if (!_publicPrivateKey.IsValid())
             {
                 GenerateKeyset();
             }
@@ -86,7 +86,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void WritePublicKey(ref WritableBuffer keyBuffer)
         {
-            if(!_publicPrivateKey.IsValid())
+            if (!_publicPrivateKey.IsValid())
             {
                 GenerateKeyset();
             }
@@ -130,6 +130,11 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             _peerKey.Free();
             _publicPrivateKey.Free();
             GC.SuppressFinalize(this);
+        }
+
+        public unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputLength)
+        {
+            throw new NotImplementedException();
         }
 
         ~ECFunctionInstance()

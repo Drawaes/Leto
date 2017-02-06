@@ -35,7 +35,7 @@ namespace Leto.Tls13.State
         public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
         public IBulkCipherInstance EarlyDataKey { get; set; }
         public IHashInstance HandshakeHash { get; set; }
-        public KeySchedule KeySchedule { get; set; }
+        public KeySchedule13 KeySchedule { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
         public SecurePipelineListener Listener => _securePipelineListener;
         public int PskIdentity { get; set; }
@@ -159,7 +159,7 @@ namespace Leto.Tls13.State
         {
             if (KeySchedule == null)
             {
-                KeySchedule = Listener.KeyScheduleProvider.GetKeySchedule(this);
+                KeySchedule = new KeySchedule13(this, Listener.KeyScheduleProvider.BufferPool);
             }
             KeySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
@@ -188,13 +188,13 @@ namespace Leto.Tls13.State
         {
             //Not required in Tls13 as the whole message context is used to seed the secrets
         }
-
-        public void SetServerRandom(ReadableBuffer readableBuffer)
+        
+        public void SetServerRandom(Memory<byte> memory)
         {
             throw new NotImplementedException();
         }
 
-        public void SetServerRandom(byte[] readableBuffer)
+        public void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe)
         {
             throw new NotImplementedException();
         }

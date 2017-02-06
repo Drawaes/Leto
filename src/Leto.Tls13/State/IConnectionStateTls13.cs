@@ -13,7 +13,7 @@ namespace Leto.Tls13.State
 {
     public interface IConnectionStateTls13 : IConnectionState
     {
-        KeySchedule KeySchedule { get; set; }
+        KeySchedule13 KeySchedule { get; set; }
         int PskIdentity { get; set; }
         PskKeyExchangeMode PskKeyExchangeMode { get; set; }
         bool EarlyDataSupported { get; set; }

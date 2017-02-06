@@ -8,6 +8,7 @@ using Microsoft.Win32.SafeHandles;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Interop.Windows;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Leto.Tls13.KeyExchange.Windows
 {
@@ -30,11 +31,6 @@ namespace Leto.Tls13.KeyExchange.Windows
         public bool HasPeerKey => _hasPeerKey;
         public int KeyExchangeSize => _keyExchangeSize;
         public NamedGroup NamedGroup => _group;
-
-        public void Dispose()
-        {
-            _key?.Dispose();
-        }
 
         public unsafe void SetPeerKey(ReadableBuffer peerKey)
         {
@@ -92,13 +88,48 @@ namespace Leto.Tls13.KeyExchange.Windows
             buffDescription.cBuffers = 2;
             fixed (byte* algPtr = algId)
             {
-                bufferArray[0] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HASH_ALGORITHM, cbBuffer = algId.Length, pvBuffer = (IntPtr)algPtr };
-                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HMAC_KEY, cbBuffer = saltSize, pvBuffer = (IntPtr)salt };
+                bufferArray[0] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HASH_ALGORITHM, cbBuffer = algId.Length, pvBuffer = algPtr };
+                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HMAC_KEY, cbBuffer = saltSize, pvBuffer = salt };
                 int sizeOfResult;
                 ExceptionHelper.CheckReturnCode(BCryptDeriveKey(returnPtr, BCRYPT_KDF_HMAC, &buffDescription, (IntPtr)output, outputSize, out sizeOfResult, 0));
                 returnPtr.Dispose();
                 Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            _key?.Dispose();
+            _peerKey?.Dispose();
+        }
+
+        public unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputLength)
+        {
+            uint version = 0x0303;
+            var buffDescription = new BCryptBufferDesc();
+            var bufferArray = stackalloc BCryptBuffer[4];
+            var algId = Encoding.Unicode.GetBytes(hashType.ToString() + "\0");
+            fixed (void* algPtr = algId)
+            {
+                bufferArray[0] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HASH_ALGORITHM, cbBuffer = algId.Length, pvBuffer = algPtr };
+                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_LABEL, cbBuffer = Tls13.Internal.Tls1_2Consts.MasterSecretSize, pvBuffer = (void*)Tls13.Internal.Tls1_2Consts.MasterSecretPointer };
+                bufferArray[2] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_SEED, cbBuffer = seedLength, pvBuffer = seed };
+                bufferArray[3] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_PROTOCOL, cbBuffer = 4, pvBuffer = &version };
+                buffDescription.cBuffers = 4;
+                buffDescription.pBuffers = (IntPtr)bufferArray;
+                int sizeOfResult;
+                SafeBCryptSecretHandle secretPointer;
+                ExceptionHelper.CheckReturnCode(BCryptSecretAgreement(_key, _peerKey, out secretPointer, 0));
+                ExceptionHelper.CheckReturnCode(
+                    BCryptDeriveKey(secretPointer, BCRYPT_KDF_TLS_PRF, &buffDescription, (IntPtr)output, outputLength, out sizeOfResult, 0));
+                secretPointer.Dispose();
+                Dispose();
+            }
+        }
+
+        ~ECCurveInstance()
+        {
+            Dispose();
         }
     }
 }

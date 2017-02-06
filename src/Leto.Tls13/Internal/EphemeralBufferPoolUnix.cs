@@ -9,7 +9,7 @@ using static Interop.Sys;
 
 namespace Leto.Tls13.Internal
 {
-    public class EphemeralBufferPoolUnix: IDisposable
+    public class EphemeralBufferPoolUnix: BufferPool
     {
         private IntPtr _memory;
         private int _bufferCount;
@@ -48,7 +48,7 @@ namespace Leto.Tls13.Internal
             }
         }
 
-        sealed class EphemeralMemory : OwnedMemory<byte>
+        private sealed class EphemeralMemory : OwnedMemory<byte>
         {
             public EphemeralMemory(IntPtr memory, int length) : base(null, 0, length, memory)
             { }
@@ -56,7 +56,22 @@ namespace Leto.Tls13.Internal
             public new IntPtr Pointer => base.Pointer;
         }
 
-        public unsafe void Return(OwnedMemory<byte> buffer)
+        public override OwnedMemory<byte> Rent(int minimumBufferSize)
+        {
+            if (minimumBufferSize > _bufferSize)
+            {
+                ExceptionHelper.ThrowException(new OutOfMemoryException("Buffer requested was larger than the max size"));
+            }
+            EphemeralMemory returnValue;
+            if (!_buffers.TryDequeue(out returnValue))
+            {
+                ExceptionHelper.ThrowException(new OutOfMemoryException());
+            }
+            returnValue.Rented = true;
+            return returnValue;
+        }
+
+        public override unsafe void Return(OwnedMemory<byte> buffer)
         {
             var buffer2 = buffer as EphemeralMemory;
             if (buffer2 == null)
@@ -74,7 +89,7 @@ namespace Leto.Tls13.Internal
             _buffers.Enqueue(buffer2);
         }
 
-        public unsafe void Dispose()
+        protected unsafe override void Dispose(bool disposing)
         {
             MemSet((void*)_memory, 0, (UIntPtr)_totalAllocated);
             if (MUnmap(_memory, (ulong)_totalAllocated) < 0)

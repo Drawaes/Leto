@@ -40,7 +40,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             _iVLength = EVP_CIPHER_iv_length(cipherType);
             _sequence = new byte[_iVLength];
             _keyLength = keySize;
-            _keyStore = bufferPool.Rent();
+            _keyStore = bufferPool.Rent(0);
             void* tmpPointer;
             if (!_keyStore.Memory.TryGetPointer(out tmpPointer))
             {

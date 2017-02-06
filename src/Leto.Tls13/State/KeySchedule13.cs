@@ -11,7 +11,7 @@ using Leto.Tls13.RecordLayer;
 
 namespace Leto.Tls13.State
 {
-    public unsafe class KeySchedule : IDisposable
+    public unsafe class KeySchedule13 : IDisposable
     {
         private void* _secret;
         private byte* _masterSecret;
@@ -20,15 +20,20 @@ namespace Leto.Tls13.State
         private byte* _serverHandshakeTrafficSecret;
         private byte* _clientApplicationTrafficSecret;
         private byte* _serverApplicationTrafficSecret;
-        private IConnectionStateTls13 _state;
+        private IConnectionState _state;
         private byte[] _resumptionSecret;
-        private EphemeralBufferPoolWindows _pool;
+        private BufferPool _pool;
         private OwnedMemory<byte> _stateData;
 
-        public unsafe KeySchedule(IConnectionStateTls13 state, EphemeralBufferPoolWindows pool, ReadableBuffer resumptionSecret)
+        public KeySchedule13(IConnectionState state, BufferPool pool)
+            :this(state, pool, default(ReadableBuffer))
+        {
+        }
+
+        public unsafe KeySchedule13(IConnectionState state, BufferPool pool, ReadableBuffer resumptionSecret)
         {
             _pool = pool;
-            _stateData = pool.Rent();
+            _stateData = pool.Rent(0);
             _state = state;
             _hashSize = CryptoProvider.HashProvider.HashSize(CipherSuite.HashType);
 
@@ -149,7 +154,7 @@ namespace Leto.Tls13.State
             GC.SuppressFinalize(this);
         }
 
-        ~KeySchedule()
+        ~KeySchedule13()
         {
             Dispose();
         }

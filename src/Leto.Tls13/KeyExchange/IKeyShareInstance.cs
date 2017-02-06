@@ -15,5 +15,6 @@ namespace Leto.Tls13.KeyExchange
         void WritePublicKey(ref WritableBuffer keyBuffer);
         NamedGroup  NamedGroup { get;}
         unsafe void DeriveSecret(IHashProvider hashProvider, HashType hashType, void* salt, int saltSize, void* output, int outputSize);
+        unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputSize);
     }
 }

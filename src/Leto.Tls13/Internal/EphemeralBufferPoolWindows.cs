@@ -9,7 +9,7 @@ using static Interop.Kernel32;
 
 namespace Leto.Tls13.Internal
 {
-    public class EphemeralBufferPoolWindows : IDisposable
+    public class EphemeralBufferPoolWindows : BufferPool
     {
         private IntPtr _memory;
         private int _bufferCount;
@@ -39,8 +39,12 @@ namespace Leto.Tls13.Internal
             }
         }
 
-        public OwnedMemory<byte> Rent()
+        public override OwnedMemory<byte> Rent(int minimumBufferSize)
         {
+            if (minimumBufferSize > _bufferSize)
+            {
+                ExceptionHelper.ThrowException(new OutOfMemoryException("Buffer requested was larger than the max size"));
+            }
             EphemeralMemory returnValue;
             if (!_buffers.TryDequeue(out returnValue))
             {
@@ -50,7 +54,7 @@ namespace Leto.Tls13.Internal
             return returnValue;
         }
 
-        public void Return(OwnedMemory<byte> buffer)
+        public override void Return(OwnedMemory<byte> buffer)
         {
             var buffer2 = buffer as EphemeralMemory;
             if (buffer2 == null)
@@ -71,12 +75,13 @@ namespace Leto.Tls13.Internal
         sealed class EphemeralMemory : OwnedMemory<byte>
         {
             public EphemeralMemory(IntPtr memory, int length) : base(null, 0, length, memory)
-            { }
+            {
+            }
             internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
         }
 
-        public unsafe void Dispose()
+        protected override void Dispose(bool disposing)
         {
             RtlZeroMemory(_memory, _totalAllocated);
             VirtualFree(_memory, _totalAllocated, 0x8000);

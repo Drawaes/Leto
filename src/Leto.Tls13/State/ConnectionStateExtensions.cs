@@ -10,7 +10,7 @@ namespace Leto.Tls13.State
 {
     public static class ConnectionStateExtensions
     {
-        public static void WriteHandshake(this IConnectionState state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionState, WritableBuffer> contentWriter)
+        public static void WriteHandshake(this IConnectionStateTls13 state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionStateTls13, WritableBuffer> contentWriter)
         {
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
@@ -22,7 +22,7 @@ namespace Leto.Tls13.State
             }
         }
 
-        public static void WriteHandshake(this IConnectionStateTls13 state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionStateTls13, WritableBuffer> contentWriter)
+        public static void WriteHandshake(this IConnectionStateTls12 state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionStateTls12, WritableBuffer> contentWriter)
         {
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);

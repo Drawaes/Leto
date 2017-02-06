@@ -52,7 +52,7 @@ namespace Leto.Tls13.BulkCipher.Windows
                     Internal.ExceptionHelper.ThrowException(new InvalidOperationException());
                     return;
             }
-            _keyStore = bufferPool.Rent();
+            _keyStore = bufferPool.Rent(0);
             void* tmpPointer;
             if (!_keyStore.Memory.TryGetPointer(out tmpPointer))
             {

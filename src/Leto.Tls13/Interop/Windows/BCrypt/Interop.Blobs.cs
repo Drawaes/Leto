@@ -253,11 +253,11 @@ internal partial class Interop
         ///     BCrypt buffer
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
-        internal struct BCryptBuffer
+        internal unsafe struct BCryptBuffer
         {
             internal int cbBuffer;             // Length of buffer, in bytes
             internal NCryptBufferDescriptors BufferType; // Buffer type
-            internal IntPtr pvBuffer;          // Pointer to buffer
+            internal void* pvBuffer;          // Pointer to buffer
         }
 
         /// <summary>

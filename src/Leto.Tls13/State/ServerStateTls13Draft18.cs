@@ -18,22 +18,22 @@ namespace Leto.Tls13.State
     {
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
-        
+
         public ServerStateTls13Draft18(SecurePipelineListener listener)
-            :base(listener)
+            : base(listener)
         {
             PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
 
         public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
-        public KeySchedule KeySchedule { get; set; }
+        public KeySchedule13 KeySchedule { get; set; }
         public override IBulkCipherInstance ReadKey => _readKey;
         public override IBulkCipherInstance WriteKey => _writeKey;
         public override TlsVersion Version => TlsVersion.Tls13Draft18;
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
         public override ushort TlsRecordVersion => 0x0301;
-
+        
         public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             WritableBuffer writer;
@@ -120,7 +120,7 @@ namespace Leto.Tls13.State
                     _state = StateType.HandshakeComplete;
                     break;
                 default:
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message,$"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}" );
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
                     break;
             }
         }
@@ -139,7 +139,7 @@ namespace Leto.Tls13.State
                 _state = StateType.WaitClientFinished;
                 return;
             }
-            Alerts.AlertException.ThrowAlert(level, description,"Alert from the client");
+            Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");
         }
 
         private bool NegotiationComplete()
@@ -150,7 +150,7 @@ namespace Leto.Tls13.State
             }
             if (KeyShare == null || Certificate == null)
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter,$"negotiation complete but no cipher suite or certificate");
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"negotiation complete but no cipher suite or certificate");
             }
             if (!KeyShare.HasPeerKey)
             {
@@ -174,7 +174,7 @@ namespace Leto.Tls13.State
         {
             if (KeySchedule == null)
             {
-                KeySchedule = Listener.KeyScheduleProvider.GetKeySchedule(this);
+                KeySchedule = new KeySchedule13(this, Listener.KeyScheduleProvider.BufferPool);
             }
             KeySchedule.SetDheDerivedValue(KeyShare);
             var hash = stackalloc byte[HandshakeHash.HashSize];
@@ -199,7 +199,20 @@ namespace Leto.Tls13.State
             WriteKey?.Dispose();
             GC.SuppressFinalize(this);
         }
-        
+
+        public override void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe)
+        {
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "");
+        }
+
+        public override void SetClientRandom(ReadableBuffer readableBuffer)
+        {
+        }
+
+        public override void SetServerRandom(Memory<byte> memory)
+        {
+        }
+
         ~ServerStateTls13Draft18()
         {
             Dispose();

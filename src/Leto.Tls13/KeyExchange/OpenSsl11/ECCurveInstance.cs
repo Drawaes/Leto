@@ -42,7 +42,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         private void GenerateECKeySet()
         {
-            if(_eKey.IsValid())
+            if (_eKey.IsValid())
             {
                 return;
             }
@@ -95,24 +95,12 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                 var data = stackalloc byte[len.ToInt32()];
                 ThrowOnError(EVP_PKEY_derive(ctx, data, ref len));
                 Dispose();
-                hashProvider.HmacData(hashType, salt, saltSize, data, len.ToInt32(), output,outputSize);
+                hashProvider.HmacData(hashType, salt, saltSize, data, len.ToInt32(), output, outputSize);
             }
             finally
             {
                 ctx.Free();
             }
-        }
-    
-        public void Dispose()
-        {
-            _clientKey.Free();
-            _eKey.Free();
-            GC.SuppressFinalize(this);
-        }
-
-        ~ECCurveInstance()
-        {
-            Dispose();
         }
 
         public unsafe void SetPeerKey(ReadableBuffer peerKey)
@@ -142,7 +130,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                 }
                 finally
                 {
-                    if(handle.IsAllocated)
+                    if (handle.IsAllocated)
                     {
                         handle.Free();
                     }
@@ -182,6 +170,23 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                     handle.Free();
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _clientKey.Free();
+            _eKey.Free();
+            GC.SuppressFinalize(this);
+        }
+
+        public unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputLength)
+        {
+            throw new NotImplementedException();
+        }
+
+        ~ECCurveInstance()
+        {
+            Dispose();
         }
     }
 }

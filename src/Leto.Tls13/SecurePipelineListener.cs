@@ -23,11 +23,13 @@ namespace Leto.Tls13
         private ServerNameProvider _serverNameProvider;
         private ILoggerFactory _logFactory;
         private ILogger<SecurePipelineListener> _logger;
+        private ILogger<SecurePipelineConnection> _connectionLogger;
 
         public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
         {
             _logFactory = logFactory;
             _logger = logFactory?.CreateLogger<SecurePipelineListener>();
+            _connectionLogger = logFactory?.CreateLogger<SecurePipelineConnection>();
             _factory = factory;
             _serverNameProvider = new ServerNameProvider();
             _keyscheduleProvider = new KeyScheduleProvider();
@@ -46,12 +48,12 @@ namespace Leto.Tls13
         public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
         {
             _logger?.LogTrace("Created new secure server pipeline");
-            return new SecurePipelineConnection(pipeline, _factory, this);
+            return new SecurePipelineConnection(pipeline, _factory, this, _connectionLogger);
         }
 
         public SecurePipelineConnection CreateSecureClientPipeline(IPipelineConnection pipeline)
         {
-            return new SecurePipelineConnection(pipeline, _factory, this);
+            return new SecurePipelineConnection(pipeline, _factory, this, _connectionLogger);
         }
 
         public void Dispose()

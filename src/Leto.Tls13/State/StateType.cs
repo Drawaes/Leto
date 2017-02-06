@@ -20,6 +20,7 @@ namespace Leto.Tls13.State
         WaitServerVerification,
         WaitServerFinished,
         WaitEarlyDataFinished,
-        WaitClientKeyExchange
+        WaitClientKeyExchange,
+        ChangeCipherSpec
     }
 }

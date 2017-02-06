@@ -38,7 +38,7 @@ namespace Leto.Tls13.Sessions
             buffer = buffer.SliceBigEndian(out cipherCode);
             buffer = buffer.SliceBigEndian(out version);
             state.CipherSuite = state.CryptoProvider.GetCipherSuiteFromCode(cipherCode, state.Version);
-            state.KeySchedule = state.Listener.KeyScheduleProvider.GetKeySchedule(state, buffer);
+            state.KeySchedule = new KeySchedule13(state, state.Listener.KeyScheduleProvider.BufferPool, buffer);
         }
 
         internal void WriteSessionKey(ref WritableBuffer writer, IConnectionState state)

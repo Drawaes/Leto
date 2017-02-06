@@ -32,7 +32,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         public unsafe byte[] DeriveSecret()
         {
             var buffer = new byte[_keyExchangeSize];
-            fixed(byte* ptr = buffer)
+            fixed (byte* ptr = buffer)
             {
                 var written = DH_compute_key(ptr, _clientBN, _localKey);
             }
@@ -56,11 +56,11 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void GenerateKeys(byte[] privateKey, byte[] publicKey)
         {
-            if(_localKey.IsAllocated)
+            if (_localKey.IsAllocated)
             {
                 return;
             }
-            byte[] q,p;
+            byte[] q, p;
             byte g;
             switch (_namedGroup)
             {
@@ -98,8 +98,8 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
                     ExceptionHelper.ThrowException(new ArgumentOutOfRangeException());
                     return;
             }
-            fixed(byte* qPtr = q)
-            fixed(byte* pPtr = p)
+            fixed (byte* qPtr = q)
+            fixed (byte* pPtr = p)
             {
                 var qBN = BN_bin2bn(qPtr, q.Length, IntPtr.Zero);
                 var gBN = BN_bin2bn(&g, 1, IntPtr.Zero);
@@ -126,7 +126,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         public unsafe void SetPeerKey(ReadableBuffer peerKey)
         {
             GenerateKeys(null, null);
-            if(peerKey.Length != _keyExchangeSize)
+            if (peerKey.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "The client key didn't match the expected size");
             }
@@ -148,7 +148,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
             finally
             {
-                if(handle.IsAllocated)
+                if (handle.IsAllocated)
                 {
                     handle.Free();
                 }
@@ -170,7 +170,7 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
             finally
             {
-                if(handle.IsAllocated)
+                if (handle.IsAllocated)
                 {
                     handle.Free();
                 }
@@ -181,6 +181,15 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
         {
             _localKey.Free();
         }
-        
+
+        public unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputLength)
+        {
+            throw new NotImplementedException();
+        }
+
+        ~FiniteFieldInstance()
+        {
+            Dispose();
+        }
     }
 }

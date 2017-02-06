@@ -10,7 +10,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
     public class BulkCipherProvider:IBulkCipherProvider
     {
         private const int MaxBufferSize = 32 + 12 + 12;
-        private readonly EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(MaxBufferSize, 10000);
+        private readonly EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(MaxBufferSize, 50000);
 
         public IBulkCipherInstance GetCipherKey(BulkCipherType cipher)
         {

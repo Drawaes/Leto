@@ -109,7 +109,7 @@ namespace Leto.Tls13.Handshake
             buffer.WriteBigEndian(connectionState.Version);
             var memoryToFill = buffer.Memory.Slice(0, RandomLength);
             connectionState.CryptoProvider.FillWithRandom(memoryToFill);
-            connectionState.SetServerRandom(memoryToFill.ToArray());
+            connectionState.SetServerRandom(memoryToFill);
             buffer.Advance(RandomLength);
             buffer.WriteBigEndian<byte>(0);
             buffer.WriteBigEndian(connectionState.CipherSuite.CipherCode);
