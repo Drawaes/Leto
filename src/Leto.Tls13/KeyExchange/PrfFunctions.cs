@@ -8,7 +8,7 @@ namespace Leto.Tls13.KeyExchange
 {
     public class PrfFunctions
     {
-        public static unsafe void P_Hash12(IHashProvider hash, HashType hashType, byte* keyMaterial, int keyMaterialLength, void* secret, int secretLength, Span<byte> seed)
+        public static unsafe void P_Hash12(IHashProvider hash, HashType hashType, Span<byte> keyMaterial, void* secret, int secretLength, Span<byte> seed)
         {
             var hashSize = hash.HashSize(hashType);
             var a1Length = hashSize + seed.Length;
@@ -27,7 +27,7 @@ namespace Leto.Tls13.KeyExchange
                 {
                     keyMaterial[keyMaterialIndex] = currentKeyData[i];
                     keyMaterialIndex++;
-                    if (keyMaterialIndex == keyMaterialLength)
+                    if (keyMaterialIndex == keyMaterial.Length)
                     {
                         return;
                     }

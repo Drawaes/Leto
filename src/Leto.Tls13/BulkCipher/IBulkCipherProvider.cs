@@ -8,6 +8,7 @@ namespace Leto.Tls13.BulkCipher
     public interface IBulkCipherProvider
     {
         IBulkCipherInstance GetCipherKey(BulkCipherType cipher);
+        int GetKeySize(BulkCipherType cipherType);
         void Dispose();
     }
 }

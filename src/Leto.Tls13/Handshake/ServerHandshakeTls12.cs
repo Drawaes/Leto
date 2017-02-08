@@ -46,16 +46,20 @@ namespace Leto.Tls13.Handshake
             connectionState.KeyShare.WritePublicKey(ref buffer);
 
             buffer.WriteBigEndian(connectionState.SignatureScheme);
-            buffer.WriteBigEndian((ushort)connectionState.Certificate.SignatureSize(connectionState.SignatureScheme));
-            var tempBuffer = stackalloc byte[connectionState.ClientRandom.Length * 2 + messageLength];
-            var tmpSpan = new Span<byte>(tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
-            connectionState.ClientRandom.CopyTo(tmpSpan);
-            tmpSpan = tmpSpan.Slice(connectionState.ClientRandom.Length);
-            connectionState.ServerRandom.CopyTo(tmpSpan);
-            tmpSpan = tmpSpan.Slice(connectionState.ServerRandom.Length);
-            bookMark.Span.Slice(0, messageLength).CopyTo(tmpSpan);
-            connectionState.Certificate.SignHash(connectionState.CryptoProvider.HashProvider,
-                connectionState.SignatureScheme, ref buffer, tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
+            BufferExtensions.WriteVector<ushort>(ref buffer, (writer, state) =>
+            {
+                var tempBuffer = stackalloc byte[connectionState.ClientRandom.Length * 2 + messageLength];
+                var tmpSpan = new Span<byte>(tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
+                connectionState.ClientRandom.CopyTo(tmpSpan);
+                tmpSpan = tmpSpan.Slice(connectionState.ClientRandom.Length);
+                connectionState.ServerRandom.CopyTo(tmpSpan);
+                tmpSpan = tmpSpan.Slice(connectionState.ServerRandom.Length);
+                bookMark.Span.Slice(0, messageLength).CopyTo(tmpSpan);
+                connectionState.Certificate.SignHash(connectionState.CryptoProvider.HashProvider,
+                    connectionState.SignatureScheme, ref writer, tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
+                return writer;
+            }, connectionState);
+            
             return buffer;
         }
     }

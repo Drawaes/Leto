@@ -112,7 +112,7 @@ namespace Leto.Tls13.KeyExchange.Windows
             fixed (void* algPtr = algId)
             {
                 bufferArray[0] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HASH_ALGORITHM, cbBuffer = algId.Length, pvBuffer = algPtr };
-                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_LABEL, cbBuffer = Tls13.Internal.Tls1_2Consts.MasterSecretSize, pvBuffer = (void*)Tls13.Internal.Tls1_2Consts.MasterSecretPointer };
+                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_LABEL, cbBuffer = Tls13.Internal.Tls1_2Consts.MasterSecretLabelSize, pvBuffer = (void*)Tls13.Internal.Tls1_2Consts.MasterSecretLabelPointer };
                 bufferArray[2] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_SEED, cbBuffer = seedLength, pvBuffer = seed };
                 bufferArray[3] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_TLS_PRF_PROTOCOL, cbBuffer = 4, pvBuffer = &version };
                 buffDescription.cBuffers = 4;

@@ -33,7 +33,7 @@ namespace Leto.Tls13.State
                 state.HandshakeHash.HashData(hashBuffer);
             }
         }
-
+                
         public static void StartHandshakeHash(this IConnectionState state, ReadableBuffer readable)
         {
             if (state.HandshakeHash == null)

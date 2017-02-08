@@ -78,10 +78,30 @@ namespace Leto.Tls13.State
                     {
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Received a {handshakeMessageType} when we expected a {HandshakeType.client_key_exchange}");
                     }
-                    this.HandshakeHash.HashData(buffer);
+                    HandshakeHash.HashData(buffer);
                     KeyShare.SetPeerKey(buffer.Slice(5));
                     _schedule.GenerateMasterSecret();
+                    _schedule.CalculateClientFinished();
+                    //We can send the server finished because we have the expected client finished
+                    _schedule.CalculateServerFinished();
+                    HandshakeHash.Dispose();
+                    HandshakeHash = null;
+                    _schedule.GenerateKeyMaterial();
                     _state = StateType.ChangeCipherSpec;
+                    break;
+                case StateType.WaitClientFinished:
+                    if(handshakeMessageType != HandshakeType.finished)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"unexpected message");
+                    }
+                    _schedule.CompareClientFinished(buffer);
+                    _writeKey = _schedule.GetServerKey();
+                    writer = pipe.Alloc();
+                    this.WriteHandshake(ref writer, HandshakeType.finished, _schedule.WriteServerFinished);
+                    DataForCurrentScheduleSent.Reset();
+                    await writer.FlushAsync();
+                    await DataForCurrentScheduleSent;
+                    _state = StateType.HandshakeComplete;
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
@@ -94,13 +114,14 @@ namespace Leto.Tls13.State
             throw new NotImplementedException();
         }
 
-        public override void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe)
+        public override void HandleChangeCipherSpec(ReadableBuffer readable)
         {
             if (State != StateType.ChangeCipherSpec)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "");
             }
-            _schedule.GenerateKeyMaterial(ref _readKey,ref _writeKey);
+            _readKey = _schedule.GetClientKey();
+            _state = StateType.WaitClientFinished;
         }
 
         public override void SetClientRandom(ReadableBuffer readableBuffer)

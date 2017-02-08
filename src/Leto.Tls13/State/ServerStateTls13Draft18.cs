@@ -200,7 +200,7 @@ namespace Leto.Tls13.State
             GC.SuppressFinalize(this);
         }
 
-        public override void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe)
+        public override void HandleChangeCipherSpec(ReadableBuffer readable)
         {
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "");
         }

@@ -36,6 +36,20 @@ namespace Leto.Tls13.BulkCipher.Windows
             GC.SuppressFinalize(this);
         }
 
+        public int GetKeySize(BulkCipherType cipherType)
+        {
+            switch(cipherType)
+            {
+                case BulkCipherType.AES_128_CCM:
+                case BulkCipherType.AES_128_GCM:
+                    return 16;
+                case BulkCipherType.AES_256_GCM:
+                    return 32;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         ~BulkCipherProvider()
         {
             Dispose();

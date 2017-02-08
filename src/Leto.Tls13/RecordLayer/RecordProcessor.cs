@@ -21,22 +21,31 @@ namespace Leto.Tls13.RecordLayer
             var recordType = messageBuffer.ReadBigEndian<RecordType>();
             var version = messageBuffer.Slice(sizeof(RecordType)).ReadBigEndian<ushort>();
             var size = messageBuffer.Slice(sizeof(RecordType) + sizeof(ushort)).ReadBigEndian<ushort>();
-            messageBuffer = messageBuffer.Slice(RecordHeaderLength);
             if (state?.ReadKey == null)
             {
+                messageBuffer = messageBuffer.Slice(RecordHeaderLength);
                 return recordType;
             }
-            state.ReadKey.Decrypt(ref messageBuffer);
-            RemovePadding(ref messageBuffer);
-            recordType = messageBuffer.Slice(messageBuffer.Length - sizeof(RecordType)).ReadBigEndian<RecordType>();
-            messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - sizeof(RecordType));
-            return recordType;
+            if ((TlsVersion)state.TlsRecordVersion == TlsVersion.Tls12)
+            {
+                state.ReadKey.DecryptWithAuthData(ref messageBuffer);
+                return recordType;
+            }
+            else
+            {
+                messageBuffer = messageBuffer.Slice(RecordHeaderLength);
+                state.ReadKey.Decrypt(ref messageBuffer);
+                RemovePadding(ref messageBuffer);
+                recordType = messageBuffer.Slice(messageBuffer.Length - sizeof(RecordType)).ReadBigEndian<RecordType>();
+                messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - sizeof(RecordType));
+                return recordType;
+            }
         }
 
         public static void WriteRecord(ref WritableBuffer buffer, RecordType recordType, Span<byte> plainText, State.IConnectionState state)
         {
             buffer.Ensure(RecordHeaderLength);
-            if(state.WriteKey == null)
+            if (state.WriteKey == null)
             {
                 buffer.WriteBigEndian(recordType);
                 buffer.WriteBigEndian(state.TlsRecordVersion);
@@ -44,11 +53,21 @@ namespace Leto.Tls13.RecordLayer
                 buffer.Write(plainText);
                 return;
             }
-            buffer.WriteBigEndian(RecordType.Application);
-            buffer.WriteBigEndian(state.TlsRecordVersion);
-            var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
-            buffer.WriteBigEndian((ushort)totalSize);
-            state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            if ((TlsVersion)state.TlsRecordVersion == TlsVersion.Tls12)
+            {
+                buffer.WriteBigEndian(recordType);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
+                buffer.WriteBigEndian((ushort)plainText.Length + (state.WriteKey.IVLength - 4) + state.WriteKey.Overhead);
+                state.ReadKey.EncryptWithAuthData(ref buffer, plainText, recordType, state.TlsRecordVersion);
+            }
+            else
+            {
+                buffer.WriteBigEndian(RecordType.Application);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
+                var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
+                buffer.WriteBigEndian((ushort)totalSize);
+                state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            }
         }
 
         public static void WriteRecord(ref WritableBuffer buffer, RecordType recordType, ReadableBuffer plainText, State.IConnectionState state)
@@ -62,13 +81,23 @@ namespace Leto.Tls13.RecordLayer
                 buffer.Append(plainText);
                 return;
             }
-            buffer.WriteBigEndian(RecordType.Application);
-            buffer.WriteBigEndian(state.TlsRecordVersion);
-            var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
-            buffer.WriteBigEndian((ushort)totalSize);
-            state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            if ((TlsVersion)state.TlsRecordVersion == TlsVersion.Tls12)
+            {
+                buffer.WriteBigEndian(recordType);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
+                buffer.WriteBigEndian((ushort)(plainText.Length + (state.WriteKey.IVLength - 4) + state.WriteKey.Overhead));
+                state.WriteKey.EncryptWithAuthData(ref buffer, plainText, recordType, state.TlsRecordVersion);
+            }
+            else
+            {
+                buffer.WriteBigEndian(RecordType.Application);
+                buffer.WriteBigEndian(state.TlsRecordVersion);
+                var totalSize = plainText.Length + state.WriteKey.Overhead + sizeof(RecordType);
+                buffer.WriteBigEndian((ushort)totalSize);
+                state.WriteKey.Encrypt(ref buffer, plainText, recordType);
+            }
         }
-        
+
         private static void RemovePadding(ref ReadableBuffer buffer)
         {
             while (buffer.Slice(buffer.Length - 1).Peek() == 0)

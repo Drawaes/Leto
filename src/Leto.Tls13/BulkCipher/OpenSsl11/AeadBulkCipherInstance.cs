@@ -5,8 +5,10 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Leto.Tls13;
 using Leto.Tls13.Internal;
 using Leto.Tls13.RecordLayer;
+using static Interop.BCrypt;
 using static Interop.LibCrypto;
 
 namespace Leto.Tls13.BulkCipher.OpenSsl11
@@ -25,11 +27,12 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
         private int _paddingSize;
         private byte[] _sequence;
         private int _overhead;
+        private ulong _sequenceNumber;
 
         static AeadBulkCipherInstance()
         {
             var array = new byte[255];
-            Marshal.Copy(array,0, s_zeroBuffer, array.Length);
+            Marshal.Copy(array, 0, s_zeroBuffer, array.Length);
         }
 
         internal unsafe AeadBulkCipherInstance(IntPtr cipherType, EphemeralBufferPoolWindows bufferPool, int ivLength, int keySize, int overhead)
@@ -97,7 +100,6 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             IncrementSequence();
         }
 
-
         public unsafe void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType)
         {
             int outLength;
@@ -146,9 +148,9 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             int outLength;
             GCHandle inHandle, outHandle;
             ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (void*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Encryption));
-            foreach(var b in plainText)
+            foreach (var b in plainText)
             {
-                if(b.Length == 0)
+                if (b.Length == 0)
                 {
                     continue;
                 }
@@ -163,11 +165,11 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
                 }
                 finally
                 {
-                    if(inHandle.IsAllocated)
+                    if (inHandle.IsAllocated)
                     {
                         inHandle.Free();
                     }
-                    if(outHandle.IsAllocated)
+                    if (outHandle.IsAllocated)
                     {
                         outHandle.Free();
                     }
@@ -182,7 +184,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             {
                 outLength = _paddingSize;
                 writePtr = buffer.Memory.GetPointer(out outHandle);
-                ThrowOnError(EVP_CipherUpdate(_ctx, writePtr, ref outLength, (byte*) s_zeroBuffer, _paddingSize));
+                ThrowOnError(EVP_CipherUpdate(_ctx, writePtr, ref outLength, (byte*)s_zeroBuffer, _paddingSize));
                 buffer.Advance(outLength);
             }
             writePtr = buffer.Memory.GetPointer(out outHandle);
@@ -226,7 +228,156 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             _keyStore = null;
             GC.SuppressFinalize(this);
         }
-        
+
+        public unsafe void DecryptWithAuthData(ref ReadableBuffer buffer)
+        {
+            var additionalData = stackalloc byte[13];
+            var spanAdditional = new Span<byte>(additionalData, 13);
+            spanAdditional.Write64BitNumber(_sequenceNumber);
+            spanAdditional = spanAdditional.Slice(8);
+            buffer.Slice(0, 3).CopyTo(spanAdditional);
+            spanAdditional = spanAdditional.Slice(3);
+            var newLength = buffer.Slice(3, 2).ReadBigEndian<ushort>() - _overhead - 8;
+            spanAdditional.Write16BitNumber((ushort)newLength);
+            buffer = buffer.Slice(5);
+            var nSpan = new Span<byte>((byte*)_ivPointer, _iVLength);
+            buffer.Slice(0, 8).CopyTo(nSpan.Slice(4));
+            buffer = buffer.Slice(8);
+
+            var cipherText = buffer.Slice(0, newLength);
+            var authTag = buffer.Slice(newLength, _overhead);
+            void* authPtr;
+            GCHandle authHandle = default(GCHandle);
+            try
+            {
+                if (authTag.IsSingleSpan)
+                {
+                    if (!authTag.First.TryGetPointer(out authPtr))
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                else
+                {
+                    var authTagArray = authTag.ToArray();
+                    authHandle = GCHandle.Alloc(authTagArray, GCHandleType.Pinned);
+                    authPtr = (void*)authHandle.AddrOfPinnedObject();
+                }
+                ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (byte*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Decryption));
+                ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_SET_TAG, _overhead, authPtr));
+                int resultSize = 0;
+                ThrowOnError(EVP_CipherUpdate(_ctx, null, ref resultSize, additionalData, 13));
+                int amountToWrite = cipherText.Length;
+                foreach (var b in cipherText)
+                {
+                    amountToWrite -= b.Length;
+                    if (b.Length == 0 && b.Length == 0)
+                    {
+                        continue;
+                    }
+                    GCHandle memHandle = default(GCHandle);
+                    try
+                    {
+                        void* ptr = b.GetPointer(out memHandle);
+                        int size = b.Length;
+                        ThrowOnError(EVP_CipherUpdate(_ctx, ptr, ref size, ptr, size));
+                    }
+                    catch
+                    {
+                        if (!memHandle.IsAllocated)
+                        {
+                            memHandle.Free();
+                        }
+                    }
+                    var outLength = 0;
+                    ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outLength));
+                    IncrementSequence();
+                    _sequenceNumber++;
+                }
+            }
+            finally
+            {
+                if (authHandle.IsAllocated)
+                {
+                    authHandle.Free();
+                }
+            }
+        }
+
+        public unsafe void EncryptWithAuthData(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType, ushort tlsVersion)
+        {
+            var additionalData = stackalloc byte[13];
+            var additionalSpan = new Span<byte>(additionalData, 13);
+            additionalSpan.Write64BitNumber(_sequenceNumber);
+            additionalSpan = additionalSpan.Slice(8);
+            additionalSpan.Write(recordType);
+            additionalSpan = additionalSpan.Slice(1);
+            additionalSpan.Write(tlsVersion);
+            additionalSpan = additionalSpan.Slice(2);
+            additionalSpan.Write16BitNumber((ushort)plainText.Length);
+            buffer.Ensure(8);
+            buffer.Write(new Span<byte>((byte*)_ivPointer + 4, 8));
+            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (byte*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Encryption));
+            int outSize = 0;
+            ThrowOnError(EVP_CipherUpdate(_ctx, null, ref outSize, additionalData, 13));
+            buffer.Ensure(plainText.Length);
+            void* outPointer;
+            if (!buffer.Memory.TryGetPointer(out outPointer))
+            {
+                throw new NotImplementedException("Need to implement a pinned array if we can get a pointer");
+            }
+            plainText.CopyTo(buffer.Memory.Span);
+            outSize = plainText.Length;
+            ThrowOnError(EVP_CipherUpdate(_ctx, outPointer, ref outSize, outPointer, outSize));
+            buffer.Advance(outSize);
+            buffer.Ensure(_overhead);
+            buffer.Memory.TryGetPointer(out outPointer);
+            ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outSize));
+            ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_GET_TAG, _overhead, outPointer));
+            buffer.Advance(_overhead);
+            _sequenceNumber++;
+            IncrementSequence();
+        }
+
+        public unsafe void EncryptWithAuthData(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType, ushort tlsVersion)
+        {
+            var additionalData = stackalloc byte[13];
+            var additionalSpan = new Span<byte>(additionalData, 13);
+            additionalSpan.Write64BitNumber(_sequenceNumber);
+            additionalSpan = additionalSpan.Slice(8);
+            additionalSpan.Write(recordType);
+            additionalSpan = additionalSpan.Slice(1);
+            additionalSpan.Write(tlsVersion);
+            additionalSpan = additionalSpan.Slice(2);
+            additionalSpan.Write16BitNumber((ushort)plainText.Length);
+            buffer.Ensure(8);
+            buffer.Write(new Span<byte>((byte*)_ivPointer + 4, 8));
+            ThrowOnError(EVP_CipherInit_ex(_ctx, _cipherType, IntPtr.Zero, (byte*)_keyPointer, (void*)_ivPointer, (int)KeyMode.Encryption));
+            int outSize = 0;
+            ThrowOnError(EVP_CipherUpdate(_ctx, null, ref outSize, additionalData, 13));
+            void* inPointer, outPointer;
+            foreach (var b in plainText)
+            {
+                if (b.Length == 0)
+                {
+                    continue;
+                }
+                buffer.Ensure(b.Length);
+                buffer.Memory.TryGetPointer(out outPointer);
+                b.TryGetPointer(out inPointer);
+                outSize = b.Length;
+                ThrowOnError(EVP_CipherUpdate(_ctx, outPointer, ref outSize, inPointer, outSize));
+                buffer.Advance(outSize);
+            }
+            buffer.Ensure(_overhead);
+            buffer.Memory.TryGetPointer(out outPointer);
+            ThrowOnError(EVP_CipherFinal_ex(_ctx, null, ref outSize));
+            ThrowOnError(EVP_CIPHER_CTX_ctrl(_ctx, EVP_CIPHER_CTRL.EVP_CTRL_GCM_GET_TAG, _overhead, outPointer));
+            buffer.Advance(_overhead);
+            _sequenceNumber++;
+            IncrementSequence();
+        }
+
         ~AeadBulkCipherInstance()
         {
             Dispose();

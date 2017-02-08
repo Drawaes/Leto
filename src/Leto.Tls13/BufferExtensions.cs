@@ -146,5 +146,12 @@ namespace Leto.Tls13
             span.Write(value);
             return span.Slice(sizeof(ushort));
         }
+
+        public static Span<byte> Write64BitNumber(this Span<byte> span, ulong value)
+        {
+            value = System.Runtime.UnsafeUtilities.Reverse(value);
+            span.Write(value);
+            return span.Slice(sizeof(ulong));
+        }
     }
 }

@@ -51,6 +51,6 @@ namespace Leto.Tls13.State
         public abstract void SetClientRandom(ReadableBuffer readableBuffer);
         public abstract void SetServerRandom(Memory<byte> readableBuffer);
         public abstract void Dispose();
-        public abstract void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe);
+        public abstract void HandleChangeCipherSpec(ReadableBuffer readable);
     }
 }

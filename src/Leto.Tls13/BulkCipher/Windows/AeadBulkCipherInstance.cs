@@ -29,7 +29,8 @@ namespace Leto.Tls13.BulkCipher.Windows
         private byte[] _sequence;
         private int _blockLength;
         private int _maxTagLength;
-        
+        private ulong _sequenceNumber;
+
         internal unsafe AeadBulkCipherInstance(SafeBCryptAlgorithmHandle algo, EphemeralBufferPoolWindows bufferPool, BulkCipherType cipherType)
         {
             _bufferPool = bufferPool;
@@ -212,6 +213,130 @@ namespace Leto.Tls13.BulkCipher.Windows
         public void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType)
         {
             throw new NotImplementedException();
+        }
+
+        public void DecryptWithAuthData(ref ReadableBuffer messageBuffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe void EncryptWithAuthData(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType, ushort tlsVersion)
+        {
+            var additionalData = stackalloc byte[13];
+            var additionalSpan = new Span<byte>(additionalData, 13);
+            additionalSpan.Write64BitNumber(_sequenceNumber);
+            additionalSpan = additionalSpan.Slice(8);
+            additionalSpan.Write(recordType);
+            additionalSpan = additionalSpan.Slice(1);
+            additionalSpan.Write(tlsVersion);
+            additionalSpan = additionalSpan.Slice(2);
+            additionalSpan.Write16BitNumber((ushort)plainText.Length);
+            buffer.Ensure(8);
+            buffer.Write(new Span<byte>((byte*)_ivPointer + 4, 8));
+            var cInfo = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO();
+            cInfo.dwInfoVersion = 1;
+            cInfo.cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>();
+            cInfo.cbNonce = _iVLength;
+            cInfo.pbNonce = _ivPointer;
+            cInfo.dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls;
+            cInfo.pbAuthData = (IntPtr)additionalData;
+            cInfo.cbAuthData = 13;
+
+            var iv = stackalloc byte[16];
+            var macRecord = stackalloc byte[16];
+            var tag = stackalloc byte[16];
+            cInfo.cbMacContext = 16;
+            cInfo.pbMacContext = (IntPtr)macRecord;
+            cInfo.pbTag = (IntPtr)tag;
+            cInfo.cbTag = 16;
+
+            var totalDataLength = plainText.Length;
+            foreach (var b in plainText)
+            {
+                totalDataLength = totalDataLength - b.Length;
+                if (b.Length == 0 && totalDataLength > 0)
+                {
+                    continue;
+                }
+                if (totalDataLength == 0)
+                {
+                    cInfo.dwFlags = AuthenticatedCipherModeInfoFlags.None;
+                }
+                buffer.Ensure(b.Length);
+                void* outPointer;
+                if (!buffer.Memory.TryGetPointer(out outPointer))
+                {
+                    throw new NotImplementedException("Need to implement a pinned array if we can get a pointer");
+                }
+                void* inPointer;
+                if (!b.TryGetPointer(out inPointer))
+                {
+                    throw new NotImplementedException("Need to implement a pinned array if we can't get a pointer");
+                }
+                int amountWritten;
+                Interop.Windows.ExceptionHelper.CheckReturnCode(
+                    BCryptEncrypt(_key, inPointer, b.Length, &cInfo, iv, 16, outPointer, buffer.Memory.Length, out amountWritten, 0));
+                buffer.Advance(amountWritten);
+                cInfo.dwFlags = AuthenticatedCipherModeInfoFlags.InProgress;
+                if (totalDataLength == 0)
+                {
+                    break;
+                }
+            }
+            buffer.Ensure(16);
+            buffer.Write(new Span<byte>(tag, 16));
+
+            IncrementSequence();
+            _sequenceNumber++;
+        }
+
+        public unsafe void EncryptWithAuthData(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType, ushort tlsVersion)
+        {
+            var additionalData = stackalloc byte[13];
+            var additionalSpan = new Span<byte>(additionalData, 13);
+            additionalSpan.Write64BitNumber(_sequenceNumber);
+            additionalSpan = additionalSpan.Slice(8);
+            additionalSpan.Write(recordType);
+            additionalSpan = additionalSpan.Slice(1);
+            additionalSpan.Write(tlsVersion);
+            additionalSpan = additionalSpan.Slice(2);
+            additionalSpan.Write16BitNumber((ushort)plainText.Length);
+            buffer.Ensure(8);
+            buffer.Write(new Span<byte>((byte*)_ivPointer + 4, 8));
+            var cInfo = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO();
+            cInfo.dwInfoVersion = 1;
+            cInfo.cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>();
+            cInfo.cbNonce = _iVLength;
+            cInfo.pbNonce = _ivPointer;
+            cInfo.dwFlags = AuthenticatedCipherModeInfoFlags.None;
+            cInfo.pbAuthData = (IntPtr)additionalData;
+            cInfo.cbAuthData = 13;
+
+            var iv = stackalloc byte[16];
+            var macRecord = stackalloc byte[16];
+            var tag = stackalloc byte[16];
+            cInfo.cbMacContext = 16;
+            cInfo.pbMacContext = (IntPtr)macRecord;
+            cInfo.pbTag = (IntPtr)tag;
+            cInfo.cbTag = 16;
+
+            buffer.Ensure(plainText.Length);
+            void* outPointer;
+            if (!buffer.Memory.TryGetPointer(out outPointer))
+            {
+                throw new NotImplementedException("Need to implement a pinned array if we can get a pointer");
+            }
+            plainText.CopyTo(buffer.Memory.Span);
+            int amountWritten;
+            Interop.Windows.ExceptionHelper.CheckReturnCode(
+                BCryptEncrypt(_key, outPointer, plainText.Length, &cInfo, iv, 16, outPointer, buffer.Memory.Length, out amountWritten, 0));
+            buffer.Advance(amountWritten);
+            cInfo.dwFlags = AuthenticatedCipherModeInfoFlags.InProgress;
+            buffer.Ensure(16);
+            buffer.Write(new Span<byte>(tag, 16));
+
+            IncrementSequence();
+            _sequenceNumber++;
         }
 
         ~AeadBulkCipherInstance()

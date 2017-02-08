@@ -88,11 +88,14 @@ namespace Leto.Tls13
                                 await writer.FlushAsync();
                                 continue;
                             }
-                            if(recordType == RecordType.ChangeCipherSpec)
+                            if (recordType == RecordType.ChangeCipherSpec)
                             {
-                                var writer = _outputPipe.Alloc();
-                                _state.HandleChangeCipherSpec(messageBuffer, ref writer);
-                                
+                                var outbuffer = _lowerConnection.Output.Alloc();
+                                var cipherBuffer = new byte[1];
+                                cipherBuffer[0] = 1;
+                                RecordProcessor.WriteRecord(ref outbuffer, RecordType.ChangeCipherSpec, cipherBuffer, _state);
+                                await outbuffer.FlushAsync();
+                                _state.HandleChangeCipherSpec(messageBuffer);
                                 continue;
                             }
                             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Unknown message type {recordType}");

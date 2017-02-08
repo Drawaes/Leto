@@ -56,6 +56,13 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
             GC.SuppressFinalize(this);
         }
 
+        public int GetKeySize(BulkCipherType cipherType)
+        {
+            int keySize, nonceSize, overhead;
+            GetCipherType(cipherType, out keySize, out nonceSize, out overhead );
+            return keySize;
+        }
+
         ~BulkCipherProvider()
         {
             Dispose();

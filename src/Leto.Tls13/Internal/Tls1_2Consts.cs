@@ -13,19 +13,20 @@ namespace Leto.Tls13.Internal
         private const string CLIENT_FINISHED = "client finished";
         private const string SERVER_FINISHED = "server finished";
         
-        internal static readonly IntPtr MasterSecretPointer = Marshal.StringToHGlobalAnsi(MASTER_SECRET);
-        internal static readonly IntPtr KeyExpansion = Marshal.StringToHGlobalAnsi(KEY_EXPANSION);
-        internal static readonly IntPtr ClientFinishedPointer = Marshal.StringToHGlobalAnsi(CLIENT_FINISHED);
-        internal static readonly IntPtr ServerFinishedPointer = Marshal.StringToHGlobalAnsi(SERVER_FINISHED);
+        internal static readonly IntPtr MasterSecretLabelPointer = Marshal.StringToHGlobalAnsi(MASTER_SECRET);
+        internal static readonly IntPtr KeyExpansionLabelPointer = Marshal.StringToHGlobalAnsi(KEY_EXPANSION);
+        internal static readonly IntPtr ClientFinishedLabelPointer = Marshal.StringToHGlobalAnsi(CLIENT_FINISHED);
+        internal static readonly IntPtr ServerFinishedLabelPointer = Marshal.StringToHGlobalAnsi(SERVER_FINISHED);
 
-        internal static readonly int MasterSecretSize = MASTER_SECRET.Length;
-        internal static readonly int KeyExpansionSize = KEY_EXPANSION.Length;
-        internal static readonly int ClientFinishedSize = CLIENT_FINISHED.Length;
-        internal static readonly int ServerFinishedSize = SERVER_FINISHED.Length;
-        internal const int MasterSecretLength = 48;
+        internal static readonly int MasterSecretLabelSize = MASTER_SECRET.Length;
+        internal static readonly int KeyExpansionLabelSize = KEY_EXPANSION.Length;
+        internal static readonly int ClientFinishedLabelSize = CLIENT_FINISHED.Length;
+        internal static readonly int ServerFinishedLabelSize = SERVER_FINISHED.Length;
+        internal const int MASTER_SECRET_LENGTH = 48;
+        internal const int VERIFY_DATA_LENGTH = 12;
 
-        internal static Span<byte> GetClientFinishedSpan() => new Span<byte>((void*)ClientFinishedPointer, ClientFinishedSize);
-        internal static Span<byte> GetServerFinishedSpan() => new Span<byte>((void*)ServerFinishedPointer, ServerFinishedSize);
-        internal static Span<byte> GetKeyExpansionSpan() => new Span<byte>((void*)KeyExpansion, KeyExpansionSize);
+        internal static Span<byte> GetClientFinishedSpan() => new Span<byte>((void*)ClientFinishedLabelPointer, ClientFinishedLabelSize);
+        internal static Span<byte> GetServerFinishedSpan() => new Span<byte>((void*)ServerFinishedLabelPointer, ServerFinishedLabelSize);
+        internal static Span<byte> GetKeyExpansionSpan() => new Span<byte>((void*)KeyExpansionLabelPointer, KeyExpansionLabelSize);
     }
 }

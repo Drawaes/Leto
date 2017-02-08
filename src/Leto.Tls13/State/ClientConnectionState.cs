@@ -194,9 +194,8 @@ namespace Leto.Tls13.State
             throw new NotImplementedException();
         }
 
-        public void HandleChangeCipherSpec(ReadableBuffer readable, ref WritableBuffer pipe)
+        public void HandleChangeCipherSpec(ReadableBuffer readable)
         {
-            throw new NotImplementedException();
         }
 
         ~ClientConnectionState()
