@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
+using Leto.Tls13.Extensions;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
 using Leto.Tls13.Sessions;
@@ -51,8 +52,20 @@ namespace Leto.Tls13.Handshake
 
         public static WritableBuffer WriteExtensionListTls12(WritableBuffer buffer, IConnectionState connectionState)
         {
-
+            WriteServerNameFromServer(ref buffer, connectionState);
+            WriteSecureRenegotiation(ref buffer, connectionState);
             return buffer;
+        }
+
+        public static void WriteSecureRenegotiation(ref WritableBuffer buffer, IConnectionState connectionState)
+        {
+            if (!connectionState.SecureRenegotiation)
+            {
+                return;
+            }
+            buffer.WriteBigEndian(ExtensionType.renegotiation_info);
+            buffer.WriteBigEndian<ushort>(1);
+            buffer.WriteBigEndian<byte>(0);
         }
 
         public static void WriteSupportedGroups(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
@@ -121,12 +134,13 @@ namespace Leto.Tls13.Handshake
             keyshare.WritePublicKey(ref buffer);
         }
 
-        public static void WriteServerName(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)
+        public static void WriteServerNameFromServer(ref WritableBuffer buffer, IConnectionState connectionState)
         {
-            buffer.WriteBigEndian(ExtensionType.server_name);
-            buffer.WriteBigEndian((ushort)(sizeof(ushort) + connectionState.ServerName.Length));
-            buffer.WriteBigEndian((ushort)connectionState.ServerName.Length);
-            buffer.Write(Encoding.UTF8.GetBytes(connectionState.ServerName));
+            if (!string.IsNullOrWhiteSpace(connectionState.ServerName))
+            {
+                buffer.WriteBigEndian(ExtensionType.server_name);
+                buffer.WriteBigEndian((ushort)0);
+            }
         }
 
         public static void WriteSupportedVersion(ref WritableBuffer writer, IConnectionState connectionState)

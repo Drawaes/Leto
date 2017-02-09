@@ -28,6 +28,7 @@ namespace Leto.Tls13.State
         CryptoProvider CryptoProvider { get; }
         IKeyshareInstance KeyShare { get; set; }
         CipherSuite CipherSuite { get; set; }
+        bool SecureRenegotiation { get; set; }
         IHashInstance HandshakeHash { get; set; }
         SecurePipelineListener Listener { get; }
         ushort TlsRecordVersion { get; }

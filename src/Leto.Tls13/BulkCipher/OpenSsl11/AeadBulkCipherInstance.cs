@@ -246,6 +246,7 @@ namespace Leto.Tls13.BulkCipher.OpenSsl11
 
             var cipherText = buffer.Slice(0, newLength);
             var authTag = buffer.Slice(newLength, _overhead);
+            buffer = buffer.Slice(0,newLength);
             void* authPtr;
             GCHandle authHandle = default(GCHandle);
             try

@@ -57,7 +57,7 @@ namespace Leto.Tls13.State
                     {
                         writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
-                        _state = StateType.WaitHelloRetry;
+                        ChangeState(StateType.WaitHelloRetry);
                         await writer.FlushAsync();
                         return;
                     }
@@ -67,14 +67,14 @@ namespace Leto.Tls13.State
                         Console.WriteLine("Generated Early Traffic Key");
                     }
                     //Write the server hello, the last of the unencrypted messages
-                    _state = StateType.SendServerHello;
+                    ChangeState(StateType.SendServerHello);
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello13);
                     //block our next actions because we need to have sent the message before changing keys
                     DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await DataForCurrentScheduleSent;
-                    _state = StateType.ServerAuthentication;
+                    ChangeState(StateType.ServerAuthentication);
                     //Generate the encryption keys and send the next set of messages
                     GenerateHandshakeKeys();
                     writer = pipe.Alloc();
@@ -92,11 +92,11 @@ namespace Leto.Tls13.State
                     GenerateServerApplicationKey();
                     if (EarlyDataSupported && PskIdentity != -1)
                     {
-                        _state = StateType.WaitEarlyDataFinished;
+                        ChangeState(StateType.WaitEarlyDataFinished);
                     }
                     else
                     {
-                        _state = StateType.WaitClientFinished;
+                        ChangeState(StateType.WaitClientFinished);
                     }
                     return;
                 case StateType.WaitClientFinished:
@@ -117,7 +117,7 @@ namespace Leto.Tls13.State
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
                     await writer.FlushAsync();
-                    _state = StateType.HandshakeComplete;
+                    ChangeState(StateType.HandshakeComplete);
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
@@ -136,7 +136,7 @@ namespace Leto.Tls13.State
                 //the client to send it's finish message
                 _readKey?.Dispose();
                 _readKey = KeySchedule.GenerateClientHandshakeKey();
-                _state = StateType.WaitClientFinished;
+                ChangeState(StateType.WaitClientFinished);
                 return;
             }
             Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");

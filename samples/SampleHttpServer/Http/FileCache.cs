@@ -15,7 +15,6 @@ namespace SampleHttpServer.Http
         public FileCache()
         {
             var filePath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "content");
-
             string currentPath = "";
             ParseFolder(filePath, currentPath);
         }

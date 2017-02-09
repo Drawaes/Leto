@@ -58,7 +58,7 @@ namespace Leto.Tls13
                                 {
                                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
                                 }
-                                _state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener);
+                                _state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener, _logger);
                                 HandshakeWriting();
                             }
                             _logger?.LogTrace($"Received TLS frame {recordType}");
@@ -70,6 +70,7 @@ namespace Leto.Tls13
                                 await HandshakeReading();
                                 if (_state.State == StateType.HandshakeComplete && !_startedApplicationWrite)
                                 {
+                                    _logger?.LogInformation("Handshake complete starting application writing");
                                     ApplicationWriting();
                                     _startedApplicationWrite = true;
                                 }
@@ -111,8 +112,9 @@ namespace Leto.Tls13
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                _logger?.LogWarning(new EventId(1), ex, "There was an unhandled exception in the reading loop");
                 //nom nom
                 Dispose();
             }
@@ -160,6 +162,7 @@ namespace Leto.Tls13
                                 messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
                                 buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
                             }
+                            _logger?.LogTrace("Writing application frame");
                             var writer = _lowerConnection.Output.Alloc();
                             RecordProcessor.WriteRecord(ref writer, RecordType.Application, messageBuffer, _state);
                             await writer.FlushAsync();
@@ -224,11 +227,16 @@ namespace Leto.Tls13
                                 messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
                                 buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
                             }
+                            _logger?.LogTrace("Writing handshake frame");
                             writer = _lowerConnection.Output.Alloc();
                             RecordProcessor.WriteRecord(ref writer, RecordType.Handshake, messageBuffer, _state);
                             await writer.FlushAsync();
                         }
                         _state.DataForCurrentScheduleSent.Set();
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger?.LogWarning(new EventId(2), ex, "The handshake loop had an exception");
                     }
                     finally
                     {

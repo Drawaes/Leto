@@ -9,6 +9,7 @@ using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13.State
 {
@@ -17,10 +18,11 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
         private KeySchedule12 _schedule;
-
-        public ServerStateTls12(SecurePipelineListener listener)
+        
+        public ServerStateTls12(SecurePipelineListener listener, ILogger logger)
             : base(listener)
         {
+            _logger = logger;
             _schedule = new KeySchedule12(this, listener.KeyScheduleProvider.BufferPool);
         }
 
@@ -30,6 +32,7 @@ namespace Leto.Tls13.State
         public override ushort TlsRecordVersion => 0x0303;
         public Span<byte> ClientRandom => _schedule.ClientRandom;
         public Span<byte> ServerRandom => _schedule.ServerRandom;
+
 
         public override void HandleAlertMessage(ReadableBuffer messageBuffer)
         {
@@ -57,7 +60,7 @@ namespace Leto.Tls13.State
                     }
                     this.StartHandshakeHash(buffer);
                     //Write server hello
-                    _state = StateType.SendServerHello;
+                    ChangeState(StateType.SendServerHello);
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello12);
                     this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
@@ -71,7 +74,7 @@ namespace Leto.Tls13.State
                     }
                     this.WriteHandshake(ref writer, HandshakeType.server_hello_done, (w, state) => w);
                     await writer.FlushAsync();
-                    _state = StateType.WaitClientKeyExchange;
+                    ChangeState(StateType.WaitClientKeyExchange);
                     break;
                 case StateType.WaitClientKeyExchange:
                     if (handshakeMessageType != HandshakeType.client_key_exchange)
@@ -84,7 +87,7 @@ namespace Leto.Tls13.State
                     _schedule.CalculateClientFinished();
                     //We can send the server finished because we have the expected client finished
                     _schedule.GenerateKeyMaterial();
-                    _state = StateType.ChangeCipherSpec;
+                    ChangeState(StateType.ChangeCipherSpec);
                     break;
                 case StateType.WaitClientFinished:
                     if(handshakeMessageType != HandshakeType.finished)
@@ -98,14 +101,14 @@ namespace Leto.Tls13.State
                     DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await DataForCurrentScheduleSent;
-                    _state = StateType.HandshakeComplete;
+                    ChangeState(StateType.HandshakeComplete);
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
                     break;
             }
         }
-
+        
         public override void Dispose()
         {
             throw new NotImplementedException();
@@ -118,7 +121,7 @@ namespace Leto.Tls13.State
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "");
             }
             _readKey = _schedule.GetClientKey();
-            _state = StateType.WaitClientFinished;
+            ChangeState(StateType.WaitClientFinished);
         }
 
         public override void SetClientRandom(ReadableBuffer readableBuffer)

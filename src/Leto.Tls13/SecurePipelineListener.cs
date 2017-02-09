@@ -24,7 +24,7 @@ namespace Leto.Tls13
         private ILoggerFactory _logFactory;
         private ILogger<SecurePipelineListener> _logger;
         private ILogger<SecurePipelineConnection> _connectionLogger;
-
+        
         public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
         {
             _logFactory = logFactory;

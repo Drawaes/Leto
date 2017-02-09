@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
+using Leto.Tls13.Extensions;
 using Leto.Tls13.Sessions;
 using Leto.Tls13.State;
 
@@ -124,6 +125,10 @@ namespace Leto.Tls13.Handshake
                             connectionState.CryptoProvider.GetKeyshareFromNamedGroups(extensionBuffer);
                         }
                         break;
+                    case ExtensionType.renegotiation_info:
+                        ReadRenegotiationInfo(extensionBuffer, connectionState);
+                        break;
+
                 }
             }
             //Wait until the end to check the signature, here we select the
@@ -132,6 +137,15 @@ namespace Leto.Tls13.Handshake
             if (signatureAlgoBuffer.Length != 0)
             {
                 ReadSignatureScheme(signatureAlgoBuffer, connectionState);
+            }
+        }
+
+        private static void ReadRenegotiationInfo(ReadableBuffer extensionBuffer, IConnectionState connectionState)
+        {
+            connectionState.SecureRenegotiation = true;
+            if(extensionBuffer.Length != 1)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "We don't support renegotiation so cannot support a secure renegotiation");
             }
         }
 
@@ -184,7 +198,10 @@ namespace Leto.Tls13.Handshake
 
         public static void ReadApplicationProtocolExtension(ReadableBuffer buffer, IConnectionState connectionState)
         {
+            buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
 
+            //if(connectionState.Listener.ServerNameProvider.MatchServerName(buffer))
+            //buffer.Equals()
         }
 
         public static TlsVersion ReadSupportedVersion(ReadableBuffer buffer, TlsVersion[] supportedVersions)

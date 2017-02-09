@@ -1,5 +1,6 @@
 ﻿using System.IO.Pipelines.Samples.Http;
 using System.IO.Pipelines.Text.Primitives;
+using Microsoft.Extensions.Logging;
 
 namespace System.IO.Pipelines.Samples
 {
@@ -10,17 +11,24 @@ namespace System.IO.Pipelines.Samples
         private PreservedBuffer _httpVersion;
         private PreservedBuffer _path;
         private PreservedBuffer _method;
+        private ILogger<HttpRequestParser> _logger;
+
+        public HttpRequestParser(ILoggerFactory factory)
+        {
+            _logger = factory?.CreateLogger<HttpRequestParser>();
+        }
 
         public ReadableBuffer HttpVersion => _httpVersion.Buffer;
         public ReadableBuffer Path => _path.Buffer;
         public ReadableBuffer Method => _method.Buffer;
 
         public RequestHeaderDictionary RequestHeaders = new RequestHeaderDictionary();
-
+                
         public ParseResult ParseRequest(ref ReadableBuffer buffer)
         {
             if (_state == ParsingState.StartLine)
             {
+                
                 // Find \n
                 ReadCursor delim;
                 ReadableBuffer startLine;

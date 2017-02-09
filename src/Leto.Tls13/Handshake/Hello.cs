@@ -4,6 +4,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.Certificates;
+using Leto.Tls13.Extensions;
 using Leto.Tls13.KeyExchange;
 using Leto.Tls13.State;
 
@@ -42,7 +43,7 @@ namespace Leto.Tls13.Handshake
             var ciphers = BufferExtensions.SliceVector<ushort>(ref readable);
             if (connectionState.CipherSuite == null)
             {
-                connectionState.CipherSuite = connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState.Version);
+                connectionState.CryptoProvider.GetCipherSuiteFromExtension(ciphers, connectionState);
             }
             //Skip compression
             BufferExtensions.SliceVector<byte>(ref readable);

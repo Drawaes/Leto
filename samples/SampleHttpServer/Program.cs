@@ -74,7 +74,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
         public static void Main(string[] args)
         {
             var logFactory = new LoggerFactory();
-            logFactory.AddConsole().AddDebug(LogLevel.Trace);
+            logFactory.AddConsole(LogLevel.Trace);
 
             using (var factory = new PipelineFactory())
             using (var list = new CertificateList())
@@ -84,7 +84,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                 //list.AddCertificate(provider.LoadCertificate(new X509Certificate2(_rsaCertPath, _certificatePassword)));
                 //list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
                 var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
-                list.AddCertificate(provider.LoadCertificate(new X509Certificate2(_ecdsaCertPath,_certificatePassword,X509KeyStorageFlags.Exportable),new X509CertificateCollection()));
+                list.AddCertificate(provider.LoadPfx12(_ecdsaCertPath, _certificatePassword));
                 using (var serverContext = new SecurePipelineListener(factory, list, logFactory))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
@@ -96,7 +96,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                         Console.WriteLine("Connected");
                         var sp = serverContext.CreateSecurePipeline(s);
                         Console.WriteLine("Secure Connection Created");
-                        await ServerLoop.HandleConnection(sp);
+                        await ServerLoop.HandleConnection(sp, logFactory);
                     });
                     socketClient.Start(ipEndPoint);
                     Console.ReadLine();

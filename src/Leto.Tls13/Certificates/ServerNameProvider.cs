@@ -16,7 +16,6 @@ namespace Leto.Tls13.Certificates
         public ServerNameProvider()
             : this( new string[0], false)
         {
-            
         }
 
         public ServerNameProvider(string[] hostNames, bool requiresMatch)

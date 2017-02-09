@@ -8,6 +8,7 @@ using Leto.Tls13.BulkCipher;
 using Leto.Tls13.Certificates;
 using Leto.Tls13.Hash;
 using Leto.Tls13.KeyExchange;
+using Leto.Tls13.State;
 using static Interop.LibCrypto;
 
 namespace Leto.Tls13
@@ -37,7 +38,7 @@ namespace Leto.Tls13
             {
                 //_keyShareProvider = new KeyExchange.Windows.KeyshareProvider();
                 _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
-                _hashProvider = new Hash.Windows.HashProvider();
+                _hashProvider = new Hash.OpenSsl11.HashProvider(); // new Hash.Windows.HashProvider();
                 _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
             }
             else
@@ -99,8 +100,8 @@ namespace Leto.Tls13
                     new CipherSuite() { BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC02C, CipherName = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.ecdsa},
                     new CipherSuite() {BulkCipherType = BulkCipherType.AES_128_GCM, HashType = HashType.SHA256, CipherCode = 0xC02F, CipherName = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" , ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.rsa},
                     new CipherSuite() {BulkCipherType = BulkCipherType.AES_256_GCM, HashType = HashType.SHA384, CipherCode = 0xC030, CipherName = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" , ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.rsa},
-                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA8, CipherName ="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256" , ExchangeType = KeyExchangeType.Ecdhe},
-                    //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA9, CipherName ="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", ExchangeType = KeyExchangeType.Ecdhe },
+                   // new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA8, CipherName ="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256" , ExchangeType = KeyExchangeType.Ecdhe},
+                    new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCA9, CipherName ="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", ExchangeType = KeyExchangeType.Ecdhe, RequiredCertificateType = CertificateType.ecdsa},
                     //new CipherSuite() {BulkCipherType = BulkCipherType.CHACHA20_POLY1305, HashType = HashType.SHA256, CipherCode = 0xCCAA, CipherName = "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256" },
                 };
         }
@@ -170,9 +171,9 @@ namespace Leto.Tls13
             return null;
         }
 
-        public unsafe CipherSuite GetCipherSuiteFromExtension(ReadableBuffer buffer, TlsVersion version)
+        public unsafe void GetCipherSuiteFromExtension(ReadableBuffer buffer, IConnectionState state)
         {
-            var list = GetCipherSuites(version);
+            var list = GetCipherSuites(state.Version);
             if (buffer.Length % 2 != 0)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, "Cipher suite extension is not divisable by zero");
@@ -183,8 +184,11 @@ namespace Leto.Tls13
             {
                 peerCipherList[i] = buffer.ReadBigEndian<ushort>();
                 buffer = buffer.Slice(sizeof(ushort));
+                if(peerCipherList[i] == 0x00FF)
+                {
+                    state.SecureRenegotiation = true;
+                }
             }
-
             for (var i = 0; i < list.Length; i++)
             {
                 for (var x = 0; x < numberOfCiphers; x++)
@@ -195,13 +199,13 @@ namespace Leto.Tls13
                     {
                         if (suite.RequiredCertificateType == CertificateType.anonymous || _certificateList.GetCertificate(null, (SignatureScheme)((ushort)suite.HashType << 8 | (ushort)suite.RequiredCertificateType)) != null)
                         {
-                            return list[i];
+                            state.CipherSuite = list[i];
+                            return;
                         }
                     }
                 }
             }
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.insufficient_security, "Failed to get a bulk cipher from the cipher extensions");
-            return null;
         }
 
         private CipherSuite[] GetCipherSuites(TlsVersion version)

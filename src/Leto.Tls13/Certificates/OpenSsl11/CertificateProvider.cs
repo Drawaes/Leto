@@ -59,6 +59,11 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                 {
                     numberinstack = 0;
                 }
+                else
+                {
+                    numberinstack -= 1;
+                    OPENSSL_sk_pop(stackPtr);
+                }
                 var certlist = new byte[numberinstack][];
                 for(int i = 0; i < numberinstack;i++)
                 {

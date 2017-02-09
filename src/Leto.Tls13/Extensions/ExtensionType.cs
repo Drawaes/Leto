@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Leto.Tls13.Handshake
+namespace Leto.Tls13.Extensions
 {
     public enum ExtensionType : ushort
     {
@@ -19,6 +19,7 @@ namespace Leto.Tls13.Handshake
         psk_key_exchange_modes = 45,
         certificate_authorities = 47,
         oid_filters = 48,
-        application_layer_protocol_negotiation = 16
+        application_layer_protocol_negotiation = 16,
+        renegotiation_info = 65281,
     }
 }

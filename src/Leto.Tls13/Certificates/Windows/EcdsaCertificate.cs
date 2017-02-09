@@ -81,8 +81,10 @@ namespace Leto.Tls13.Certificates.Windows
             {
                 hash.InterimHash(dPtr, digest.Length);
             }
-            writer.Ensure(_privateKey.KeySize);
+            
             var result = _privateKey.SignHash(digest);
+            var enc = new System.Security.Cryptography.AsnEncodedData(_certificate.SignatureAlgorithm, result);
+            
             writer.Write(result);
             return result.Length;
         }

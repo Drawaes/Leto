@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Threading.Tasks;
+using Leto.Tls13.Extensions;
 using Leto.Tls13.Handshake;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13.State
 {
@@ -15,12 +17,12 @@ namespace Leto.Tls13.State
             TlsVersion.Tls13Draft18
         };
         
-        public static IConnectionState GetNewStateMachine(ReadableBuffer buffer, SecurePipelineListener listener)
+        public static IConnectionState GetNewStateMachine(ReadableBuffer buffer, SecurePipelineListener listener, ILogger logger)
         {
             switch(GetVersion(ref buffer))
             {
                 case TlsVersion.Tls12:
-                    return new ServerStateTls12(listener);
+                    return new ServerStateTls12(listener, logger);
                 case TlsVersion.Tls13Draft18:
                     return new ServerStateTls13Draft18(listener);
                 default:

@@ -2,7 +2,7 @@
   "version": "1.0.0-*",
   "buildOptions": {
     "emitEntryPoint": true,
-    "copyToOutput": [ "../../data/*.pfx", "./Content/*/*" ]
+    "copyToOutput": [ "../../data/*.pfx", "./Content/**/**" ]
   },
 
   "dependencies": {

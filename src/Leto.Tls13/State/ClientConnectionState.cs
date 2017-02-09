@@ -73,6 +73,19 @@ namespace Leto.Tls13.State
             }
         }
 
+        public bool SecureRenegotiation
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
         {
             switch (State)
