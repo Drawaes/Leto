@@ -28,5 +28,6 @@ namespace Leto.Tls13.Internal
         internal static Span<byte> GetClientFinishedSpan() => new Span<byte>((void*)ClientFinishedLabelPointer, ClientFinishedLabelSize);
         internal static Span<byte> GetServerFinishedSpan() => new Span<byte>((void*)ServerFinishedLabelPointer, ServerFinishedLabelSize);
         internal static Span<byte> GetKeyExpansionSpan() => new Span<byte>((void*)KeyExpansionLabelPointer, KeyExpansionLabelSize);
+        internal static Span<byte> GetMasterSecretSpan() => new Span<byte>((void*)MasterSecretLabelPointer, MasterSecretLabelSize);
     }
 }

@@ -57,7 +57,7 @@ namespace Leto.Tls13.Certificates.OpenSsl11
 
         public bool SupportsSignatureScheme(SignatureScheme scheme)
         {
-            return scheme == _scheme;
+            return ((ushort)scheme & 0x00FF) == ((ushort)_scheme & 0x00FF);
         }
 
         public CertificateType CertificateType => CertificateType.ecdsa;
@@ -107,6 +107,11 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                     handle.Free();
                 }
             }
+        }
+
+        public SignatureScheme ModifySignatureScheme(SignatureScheme signatureScheme)
+        {
+            return _scheme;
         }
 
         ~EcdsaCertificate()

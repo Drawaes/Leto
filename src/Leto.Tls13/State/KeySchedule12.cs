@@ -74,12 +74,6 @@ namespace Leto.Tls13.State
             _state.HandshakeHash.HashData(hPtr, 4);
             _state.HandshakeHash.HashData((byte*)_clientFinishedVerify, Tls1_2Consts.VERIFY_DATA_LENGTH);
 
-            var hashResult = stackalloc byte[_state.HandshakeHash.HashSize + Tls1_2Consts.ServerFinishedLabelSize];
-            var seed = new Span<byte>(hashResult, _state.HandshakeHash.HashSize + Tls1_2Consts.ServerFinishedLabelSize);
-            _state.HandshakeHash.InterimHash(hashResult + Tls1_2Consts.ServerFinishedLabelSize, _state.HandshakeHash.HashSize);
-            var finishedLabel = Tls1_2Consts.GetServerFinishedSpan();
-            finishedLabel.CopyTo(seed);
-            PrfFunctions.P_Hash12(_state.CryptoProvider.HashProvider, _state.CipherSuite.HashType, _serverSpan, _masterSecret, Tls1_2Consts.MASTER_SECRET_LENGTH, seed);
         }
 
         public void GenerateKeyMaterial()
@@ -102,10 +96,19 @@ namespace Leto.Tls13.State
             return buffer;
         }
 
-        public void CompareClientFinished(ReadableBuffer buffer)
+        public void CompareClientFinishedGenerateServerFinished(ReadableBuffer buffer)
         {
+            _state.HandshakeHash.HashData(buffer);
             buffer = buffer.Slice(4);
             var result = CompareFunctions.ConstantTimeEquals(_clientSpan, buffer);
+
+
+            var hashResult = stackalloc byte[_state.HandshakeHash.HashSize + Tls1_2Consts.ServerFinishedLabelSize];
+            var seed = new Span<byte>(hashResult, _state.HandshakeHash.HashSize + Tls1_2Consts.ServerFinishedLabelSize);
+            _state.HandshakeHash.InterimHash(hashResult + Tls1_2Consts.ServerFinishedLabelSize, _state.HandshakeHash.HashSize);
+            var finishedLabel = Tls1_2Consts.GetServerFinishedSpan();
+            finishedLabel.CopyTo(seed);
+            PrfFunctions.P_Hash12(_state.CryptoProvider.HashProvider, _state.CipherSuite.HashType, _serverSpan, _masterSecret, Tls1_2Consts.MASTER_SECRET_LENGTH, seed);
         }
 
         public IBulkCipherInstance GetServerKey()

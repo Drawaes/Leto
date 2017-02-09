@@ -126,6 +126,11 @@ namespace Leto.Tls13.Certificates.OpenSsl11
             }
         }
 
+        public SignatureScheme ModifySignatureScheme(SignatureScheme signatureScheme)
+        {
+            return signatureScheme;
+        }
+
         ~RsaCertificate()
         {
             Dispose();

@@ -80,11 +80,11 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
             using (var list = new CertificateList())
             {
                 var thumb = "48026c976caaf7f3a72d38c17d16ce69d04a6053".ToUpper();
-                var provider = new Leto.Tls13.Certificates.Windows.CertificateProvider();
+                //var provider = new Leto.Tls13.Certificates.Windows.CertificateProvider();
                 //list.AddCertificate(provider.LoadCertificate(new X509Certificate2(_rsaCertPath, _certificatePassword)));
-                list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
-                //var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
-                //list.AddCertificate(provider.LoadCertificate(ecdsaCertPEM, ecdsaKeyPEM));
+                //list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
+                var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
+                list.AddCertificate(provider.LoadCertificate(new X509Certificate2(_ecdsaCertPath,_certificatePassword,X509KeyStorageFlags.Exportable),new X509CertificateCollection()));
                 using (var serverContext = new SecurePipelineListener(factory, list, logFactory))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {

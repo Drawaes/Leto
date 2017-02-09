@@ -57,6 +57,7 @@ namespace Leto.Tls13.Handshake
             }
             connectionState.SignatureScheme = (SignatureScheme)((ushort)connectionState.CipherSuite.HashType << 8 | (ushort)connectionState.CipherSuite.RequiredCertificateType);
             connectionState.Certificate = connectionState.CertificateList.GetCertificate(null, connectionState.SignatureScheme);
+            connectionState.SignatureScheme = connectionState.Certificate.ModifySignatureScheme(connectionState.SignatureScheme);
         }
 
         public static void ReadClientHelloTls13(ReadableBuffer readable, IConnectionStateTls13 connectionState)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Leto.Tls13.Hash;
+using Leto.Tls13.Internal;
 using static Interop.LibCrypto;
 
 namespace Leto.Tls13.KeyExchange.OpenSsl11
@@ -181,7 +182,29 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
 
         public unsafe void DeriveMasterSecretTls12(IHashProvider hashProvider, HashType hashType, void* seed, int seedLength, void* output, int outputLength)
         {
-            throw new NotImplementedException();
+            var ctx = EVP_PKEY_CTX_new(_eKey, IntPtr.Zero);
+            try
+            {
+                ThrowOnError(EVP_PKEY_derive_init(ctx));
+                ThrowOnError(EVP_PKEY_derive_set_peer(ctx, _clientKey));
+                IntPtr len = IntPtr.Zero;
+                ThrowOnError(EVP_PKEY_derive(ctx, null, ref len));
+
+                var data = stackalloc byte[len.ToInt32()];
+                ThrowOnError(EVP_PKEY_derive(ctx, data, ref len));
+                var newSeed = stackalloc byte[seedLength + Tls1_2Consts.MasterSecretLabelSize];
+                var sSpan = new Span<byte>(newSeed, seedLength + Tls1_2Consts.MasterSecretLabelSize);
+                var masterSpan = Tls1_2Consts.GetMasterSecretSpan();
+                masterSpan.CopyTo(sSpan);
+                var seedSpan = new Span<byte>(seed, seedLength);
+                seedSpan.CopyTo(sSpan.Slice(masterSpan.Length));
+                PrfFunctions.P_Hash12(hashProvider, hashType, new Span<byte>(output, outputLength), data, len.ToInt32(), sSpan);
+                Dispose();
+            }
+            finally
+            {
+                ctx.Free();
+            }
         }
 
         ~ECCurveInstance()

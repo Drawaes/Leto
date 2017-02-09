@@ -83,9 +83,6 @@ namespace Leto.Tls13.State
                     _schedule.GenerateMasterSecret();
                     _schedule.CalculateClientFinished();
                     //We can send the server finished because we have the expected client finished
-                    _schedule.CalculateServerFinished();
-                    HandshakeHash.Dispose();
-                    HandshakeHash = null;
                     _schedule.GenerateKeyMaterial();
                     _state = StateType.ChangeCipherSpec;
                     break;
@@ -94,7 +91,7 @@ namespace Leto.Tls13.State
                     {
                         Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"unexpected message");
                     }
-                    _schedule.CompareClientFinished(buffer);
+                    _schedule.CompareClientFinishedGenerateServerFinished(buffer);
                     _writeKey = _schedule.GetServerKey();
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.finished, _schedule.WriteServerFinished);

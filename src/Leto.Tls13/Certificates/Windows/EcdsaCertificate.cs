@@ -95,5 +95,10 @@ namespace Leto.Tls13.Certificates.Windows
         public void Dispose()
         {
         }
+
+        public SignatureScheme ModifySignatureScheme(SignatureScheme signatureScheme)
+        {
+            return _supportedSignatureScheme;
+        }
     }
 }

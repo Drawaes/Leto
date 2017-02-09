@@ -16,5 +16,6 @@ namespace Leto.Tls13.Certificates
         bool SupportsSignatureScheme(SignatureScheme scheme);
         int SignatureSize(SignatureScheme scheme);
         unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer, byte* message, int messageLength);
+        SignatureScheme ModifySignatureScheme(SignatureScheme signatureScheme);
     }
 }
