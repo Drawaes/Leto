@@ -91,48 +91,16 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                     var ip = IPAddress.Any;
                     int port = 443;
                     var ipEndPoint = new IPEndPoint(ip, port);
-                    socketClient.OnConnection(async s =>
+                    socketClient.OnConnection(s =>
                     {
                         Console.WriteLine("Connected");
                         var sp = serverContext.CreateSecurePipeline(s);
                         Console.WriteLine("Secure Connection Created");
-                        await ServerLoop.HandleConnection(sp, logFactory);
+                        return ServerLoop.HandleConnection(sp, logFactory); 
                     });
                     socketClient.Start(ipEndPoint);
                     Console.ReadLine();
                 }
-            }
-        }
-
-        private static async Task Echo(SecurePipelineConnection pipeline)
-        {
-            try
-            {
-                while (true)
-                {
-                    var result = await pipeline.Input.ReadAsync();
-                    var request = result.Buffer;
-
-                    if (request.IsEmpty && result.IsCompleted)
-                    {
-                        pipeline.Input.Advance(request.End);
-                        return;
-                    }
-                    var response = pipeline.Output.Alloc();
-                    response.Write(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK"));
-                    response.Write(Encoding.UTF8.GetBytes("\r\nContent-Length: 13"));
-                    response.Write(Encoding.UTF8.GetBytes("\r\nContent-Type: text/plain"));
-                    response.Write(Encoding.UTF8.GetBytes("\r\nConnection: close"));
-                    response.Write(Encoding.UTF8.GetBytes("\n\r\n"));
-                    response.Write(Encoding.UTF8.GetBytes("Hello, World!"));
-                    await response.FlushAsync();
-                    pipeline.Input.Advance(request.End);
-                    pipeline.Output.Complete();
-                }
-            }
-            finally
-            {
-
             }
         }
     }

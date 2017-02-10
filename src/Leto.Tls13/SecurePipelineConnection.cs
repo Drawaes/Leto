@@ -22,6 +22,7 @@ namespace Leto.Tls13
         private bool _startedApplicationWrite;
         private SecurePipelineListener _listener;
         private ILogger<SecurePipelineConnection> _logger;
+        private TaskCompletionSource<bool> _handshakeDone = new TaskCompletionSource<bool>();
 
         public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener, ILogger<SecurePipelineConnection> logger)
         {
@@ -37,6 +38,7 @@ namespace Leto.Tls13
 
         public IPipelineReader Input => _outputPipe;
         public IPipelineWriter Output => _inputPipe;
+        public Task HandshakeComplete => _handshakeDone.Task;
 
         private async void StartReading()
         {
@@ -73,6 +75,7 @@ namespace Leto.Tls13
                                     _logger?.LogInformation("Handshake complete starting application writing");
                                     ApplicationWriting();
                                     _startedApplicationWrite = true;
+                                    _handshakeDone.SetResult(true);
                                 }
                                 continue;
                             }

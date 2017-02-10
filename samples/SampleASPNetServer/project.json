@@ -6,20 +6,21 @@
   },
 
   "dependencies": {
-    "Leto.Tls13": { "target": "project" },
-    "Microsoft.AspNetCore.Http.Features": "1.1.0",
+    "Microsoft.AspNetCore.Hosting": "1.1.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.1.0",
     "Microsoft.Extensions.Logging": "1.1.0",
     "Microsoft.Extensions.Logging.Console": "1.1.0",
     "Microsoft.Extensions.Logging.Debug": "1.1.0",
-    "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
-    "Microsoft.NETCore.App": { "version": "1.1.0" },
-
-    "System.IO.Pipelines.Networking.Sockets": "0.1.0-e170114-1"
+    "Leto.Kestrel11": { "target": "project" },
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.1.0"
+    }
   },
 
   "frameworks": {
     "netcoreapp1.1": {
+      "imports": "dnxcore50"
     }
-  },
-  "runtimes": { "win8-x64": {} }
+  }
 }

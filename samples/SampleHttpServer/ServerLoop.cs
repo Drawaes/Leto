@@ -113,7 +113,7 @@ namespace SampleHttpServer
                             formatter.Append("HTTP/1.1 404 NOT FOUND");
                             formatter.Append("\r\nContent-Length: 0");
                             formatter.Append("\r\n\r\n");
-                            await output.FlushAsync();
+                            await output.FlushAsync().GetAwaiter();
                         }
                         if (httpParser.RequestHeaders["Connection"] == "close")
                         {
