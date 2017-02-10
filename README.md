@@ -7,11 +7,18 @@ Currently uses OpenSsl 1.1 for the crypto part and supports
 
 Hello Retry, and standard Handshake. 
 
+Now supports/downgrades to TLS 1.3 Correctly
+
 AESxxx-GCM
 ChaCha20/Poly
 ECDSA certificates
+RSA certificates
 
 Key exchanges (All now supported)
+
+Some support for Windows CNG is working, most extensions. Multiple server certificates, secure renegotiation
+
+https://tls13.cetus.io is currently hosting a site running on it (but runs out in a few days)
 
 1. x25519
 2. x448
@@ -23,19 +30,6 @@ Key exchanges (All now supported)
 8. secp521r1
 9. secp384r1
 10. secp256r1
-
-Things I am currently working on
-
-1. ~~EC key exchange~~ done
-2. PSK
-3. 0-RTT
-4. CNG Windows Support 
-  1. ~~Hash~~ done
-  2. ~~EC Keyexchange~~ done
-  3. FF Keyexchange
-  4. x25519
-  6. AES 
-5. ~~ChaCha20/Poly Support~~ done
 
 This library aims to prove out the use case for Pipelines having a native TLS library and for how TLS 1.3 can be implemented in that library.
 
