@@ -35,6 +35,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SampleASPNetServer", "sampl
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Leto.Kestrel11", "src\Leto.Kestrel11\Leto.Kestrel11.xproj", "{46D839A2-83B0-4872-B73A-55C3A44B7F76}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SslStreamVsLeto", "test\benchmarks\SslStreamVsLeto\SslStreamVsLeto.xproj", "{511E1E98-FBB3-4F26-A1D1-1680004B2E2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{46D839A2-83B0-4872-B73A-55C3A44B7F76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46D839A2-83B0-4872-B73A-55C3A44B7F76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46D839A2-83B0-4872-B73A-55C3A44B7F76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{511E1E98-FBB3-4F26-A1D1-1680004B2E2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{511E1E98-FBB3-4F26-A1D1-1680004B2E2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{511E1E98-FBB3-4F26-A1D1-1680004B2E2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{511E1E98-FBB3-4F26-A1D1-1680004B2E2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +73,6 @@ Global
 		{38F78C7E-13C2-490D-A50C-7B8F0E5F6CF2} = {8E98F636-35A0-46D9-8F2E-057F735FC6AA}
 		{483BA398-32EF-48AE-99D8-14A530F8D749} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{46D839A2-83B0-4872-B73A-55C3A44B7F76} = {9E09D9AE-D033-4226-9A46-2344877FF699}
+		{511E1E98-FBB3-4F26-A1D1-1680004B2E2B} = {8E98F636-35A0-46D9-8F2E-057F735FC6AA}
 	EndGlobalSection
 EndGlobal

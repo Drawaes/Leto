@@ -17,6 +17,7 @@ namespace SampleASPNetServer
             var host = new WebHostBuilder()
                 .UseKestrel((ops) =>
                 {
+                    //ops.UseHttps(".\\data\\new.pfx", "Test123t");
                     ops.UseLetoHttps(".\\data\\new.pfx", "Test123t");
                 })
                 .UseUrls("https://localhost:443")

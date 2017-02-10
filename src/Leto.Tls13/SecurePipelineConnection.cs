@@ -56,11 +56,12 @@ namespace Leto.Tls13
                             var recordType = RecordProcessor.ReadRecord(ref messageBuffer, _state);
                             if (_state == null)
                             {
-                                if (recordType != RecordType.Handshake)
-                                {
-                                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
-                                }
-                                _state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener, _logger);
+                                _state = new ServerStateTls12(this._listener, _logger);
+                                //if (recordType != RecordType.Handshake)
+                                //{
+                                //    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
+                                //}
+                                //_state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener, _logger);
                                 HandshakeWriting();
                             }
                             _logger?.LogTrace($"Received TLS frame {recordType}");

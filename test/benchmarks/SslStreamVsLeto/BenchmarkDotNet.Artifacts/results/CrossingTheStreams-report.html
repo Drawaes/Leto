@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>CrossingTheStreams</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.1, OS=Windows
+Processor=?, ProcessorCount=8
+Frequency=2742189 Hz, Resolution=364.6722 ns, Timer=TSC
+dotnet cli version=1.0.0-preview2-1-003177
+  [Host]     : .NET Core 4.6.24628.01, 64bit RyuJIT [AttachedDebugger]
+  DefaultJob : .NET Core 4.6.25009.03, 64bit RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th> Method</th><th>   Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Stream2Stream</td><td>752.1607 us</td><td>5.9069 us</td><td>22.8773 us</td><td>1.00</td><td>   0.00</td><td>16.42 kB</td>
+</tr><tr><td>Stream2Leto</td><td>4,091.9445 us</td><td>57.5220 us</td><td>275.8658 us</td><td>5.44</td><td>   0.39</td><td>18.51 kB</td>
+</tr></tbody></table>
+</body>
+</html>

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Leto.Kestrel11
 {
-    internal class StreamPipelineConnection : IPipelineConnection
+    public class StreamPipelineConnection : IPipelineConnection
     {
         public StreamPipelineConnection(PipelineFactory factory, Stream stream)
         {
