@@ -64,14 +64,18 @@ namespace Leto.Tls13.State
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello12);
                     this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
+                    await writer.FlushAsync();
                     if (CipherSuite.ExchangeType == KeyExchangeType.Ecdhe || CipherSuite.ExchangeType == KeyExchangeType.Dhe)
                     {
                         if (KeyShare == null)
                         {
                             KeyShare = CryptoProvider.GetDefaultKeyShare(CipherSuite.ExchangeType);
                         }
+                        writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.server_key_exchange, ServerHandshakeTls12.SendKeyExchange);
+                        await writer.FlushAsync();
                     }
+                    writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello_done, (w, state) => w);
                     await writer.FlushAsync();
                     ChangeState(StateType.WaitClientKeyExchange);
@@ -98,10 +102,13 @@ namespace Leto.Tls13.State
                     _writeKey = _schedule.GetServerKey();
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.finished, _schedule.WriteServerFinished);
+                    KeyShare?.Dispose();
+                    KeyShare = null;
                     DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     await DataForCurrentScheduleSent;
                     ChangeState(StateType.HandshakeComplete);
+                    
                     break;
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
@@ -111,7 +118,7 @@ namespace Leto.Tls13.State
         
         public override void Dispose()
         {
-            throw new NotImplementedException();
+            KeyShare?.Dispose();
         }
 
         public override void HandleChangeCipherSpec(ReadableBuffer readable)

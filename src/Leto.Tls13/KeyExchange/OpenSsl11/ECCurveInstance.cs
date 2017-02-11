@@ -100,7 +100,10 @@ namespace Leto.Tls13.KeyExchange.OpenSsl11
             }
             finally
             {
-                ctx.Free();
+                if (ctx.IsValid())
+                {
+                    ctx.Free();
+                }
             }
         }
 

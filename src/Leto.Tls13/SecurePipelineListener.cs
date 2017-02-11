@@ -19,7 +19,6 @@ namespace Leto.Tls13
         private CertificateList _certificateList;
         private KeyScheduleProvider _keyscheduleProvider;
         private ResumptionProvider _resumptionProvider;
-        private bool _allowTicketResumption;
         private ServerNameProvider _serverNameProvider;
         private ILoggerFactory _logFactory;
         private ILogger<SecurePipelineListener> _logger;

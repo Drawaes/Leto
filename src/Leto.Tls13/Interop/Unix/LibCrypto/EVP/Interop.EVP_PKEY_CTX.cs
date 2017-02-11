@@ -17,6 +17,11 @@ internal partial class Interop
                 EVP_PKEY_CTX_free(_ptr);
                 _ptr = IntPtr.Zero;
             }
+
+            internal bool IsValid()
+            {
+                return _ptr.ToInt64() > 0;
+            }
         }
     }
 }

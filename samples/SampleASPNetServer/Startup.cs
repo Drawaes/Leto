@@ -12,7 +12,7 @@ namespace SampleASPNetServer
     {
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            //loggerFactory.AddConsole(LogLevel.Trace);
+            loggerFactory.AddConsole(LogLevel.Trace);
             var logger = loggerFactory.CreateLogger("Default");
 
             app.Run(async context =>

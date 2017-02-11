@@ -33,7 +33,9 @@ namespace Leto.Tls13
             _inputPipe = factory.Create();
             _handshakePipe = factory.Create();
             _handshakeOutpipe = factory.Create();
+            _state = new ServerStateTls12(_listener, _logger);
             StartReading();
+            HandshakeWriting();
         }
 
         public IPipelineReader Input => _outputPipe;
@@ -54,16 +56,6 @@ namespace Leto.Tls13
                         while (RecordProcessor.TryGetFrame(ref buffer, out messageBuffer))
                         {
                             var recordType = RecordProcessor.ReadRecord(ref messageBuffer, _state);
-                            if (_state == null)
-                            {
-                                _state = new ServerStateTls12(this._listener, _logger);
-                                //if (recordType != RecordType.Handshake)
-                                //{
-                                //    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Requre a handshake for first message");
-                                //}
-                                //_state = VersionStateFactory.GetNewStateMachine(messageBuffer, _listener, _logger);
-                                HandshakeWriting();
-                            }
                             _logger?.LogTrace($"Received TLS frame {recordType}");
                             if (recordType == RecordType.Handshake)
                             {
@@ -116,10 +108,9 @@ namespace Leto.Tls13
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger?.LogWarning(new EventId(1), ex, "There was an unhandled exception in the reading loop");
-                //nom nom
                 Dispose();
             }
         }
@@ -208,44 +199,41 @@ namespace Leto.Tls13
             }
             while (true)
             {
-                while (true)
+                var result = await _handshakeOutpipe.ReadAsync();
+                var buffer = result.Buffer;
+                try
                 {
-                    var result = await _handshakeOutpipe.ReadAsync();
-                    var buffer = result.Buffer;
                     if (result.IsCompleted && result.Buffer.IsEmpty)
                     {
                         break;
                     }
-                    try
+                    while (buffer.Length > 0)
                     {
-                        while (buffer.Length > 0)
+                        ReadableBuffer messageBuffer;
+                        if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
                         {
-                            ReadableBuffer messageBuffer;
-                            if (buffer.Length <= RecordProcessor.PlainTextMaxSize)
-                            {
-                                messageBuffer = buffer;
-                                buffer = buffer.Slice(buffer.End);
-                            }
-                            else
-                            {
-                                messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
-                                buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
-                            }
-                            _logger?.LogTrace("Writing handshake frame");
-                            writer = _lowerConnection.Output.Alloc();
-                            RecordProcessor.WriteRecord(ref writer, RecordType.Handshake, messageBuffer, _state);
-                            await writer.FlushAsync();
+                            messageBuffer = buffer;
+                            buffer = buffer.Slice(buffer.End);
                         }
-                        _state.DataForCurrentScheduleSent.Set();
+                        else
+                        {
+                            messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
+                            buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
+                        }
+                        _logger?.LogTrace("Writing handshake frame");
+                        writer = _lowerConnection.Output.Alloc();
+                        RecordProcessor.WriteRecord(ref writer, RecordType.Handshake, messageBuffer, _state);
+                        await writer.FlushAsync();
                     }
-                    catch(Exception ex)
-                    {
-                        _logger?.LogWarning(new EventId(2), ex, "The handshake loop had an exception");
-                    }
-                    finally
-                    {
-                        _handshakeOutpipe.AdvanceReader(buffer.Start, buffer.End);
-                    }
+                    _state.DataForCurrentScheduleSent.Set();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(new EventId(2), ex, "The handshake loop had an exception");
+                }
+                finally
+                {
+                    _handshakeOutpipe.AdvanceReader(buffer.Start, buffer.End);
                 }
             }
         }
@@ -254,6 +242,7 @@ namespace Leto.Tls13
         {
             _logger?.LogTrace("Disposed connection");
             _lowerConnection.Dispose();
+            _state?.Dispose();
             GC.SuppressFinalize(this);
         }
 
