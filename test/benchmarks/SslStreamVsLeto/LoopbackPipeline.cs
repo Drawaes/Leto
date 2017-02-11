@@ -8,10 +8,10 @@ namespace SslStreamVsLeto
 {
     public class LoopbackPipeline
     {
-        IPipelineConnection _clientPipeline;
-        IPipelineConnection _serverPipeline;
+        IPipeConnection _clientPipeline;
+        IPipeConnection _serverPipeline;
 
-        public LoopbackPipeline(PipelineFactory factory)
+        public LoopbackPipeline(PipeFactory factory)
         {
             var backPipeline1 = factory.Create();
             var backPipeline2 = factory.Create();
@@ -20,22 +20,22 @@ namespace SslStreamVsLeto
             _serverPipeline = new TestPipeline(backPipeline2, backPipeline1);
         }
 
-        public IPipelineConnection ServerPipeline => _serverPipeline;
-        public IPipelineConnection ClientPipeline => _clientPipeline;
+        public IPipeConnection ServerPipeline => _serverPipeline;
+        public IPipeConnection ClientPipeline => _clientPipeline;
 
-        class TestPipeline : IPipelineConnection
+        class TestPipeline : IPipeConnection
         {
-            Pipe _inPipeline;
-            Pipe _outPipeline;
+            IPipe _inPipeline;
+            IPipe _outPipeline;
 
-            public TestPipeline(Pipe inPipeline, Pipe outPipeline)
+            public TestPipeline(IPipe inPipeline, IPipe outPipeline)
             {
                 _inPipeline = inPipeline;
                 _outPipeline = outPipeline;
             }
 
-            public IPipelineReader Input => _inPipeline;
-            public IPipelineWriter Output => _outPipeline;
+            public IPipeReader Input => _inPipeline.Reader;
+            public IPipeWriter Output => _outPipeline.Writer;
             public void Dispose()
             {
             }

@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
     <AssemblyName>SampleASPNetServer</AssemblyName>
     <OutputType>Exe</OutputType>
-    <PackageId>SampleASPNetServer</PackageId>
     <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <PackageId>SampleASPNetServer</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
@@ -19,16 +18,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Leto.Kestrel11\Leto.Kestrel11.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="1.2.0-preview1-23409" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="1.1.0" />
+    <ProjectReference Include="..\..\src\Leto.Kestrel12\Leto.Kestrel12.csproj" />
   </ItemGroup>
 
 </Project>

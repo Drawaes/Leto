@@ -10,19 +10,20 @@ using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
 using Leto.Tls13.Sessions;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13.State
 {
     public class ClientConnectionState : IConnectionStateTls13
     {
-        private SecurePipelineListener _securePipelineListener;
+        private SecurePipeListener _securePipelineListener;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private byte[] _helloBuffer;
         private IBulkCipherInstance _writeKey;
         private IBulkCipherInstance _readKey;
 
-        public ClientConnectionState(SecurePipelineListener securePipelineListener)
+        public ClientConnectionState(SecurePipeListener securePipelineListener)
         {
             State = StateType.SendClientHello;
             _securePipelineListener = securePipelineListener;
@@ -37,7 +38,7 @@ namespace Leto.Tls13.State
         public IHashInstance HandshakeHash { get; set; }
         public KeySchedule13 KeySchedule { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
-        public SecurePipelineListener Listener => _securePipelineListener;
+        public SecurePipeListener Listener => _securePipelineListener;
         public int PskIdentity { get; set; }
         public PskKeyExchangeMode PskKeyExchangeMode { get; set; }
         public IBulkCipherInstance ReadKey => _readKey;
@@ -86,7 +87,9 @@ namespace Leto.Tls13.State
             }
         }
 
-        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public ILogger Logger => throw new NotImplementedException();
+
+        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe)
         {
             switch (State)
             {

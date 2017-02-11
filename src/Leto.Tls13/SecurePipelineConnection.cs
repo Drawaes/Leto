@@ -11,20 +11,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13
 {
-    public class SecurePipelineConnection : IPipelineConnection
+    public class SecurePipelineConnection : IPipeConnection
     {
-        private IPipelineConnection _lowerConnection;
-        private readonly Pipe _outputPipe;
-        private readonly Pipe _inputPipe;
-        private readonly Pipe _handshakePipe;
-        private readonly Pipe _handshakeOutpipe;
+        private IPipeConnection _lowerConnection;
+        private readonly IPipe _outputPipe;
+        private readonly IPipe _inputPipe;
+        private readonly IPipe _handshakePipe;
+        private readonly IPipe _handshakeOutpipe;
         private IConnectionState _state;
         private bool _startedApplicationWrite;
-        private SecurePipelineListener _listener;
+        private SecurePipeListener _listener;
         private ILogger<SecurePipelineConnection> _logger;
         private TaskCompletionSource<bool> _handshakeDone = new TaskCompletionSource<bool>();
+        private object _lock = new object();
 
-        public SecurePipelineConnection(IPipelineConnection pipeline, PipelineFactory factory, SecurePipelineListener listener, ILogger<SecurePipelineConnection> logger)
+        public SecurePipelineConnection(IPipeConnection pipeline, PipeFactory factory, SecurePipeListener listener, ILogger<SecurePipelineConnection> logger)
         {
             _logger = logger;
             _listener = listener;
@@ -38,8 +39,8 @@ namespace Leto.Tls13
             HandshakeWriting();
         }
 
-        public IPipelineReader Input => _outputPipe;
-        public IPipelineWriter Output => _inputPipe;
+        public IPipeReader Input => _outputPipe.Reader;
+        public IPipeWriter Output => _inputPipe.Writer;
         public Task HandshakeComplete => _handshakeDone.Task;
 
         private async void StartReading()
@@ -59,7 +60,7 @@ namespace Leto.Tls13
                             _logger?.LogTrace($"Received TLS frame {recordType}");
                             if (recordType == RecordType.Handshake)
                             {
-                                var writer = _handshakePipe.Alloc();
+                                var writer = _handshakePipe.Writer.Alloc();
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();
                                 await HandshakeReading();
@@ -80,7 +81,7 @@ namespace Leto.Tls13
                             if (recordType == RecordType.Application)
                             {
                                 _logger?.LogTrace("Writing Application Data");
-                                var writer = _outputPipe.Alloc();
+                                var writer = _outputPipe.Writer.Alloc();
                                 writer.Append(messageBuffer);
                                 await writer.FlushAsync();
                                 continue;
@@ -111,13 +112,16 @@ namespace Leto.Tls13
             catch (Exception ex)
             {
                 _logger?.LogWarning(new EventId(1), ex, "There was an unhandled exception in the reading loop");
+            }
+            finally
+            {
                 Dispose();
             }
         }
 
         private async Task HandshakeReading()
         {
-            var result = await _handshakePipe.ReadAsync();
+            var result = await _handshakePipe.Reader.ReadAsync();
             var buffer = result.Buffer;
             try
             {
@@ -125,12 +129,16 @@ namespace Leto.Tls13
                 Handshake.HandshakeType handshakeType;
                 while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, out messageBuffer, out handshakeType))
                 {
-                    await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe);
+                    await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe.Writer);
                 }
+            }
+            catch
+            {
+                _logger.LogInformation("Handshake reading finished with an error");
             }
             finally
             {
-                _handshakePipe.AdvanceReader(buffer.Start, buffer.End);
+                _handshakePipe.Reader.Advance(buffer.Start, buffer.End);
             }
         }
 
@@ -140,7 +148,7 @@ namespace Leto.Tls13
             {
                 while (true)
                 {
-                    var result = await _inputPipe.ReadAsync();
+                    var result = await _inputPipe.Reader.ReadAsync();
                     var buffer = result.Buffer;
                     try
                     {
@@ -173,21 +181,22 @@ namespace Leto.Tls13
                     }
                     finally
                     {
-                        _inputPipe.AdvanceReader(buffer.Start, buffer.End);
+                        _inputPipe.Reader.Advance(buffer.Start, buffer.End);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogDebug($"Exception was thrown {ex}");
+                _logger?.LogDebug($"Exception was thrown during the application write {ex}");
                 //Nom Nom
+                Dispose();
             }
             _lowerConnection.Output.Complete();
         }
 
         private async void HandshakeWriting()
         {
-            var writer = _handshakeOutpipe.Alloc();
+            var writer = _handshakeOutpipe.Writer.Alloc();
             _state.StartHandshake(ref writer);
             if (writer.BytesWritten > 0)
             {
@@ -199,7 +208,7 @@ namespace Leto.Tls13
             }
             while (true)
             {
-                var result = await _handshakeOutpipe.ReadAsync();
+                var result = await _handshakeOutpipe.Reader.ReadAsync();
                 var buffer = result.Buffer;
                 try
                 {
@@ -233,17 +242,22 @@ namespace Leto.Tls13
                 }
                 finally
                 {
-                    _handshakeOutpipe.AdvanceReader(buffer.Start, buffer.End);
+                    _handshakeOutpipe.Reader.Advance(buffer.Start, buffer.End);
                 }
             }
         }
-
+        
         public void Dispose()
         {
-            _logger?.LogTrace("Disposed connection");
-            _lowerConnection.Dispose();
-            _state?.Dispose();
-            GC.SuppressFinalize(this);
+            lock (_lock)
+            {
+                _logger?.LogTrace("Disposed connection");
+                _lowerConnection?.Dispose();
+                _state?.Dispose();
+                _lowerConnection = null;
+                _state = null;
+                GC.SuppressFinalize(this);
+            }
         }
 
         ~SecurePipelineConnection()

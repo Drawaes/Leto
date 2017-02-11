@@ -12,22 +12,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13
 {
-    public class SecurePipelineListener : IDisposable
+    public class SecurePipeListener : IDisposable
     {
         private CryptoProvider _cryptoProvider;
-        private PipelineFactory _factory;
+        private PipeFactory _factory;
         private CertificateList _certificateList;
         private KeyScheduleProvider _keyscheduleProvider;
         private ResumptionProvider _resumptionProvider;
         private ServerNameProvider _serverNameProvider;
         private ILoggerFactory _logFactory;
-        private ILogger<SecurePipelineListener> _logger;
+        private ILogger<SecurePipeListener> _logger;
         private ILogger<SecurePipelineConnection> _connectionLogger;
         
-        public SecurePipelineListener(PipelineFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
+        public SecurePipeListener(PipeFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
         {
             _logFactory = logFactory;
-            _logger = logFactory?.CreateLogger<SecurePipelineListener>();
+            _logger = logFactory?.CreateLogger<SecurePipeListener>();
             _connectionLogger = logFactory?.CreateLogger<SecurePipelineConnection>();
             _factory = factory;
             _serverNameProvider = new ServerNameProvider();
@@ -44,13 +44,13 @@ namespace Leto.Tls13
         public ServerNameProvider ServerNameProvider => _serverNameProvider;
         public Func<X509Certificate2Collection, bool> CertificateValidation { get; set; }
 
-        public SecurePipelineConnection CreateSecurePipeline(IPipelineConnection pipeline)
+        public SecurePipelineConnection CreateSecurePipeline(IPipeConnection pipeline)
         {
             _logger?.LogTrace("Created new secure server pipeline");
             return new SecurePipelineConnection(pipeline, _factory, this, _connectionLogger);
         }
 
-        public SecurePipelineConnection CreateSecureClientPipeline(IPipelineConnection pipeline)
+        public SecurePipelineConnection CreateSecureClientPipeline(IPipeConnection pipeline)
         {
             return new SecurePipelineConnection(pipeline, _factory, this, _connectionLogger);
         }

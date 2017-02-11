@@ -16,7 +16,8 @@
       }
     },
     "SampleASPNetServer": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "leto"
     }
   }
 }

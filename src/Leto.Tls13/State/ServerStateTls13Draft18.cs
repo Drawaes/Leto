@@ -19,7 +19,7 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
 
-        public ServerStateTls13Draft18(SecurePipelineListener listener)
+        public ServerStateTls13Draft18(SecurePipeListener listener)
             : base(listener)
         {
             PskKeyExchangeMode = PskKeyExchangeMode.none;
@@ -34,7 +34,7 @@ namespace Leto.Tls13.State
         public bool EarlyDataSupported { get; set; }
         public override ushort TlsRecordVersion => 0x0301;
         
-        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe)
         {
             WritableBuffer writer;
             switch (State)

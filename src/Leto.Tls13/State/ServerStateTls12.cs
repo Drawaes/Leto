@@ -19,7 +19,7 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _writeKey;
         private KeySchedule12 _schedule;
         
-        public ServerStateTls12(SecurePipelineListener listener, ILogger logger)
+        public ServerStateTls12(SecurePipeListener listener, ILogger logger)
             : base(listener)
         {
             _logger = logger;
@@ -42,7 +42,7 @@ namespace Leto.Tls13.State
             Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");
         }
 
-        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe)
+        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe)
         {
             WritableBuffer writer;
             switch (State)
@@ -63,22 +63,31 @@ namespace Leto.Tls13.State
                     ChangeState(StateType.SendServerHello);
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello12);
-                    this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
                     await writer.FlushAsync();
+
+                    writer = pipe.Alloc();
+                    this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
+                    DataForCurrentScheduleSent.Reset();
+                    await writer.FlushAsync();
+                    await DataForCurrentScheduleSent;
                     if (CipherSuite.ExchangeType == KeyExchangeType.Ecdhe || CipherSuite.ExchangeType == KeyExchangeType.Dhe)
                     {
                         if (KeyShare == null)
                         {
                             KeyShare = CryptoProvider.GetDefaultKeyShare(CipherSuite.ExchangeType);
                         }
+                        DataForCurrentScheduleSent.Reset();
                         writer = pipe.Alloc();
                         this.WriteHandshake(ref writer, HandshakeType.server_key_exchange, ServerHandshakeTls12.SendKeyExchange);
                         await writer.FlushAsync();
+                        await DataForCurrentScheduleSent;
                     }
                     writer = pipe.Alloc();
                     this.WriteHandshake(ref writer, HandshakeType.server_hello_done, (w, state) => w);
+                    DataForCurrentScheduleSent.Reset();
                     await writer.FlushAsync();
                     ChangeState(StateType.WaitClientKeyExchange);
+                    await DataForCurrentScheduleSent;
                     break;
                 case StateType.WaitClientKeyExchange:
                     if (handshakeMessageType != HandshakeType.client_key_exchange)

@@ -22,7 +22,8 @@ namespace Leto.Tls13.Certificates.OpenSsl11
         private HashType _hashType;
         private EC_KEY _ecKey;
         private byte[][] _chain;
-        
+        private static object _lock = new object();
+
         internal EcdsaCertificate(EVP_PKEY privateKey, X509 certificate, byte[] derCertData, string altNameString, byte[][] chain)
         {
             _certData = derCertData;
@@ -79,32 +80,35 @@ namespace Leto.Tls13.Certificates.OpenSsl11
 
         public unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer , byte* message, int messageLength)
         {
-            var hash = provider.GetHashInstance(_hashType);
-            hash.HashData(message, messageLength);
+            lock (_lock)
+            {
+                var hash = provider.GetHashInstance(_hashType);
+                hash.HashData(message, messageLength);
 
-            var digest = new byte[hash.HashSize];
-            fixed (byte* dPtr = digest)
-            {
-                hash.InterimHash(dPtr, digest.Length);
-            }
-            writer.Ensure(ECDSA_size(_ecKey));
-            GCHandle handle;
-            var output = writer.Memory.GetPointer(out handle);
-            try
-            {
-                fixed (byte* iPtr = digest)
+                var digest = new byte[hash.HashSize];
+                fixed (byte* dPtr = digest)
                 {
-                    var sigSize = writer.Memory.Length;
-                    ThrowOnError(ECDSA_sign(0, iPtr, digest.Length, output, ref sigSize, _ecKey));
-                    writer.Advance(sigSize);
-                    return sigSize;
+                    hash.InterimHash(dPtr, digest.Length);
                 }
-            }
-            finally
-            {
-                if (handle.IsAllocated)
+                writer.Ensure(ECDSA_size(_ecKey));
+                GCHandle handle;
+                var output = writer.Memory.GetPointer(out handle);
+                try
                 {
-                    handle.Free();
+                    fixed (byte* iPtr = digest)
+                    {
+                        var sigSize = writer.Memory.Length;
+                        ThrowOnError(ECDSA_sign(0, iPtr, digest.Length, output, ref sigSize, _ecKey));
+                        writer.Advance(sigSize);
+                        return sigSize;
+                    }
+                }
+                finally
+                {
+                    if (handle.IsAllocated)
+                    {
+                        handle.Free();
+                    }
                 }
             }
         }

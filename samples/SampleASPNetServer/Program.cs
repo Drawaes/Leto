@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Leto.Kestrel11;
+using Leto.Kestrel12;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -22,16 +22,18 @@ namespace SampleASPNetServer
             var host = new WebHostBuilder()
                 .UseKestrel((ops) =>
                 {
-                    if (args[0] == "leto")
-                    {
-                        ops.UseLetoHttps(".\\data\\new.pfx", "Test123t");
-                    }
-                    else
-                    {
-                        ops.UseHttps(".\\data\\new.pfx", "Test123t");
-                    }
+                    ops.Listen(new IPEndPoint(IPAddress.Any, 443), lOpts =>
+                 {
+                     if (args[0] == "leto")
+                     {
+                         lOpts.UseLetoHttps(".\\data\\new.pfx", "Test123t");
+                     }
+                     else
+                     {
+                         lOpts.UseHttps(".\\data\\new.pfx", "Test123t");
+                     }
+                 });
                 })
-                .UseUrls("https://localhost:443")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .Build();

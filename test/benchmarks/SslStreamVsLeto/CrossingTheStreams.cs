@@ -13,20 +13,20 @@ namespace SslStreamVsLeto
     {
         const string certPath = "c:\\code\\leto\\data\\new.pfx";
         const string certPassword = "Test123t";
-        private static Leto.Tls13.SecurePipelineListener _listener;
+        private static Leto.Tls13.SecurePipeListener _listener;
         private static X509Certificate2 _certificate;
-        private static PipelineFactory _factory;
+        private static PipeFactory _factory;
         private static byte[] _payload = new byte[1024];
 
         [Setup]
         public static void Setup()
         {
-            _factory = new PipelineFactory();
+            _factory = new PipeFactory();
             _certificate = new X509Certificate2(certPath, certPassword);
             var certs = new Leto.Tls13.CertificateList();
             var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
             certs.AddCertificate(provider.LoadPfx12(certPath, certPassword));
-            _listener = new Leto.Tls13.SecurePipelineListener(_factory, certs, null);
+            _listener = new Leto.Tls13.SecurePipeListener(_factory, certs, null);
         }
 
         [Benchmark(Baseline = true)]

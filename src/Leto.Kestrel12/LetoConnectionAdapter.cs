@@ -15,13 +15,14 @@ namespace Leto.Kestrel12
 {
     public class LetoConnectionAdapter : IConnectionAdapter, IDisposable
     {
-        private PipelineFactory _pipeFactory = new PipelineFactory();
+        private PipeFactory _pipeFactory = new PipeFactory();
         private static readonly ClosedAdaptedConnection _closedAdaptedConnection = new ClosedAdaptedConnection();
-        private SecurePipelineListener _listener;
+        private SecurePipeListener _listener;
         private CertificateList _certList;
+        private ILogger _logger;
 
         public LetoConnectionAdapter(LetoConnectionAdapterOptions options)
-            :this(options, loggerFactory: null)
+            : this(options, loggerFactory: null)
         {
         }
 
@@ -30,19 +31,22 @@ namespace Leto.Kestrel12
             _certList = new CertificateList();
             var provider = new Tls13.Certificates.OpenSsl11.CertificateProvider();
             _certList.AddCertificate(provider.LoadPfx12(options.PfxPath, options.PfxPassword));
-            _listener = new SecurePipelineListener(_pipeFactory, _certList, loggerFactory);
+            _listener = new SecurePipeListener(_pipeFactory, _certList, loggerFactory);
         }
-                
+
         public async Task<IAdaptedConnection> OnConnectionAsync(ConnectionAdapterContext context)
         {
-            var netStream = context.ConnectionStream as NetworkStream;
-            if(netStream == null)
-            {
-                return _closedAdaptedConnection;
-            }
-            var connection = _pipeFactory.CreateConnection(netStream);
+            var connection = new StreamPipeConnection(_pipeFactory, context.ConnectionStream);
             var secureConnection = _listener.CreateSecurePipeline(connection);
-            await secureConnection.HandshakeComplete;
+            try
+            {
+                await secureConnection.HandshakeComplete;
+            }
+            catch(Exception ex)
+            {
+                _logger?.LogInformation(new EventId(10), ex,"Failed to complete a TLS handshake");
+                return new ClosedAdaptedConnection();
+            }
             return new TlsAdaptedConnection(secureConnection);
         }
 

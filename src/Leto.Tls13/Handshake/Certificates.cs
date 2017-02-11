@@ -9,7 +9,7 @@ namespace Leto.Tls13.Handshake
 {
     public class Certificates
     {
-        public static void ReadCertificates(ReadableBuffer buffer, SecurePipelineListener listener)
+        public static void ReadCertificates(ReadableBuffer buffer, SecurePipeListener listener)
         {
             buffer = buffer.Slice(HandshakeProcessor.HandshakeHeaderSize);
             //ignore context

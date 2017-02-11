@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.6</TargetFramework>
+    <AssemblyName>Leto.Kestrel12</AssemblyName>
+    <PackageId>Leto.Kestrel12</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <NetStandardImplicitPackageVersion>1.6.2-beta-24913-01</NetStandardImplicitPackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Leto.Tls13\Leto.Tls13.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-*" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-*" />
+  </ItemGroup>
+
+</Project>

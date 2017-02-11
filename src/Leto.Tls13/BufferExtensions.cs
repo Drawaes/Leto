@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace Leto.Tls13
 {
     public static class BufferExtensions
     {
-        public static ReadableBuffer SliceBigEndian<[Primitive] T>(this ReadableBuffer buffer, out T value) where T : struct
+        public static ReadableBuffer SliceBigEndian<T>(this ReadableBuffer buffer, out T value) where T : struct
         {
             value = buffer.ReadBigEndian<T>();
             return buffer.Slice(Unsafe.SizeOf<T>());
@@ -118,7 +119,7 @@ namespace Leto.Tls13
             buffer.Span.Slice(2).Write((byte)(numberToWrite & 0x0000ff));
         }
 
-        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, IConnectionStateTls12, WritableBuffer> writeContent, IConnectionStateTls12 state)
+        public static void WriteVector24Bit<T>(ref WritableBuffer buffer, Func<WritableBuffer, T, WritableBuffer> writeContent, T state) where T : IConnectionState
         {
             buffer.Ensure(3);
             var bookmark = buffer.Memory;

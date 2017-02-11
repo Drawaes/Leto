@@ -17,7 +17,7 @@ namespace Leto.Tls13.State
             TlsVersion.Tls13Draft18
         };
         
-        public static IConnectionState GetNewStateMachine(ReadableBuffer buffer, SecurePipelineListener listener, ILogger logger)
+        public static IConnectionState GetNewStateMachine(ReadableBuffer buffer, SecurePipeListener listener, ILogger logger)
         {
             switch(GetVersion(ref buffer))
             {

@@ -3,19 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>portable</DebugType>
     <AssemblyName>Leto.Tls13</AssemblyName>
     <PackageId>Leto.Tls13</PackageId>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <NetStandardImplicitPackageVersion>1.6.2-beta-24913-01</NetStandardImplicitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170114-1" />
-    <PackageReference Include="System.IO.Pipelines.Text.Primitives" Version="0.1.0-e170114-1" />
-    <PackageReference Include="System.Binary" Version="0.1.0-e170114-1" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-*" />
+    <PackageReference Include="System.IO.Pipelines.Text.Primitives" Version="0.1.0-*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.0" />
   </ItemGroup>
 

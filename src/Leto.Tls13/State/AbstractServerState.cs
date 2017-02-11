@@ -16,12 +16,12 @@ namespace Leto.Tls13.State
 {
     public abstract class AbstractServerState : IConnectionState
     {
-        private SecurePipelineListener _listener;
+        private SecurePipeListener _listener;
         private StateType _state;
         protected ILogger _logger;
         private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
         
-        public AbstractServerState(SecurePipelineListener listener)
+        public AbstractServerState(SecurePipeListener listener)
         {
             _state = StateType.None;
             _listener = listener;
@@ -35,7 +35,7 @@ namespace Leto.Tls13.State
         public IHashInstance HandshakeHash { get; set; }
         public IKeyshareInstance KeyShare { get; set; }
         public SignatureScheme SignatureScheme { get; set; }
-        public SecurePipelineListener Listener => _listener;
+        public SecurePipeListener Listener => _listener;
         public CertificateList CertificateList => _listener.CertificateList;
         public virtual IBulkCipherInstance ReadKey { get;}
         public ResumptionProvider ResumptionProvider => _listener.ResumptionProvider;
@@ -44,9 +44,10 @@ namespace Leto.Tls13.State
         public abstract TlsVersion Version { get; }
         public virtual IBulkCipherInstance WriteKey {get; }
         public abstract ushort TlsRecordVersion { get; }
+        public ILogger Logger => _logger;
 
         public abstract void HandleAlertMessage(ReadableBuffer readable);
-        public abstract Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipelineWriter pipe);
+        public abstract Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe);
         public void StartHandshake(ref WritableBuffer writer)
         {
 

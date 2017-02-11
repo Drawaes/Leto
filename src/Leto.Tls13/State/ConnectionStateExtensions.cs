@@ -5,28 +5,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13.State
 {
     public static class ConnectionStateExtensions
     {
-        public static void WriteHandshake(this IConnectionStateTls13 state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionStateTls13, WritableBuffer> contentWriter)
+        public static void WriteHandshake<T>(this T state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, T, WritableBuffer> contentWriter) where T : IConnectionState
         {
+            state.Logger?.LogTrace("Writing handshake {handshake type}", handshakeType);
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
-            BufferExtensions.WriteVector24Bit(ref writer, contentWriter, state);
-            if (state.HandshakeHash != null)
-            {
-                var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
-                state.HandshakeHash.HashData(hashBuffer);
-            }
-        }
-
-        public static void WriteHandshake(this IConnectionStateTls12 state, ref WritableBuffer writer, HandshakeType handshakeType, Func<WritableBuffer, IConnectionStateTls12, WritableBuffer> contentWriter)
-        {
-            var dataWritten = writer.BytesWritten;
-            writer.WriteBigEndian(handshakeType);
-            BufferExtensions.WriteVector24Bit(ref writer, contentWriter, state);
+            BufferExtensions.WriteVector24Bit<T>(ref writer, contentWriter, state);
             if (state.HandshakeHash != null)
             {
                 var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
