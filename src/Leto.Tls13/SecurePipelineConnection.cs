@@ -54,8 +54,7 @@ namespace Leto.Tls13
                     }
                     try
                     {
-                        ReadableBuffer messageBuffer;
-                        while (RecordProcessor.TryGetFrame(ref buffer, out messageBuffer))
+                        while (RecordProcessor.TryGetFrame(ref buffer, out ReadableBuffer messageBuffer))
                         {
                             var recordType = RecordProcessor.ReadRecord(ref messageBuffer, _state);
                             _logger?.LogTrace($"Received TLS frame {recordType}");
@@ -177,6 +176,7 @@ namespace Leto.Tls13
                                 messageBuffer = buffer.Slice(0, RecordProcessor.PlainTextMaxSize);
                                 buffer = buffer.Slice(RecordProcessor.PlainTextMaxSize);
                             }
+
                             _logger?.LogTrace("Writing application frame");
                             var writer = _lowerConnection.Output.Alloc();
                             _state.FrameWriter.StartFrame(RecordType.Application, ref writer);
@@ -184,11 +184,11 @@ namespace Leto.Tls13
                             _state.FrameWriter.FinishFrame(ref writer);
                             await writer.FlushAsync();
                         }
-                        
+
                     }
                     finally
                     {
-                        _inputPipe.Reader.Advance(buffer.Start, buffer.End);
+                        _inputPipe.Reader.Advance(buffer.Start, buffer.End);   
                     }
                 }
             }
