@@ -27,6 +27,7 @@ namespace Leto.Tls13.RecordLayer
             {
                 ExceptionHelper.ThrowException(new InvalidOperationException("Already writing a frame and started another"));
             }
+            _frameStarted = true;
             _recordType = recordType;
             buffer.Ensure(RecordProcessor.RecordHeaderLength);
             buffer.WriteBigEndian(recordType);
@@ -51,6 +52,7 @@ namespace Leto.Tls13.RecordLayer
             }
             _messageBodySize = buffer.BytesWritten - _messageBodySize;
             _bookmark.Span.Write16BitNumber((ushort)_messageBodySize);
+            _frameStarted = false;
         }
     }
 }

@@ -22,7 +22,6 @@ namespace Leto.Tls13.Certificates.OpenSsl11
         private HashType _hashType;
         private EC_KEY _ecKey;
         private byte[][] _chain;
-        private static object _lock = new object();
 
         internal EcdsaCertificate(EVP_PKEY privateKey, X509 certificate, byte[] derCertData, string altNameString, byte[][] chain)
         {
@@ -80,8 +79,6 @@ namespace Leto.Tls13.Certificates.OpenSsl11
 
         public unsafe int SignHash(IHashProvider provider, SignatureScheme scheme, ref WritableBuffer writer , byte* message, int messageLength)
         {
-            lock (_lock)
-            {
                 var hash = provider.GetHashInstance(_hashType);
                 hash.HashData(message, messageLength);
 
@@ -110,7 +107,6 @@ namespace Leto.Tls13.Certificates.OpenSsl11
                         handle.Free();
                     }
                 }
-            }
         }
 
         public SignatureScheme ModifySignatureScheme(SignatureScheme signatureScheme)

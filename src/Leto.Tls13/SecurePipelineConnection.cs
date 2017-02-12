@@ -48,6 +48,10 @@ namespace Leto.Tls13
                 {
                     var result = await _lowerConnection.Input.ReadAsync();
                     var buffer = result.Buffer;
+                    if (result.IsCompleted && buffer.IsEmpty)
+                    {
+                        return;
+                    }
                     try
                     {
                         ReadableBuffer messageBuffer;
@@ -64,9 +68,9 @@ namespace Leto.Tls13
                                 if (_state.State == StateType.HandshakeComplete && !_startedApplicationWrite)
                                 {
                                     _logger?.LogInformation("Handshake complete starting application writing");
-                                    ApplicationWriting();
                                     _startedApplicationWrite = true;
                                     _handshakeDone.SetResult(true);
+                                    ApplicationWriting();
                                 }
                                 continue;
                             }
@@ -122,8 +126,8 @@ namespace Leto.Tls13
                 while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, out messageBuffer, out handshakeType))
                 {
                     var outBuffer = _lowerConnection.Output.Alloc();
-                    _state.HandleHandshakeMessage(handshakeType, messageBuffer,ref  outBuffer);
-                    if(outBuffer.BytesWritten == 0)
+                    _state.HandleHandshakeMessage(handshakeType, messageBuffer, ref outBuffer);
+                    if (outBuffer.BytesWritten == 0)
                     {
                         outBuffer.Commit();
                     }
@@ -151,6 +155,13 @@ namespace Leto.Tls13
                 {
                     var result = await _inputPipe.Reader.ReadAsync();
                     var buffer = result.Buffer;
+                    if (result.IsCompleted && buffer.IsEmpty)
+                    {
+                        //var output = _lowerConnection.Output.Alloc();
+                        //Alerts.AlertException.WriteAlert(ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify, _state);
+                        //await output.FlushAsync();
+                        break;
+                    }
                     try
                     {
                         while (buffer.Length > 0)
@@ -173,13 +184,7 @@ namespace Leto.Tls13
                             _state.FrameWriter.FinishFrame(ref writer);
                             await writer.FlushAsync();
                         }
-                        if (result.IsCompleted && buffer.IsEmpty)
-                        {
-                            var output = _lowerConnection.Output.Alloc();
-                            Alerts.AlertException.WriteAlert(ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify, _state);
-                            await output.FlushAsync();
-                            break;
-                        }
+                        
                     }
                     finally
                     {
@@ -193,9 +198,8 @@ namespace Leto.Tls13
                 //Nom Nom
                 Dispose();
             }
-            _lowerConnection.Output.Complete();
         }
-                
+
         public void Dispose()
         {
             lock (_lock)
