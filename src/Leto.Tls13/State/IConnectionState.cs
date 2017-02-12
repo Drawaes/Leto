@@ -39,6 +39,6 @@ namespace Leto.Tls13.State
         void StartHandshake(ref WritableBuffer writer);
         void HandleAlertMessage(ReadableBuffer readable);
         void HandleChangeCipherSpec(ReadableBuffer readable);
-        Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe);
+        Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection);
     }
 }

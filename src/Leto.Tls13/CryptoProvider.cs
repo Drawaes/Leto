@@ -36,9 +36,9 @@ namespace Leto.Tls13
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                //_keyShareProvider = new KeyExchange.Windows.KeyshareProvider();
-                _keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
-                _hashProvider = new Hash.OpenSsl11.HashProvider(); // new Hash.Windows.HashProvider();
+                _keyShareProvider = new KeyExchange.Windows.KeyshareProvider();
+                //_keyShareProvider = new KeyExchange.OpenSsl11.KeyshareProvider();
+                _hashProvider = new Hash.Windows.HashProvider();
                 _bulkCipherProvider = new BulkCipher.OpenSsl11.BulkCipherProvider();
             }
             else

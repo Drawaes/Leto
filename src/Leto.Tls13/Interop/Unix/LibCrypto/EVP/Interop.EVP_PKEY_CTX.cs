@@ -14,13 +14,16 @@ internal partial class Interop
 
             public void Free()
             {
-                EVP_PKEY_CTX_free(_ptr);
-                _ptr = IntPtr.Zero;
+                if (IsValid())
+                {
+                    EVP_PKEY_CTX_free(_ptr);
+                    _ptr = IntPtr.Zero;
+                }
             }
 
             internal bool IsValid()
             {
-                return _ptr.ToInt64() > 0;
+                return _ptr != IntPtr.Zero;
             }
         }
     }

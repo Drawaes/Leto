@@ -89,7 +89,7 @@ namespace Leto.Tls13.State
 
         public ILogger Logger => throw new NotImplementedException();
 
-        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe)
+        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection)
         {
             switch (State)
             {

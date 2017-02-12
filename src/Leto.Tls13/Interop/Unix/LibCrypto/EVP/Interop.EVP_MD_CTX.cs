@@ -17,6 +17,11 @@ internal partial class Interop
                 EVP_MD_CTX_free(_ptr);
                 _ptr = IntPtr.Zero;
             }
+
+            public bool IsValid()
+            {
+                return _ptr != IntPtr.Zero;
+            }
         }
     }
 }

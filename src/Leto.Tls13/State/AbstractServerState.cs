@@ -47,7 +47,7 @@ namespace Leto.Tls13.State
         public ILogger Logger => _logger;
 
         public abstract void HandleAlertMessage(ReadableBuffer readable);
-        public abstract Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe);
+        public abstract Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection);
         public void StartHandshake(ref WritableBuffer writer)
         {
 

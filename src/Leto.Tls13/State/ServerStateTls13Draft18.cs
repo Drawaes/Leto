@@ -34,7 +34,7 @@ namespace Leto.Tls13.State
         public bool EarlyDataSupported { get; set; }
         public override ushort TlsRecordVersion => 0x0301;
         
-        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe)
+        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection)
         {
             WritableBuffer writer;
             switch (State)

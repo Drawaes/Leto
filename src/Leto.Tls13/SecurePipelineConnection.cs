@@ -88,11 +88,6 @@ namespace Leto.Tls13
                             }
                             if (recordType == RecordType.ChangeCipherSpec)
                             {
-                                var outbuffer = _lowerConnection.Output.Alloc();
-                                var cipherBuffer = new byte[1];
-                                cipherBuffer[0] = 1;
-                                RecordProcessor.WriteRecord(ref outbuffer, RecordType.ChangeCipherSpec, cipherBuffer, _state);
-                                await outbuffer.FlushAsync();
                                 _state.HandleChangeCipherSpec(messageBuffer);
                                 continue;
                             }
@@ -129,7 +124,7 @@ namespace Leto.Tls13
                 Handshake.HandshakeType handshakeType;
                 while (Handshake.HandshakeProcessor.TryGetFrame(ref buffer, out messageBuffer, out handshakeType))
                 {
-                    await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe.Writer);
+                    await _state.HandleHandshakeMessage(handshakeType, messageBuffer, _handshakeOutpipe.Writer, _lowerConnection);
                 }
             }
             catch
