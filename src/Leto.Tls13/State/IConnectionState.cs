@@ -9,6 +9,7 @@ using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
+using Leto.Tls13.RecordLayer;
 using Leto.Tls13.Sessions;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +27,6 @@ namespace Leto.Tls13.State
         TlsVersion Version { get; }
         ResumptionProvider ResumptionProvider { get; }
         CertificateList CertificateList { get; }
-        Signal DataForCurrentScheduleSent { get; }
         CryptoProvider CryptoProvider { get; }
         IKeyshareInstance KeyShare { get; set; }
         CipherSuite CipherSuite { get; set; }
@@ -34,11 +34,11 @@ namespace Leto.Tls13.State
         IHashInstance HandshakeHash { get; set; }
         SecurePipeListener Listener { get; }
         ushort TlsRecordVersion { get; }
+        FrameWriter FrameWriter { get; }
         void SetClientRandom(ReadableBuffer readableBuffer);
         void SetServerRandom(Memory<byte> memory);
-        void StartHandshake(ref WritableBuffer writer);
         void HandleAlertMessage(ReadableBuffer readable);
         void HandleChangeCipherSpec(ReadableBuffer readable);
-        Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection);
+        void HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer,ref WritableBuffer outBuffer);
     }
 }

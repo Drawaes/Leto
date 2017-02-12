@@ -14,12 +14,11 @@ namespace Leto.Tls13.BulkCipher
         int IVLength { get; }
         void SetKey(Span<byte> key);
         void SetIV(Span<byte> iv);
+        void WriteNonce(ref WritableBuffer buffer);
         void Decrypt(ref ReadableBuffer messageBuffer);
-        void Encrypt(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType);
+        void Encrypt(ref WritableBuffer buffer, RecordType recordType);
         void WithPadding(int paddingSize);
-        void Encrypt(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType);
         void DecryptWithAuthData(ref ReadableBuffer messageBuffer);
-        void EncryptWithAuthData(ref WritableBuffer buffer, Span<byte> plainText, RecordType recordType, ushort tlsVersion);
-        void EncryptWithAuthData(ref WritableBuffer buffer, ReadableBuffer plainText, RecordType recordType, ushort tlsVersion);
+        void EncryptWithAuthData(ref WritableBuffer buffer, RecordType recordType, ushort tlsVersion, int plaintextLength);
     }
 }

@@ -17,8 +17,6 @@ namespace Leto.Tls13.State
     public class ClientConnectionState : IConnectionStateTls13
     {
         private SecurePipeListener _securePipelineListener;
-        private Signal _dataForCurrentScheduleSent = new Signal(Signal.ContinuationMode.Synchronous);
-        private Signal _waitForHandshakeToChangeSchedule = new Signal(Signal.ContinuationMode.Synchronous);
         private byte[] _helloBuffer;
         private IBulkCipherInstance _writeKey;
         private IBulkCipherInstance _readKey;
@@ -33,7 +31,6 @@ namespace Leto.Tls13.State
         public CertificateList CertificateList => _securePipelineListener.CertificateList;
         public CipherSuite CipherSuite { get; set; }
         public CryptoProvider CryptoProvider => _securePipelineListener.CryptoProvider;
-        public Signal DataForCurrentScheduleSent => _dataForCurrentScheduleSent;
         public IBulkCipherInstance EarlyDataKey { get; set; }
         public IHashInstance HandshakeHash { get; set; }
         public KeySchedule13 KeySchedule { get; set; }
@@ -89,7 +86,7 @@ namespace Leto.Tls13.State
 
         public ILogger Logger => throw new NotImplementedException();
 
-        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection)
+        public async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, ref WritableBuffer outBuffer)
         {
             switch (State)
             {

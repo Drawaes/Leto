@@ -46,12 +46,10 @@ namespace Leto.Tls13.Alerts
 
         public static void WriteAlert(ref WritableBuffer output, AlertLevel level, AlertDescription description, State.IConnectionState connectionState)
         {
-            var buffer = new byte[sizeof(AlertLevel) + sizeof(AlertDescription)];
-            var span = new Span<byte>(buffer);
-            span.Write(level);
-            span = span.Slice(sizeof(AlertLevel));
-            span.Write(description);
-            RecordProcessor.WriteRecord(ref output, RecordType.Alert, buffer, connectionState);
+            connectionState.FrameWriter.StartFrame(RecordType.Alert, ref output);
+            output.WriteBigEndian(level);
+            output.WriteBigEndian(description);
+            connectionState.FrameWriter.FinishFrame(ref output);
         }
     }
 }

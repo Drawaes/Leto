@@ -12,15 +12,15 @@ namespace SampleASPNetServer
     {
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(LogLevel.Trace);
-            var logger = loggerFactory.CreateLogger("Default");
+            //loggerFactory.AddConsole(LogLevel.Trace);
+            //var logger = loggerFactory.CreateLogger("Default");
 
             app.Run(async context =>
             {
                 var connectionFeature = context.Connection;
-                logger.LogDebug($"Peer: {connectionFeature.RemoteIpAddress?.ToString()}:{connectionFeature.RemotePort}"
-                    + $"{Environment.NewLine}"
-                    + $"Sock: {connectionFeature.LocalIpAddress?.ToString()}:{connectionFeature.LocalPort}");
+                //logger.LogDebug($"Peer: {connectionFeature.RemoteIpAddress?.ToString()}:{connectionFeature.RemotePort}"
+                //    + $"{Environment.NewLine}"
+                //    + $"Sock: {connectionFeature.LocalIpAddress?.ToString()}:{connectionFeature.LocalPort}");
 
                 var response = $"hello, world{Environment.NewLine}";
                 context.Response.ContentLength = response.Length;

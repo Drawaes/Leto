@@ -24,7 +24,7 @@ namespace Leto.Tls13.State
                 case TlsVersion.Tls12:
                     return new ServerStateTls12(listener, logger);
                 case TlsVersion.Tls13Draft18:
-                    return new ServerStateTls13Draft18(listener);
+                    return new ServerStateTls13Draft18(listener, logger);
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Unsupported version");
                     return null;

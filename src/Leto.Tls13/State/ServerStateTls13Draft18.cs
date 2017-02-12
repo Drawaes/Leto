@@ -10,7 +10,9 @@ using Leto.Tls13.Handshake;
 using Leto.Tls13.Hash;
 using Leto.Tls13.Internal;
 using Leto.Tls13.KeyExchange;
+using Leto.Tls13.RecordLayer;
 using Leto.Tls13.Sessions;
+using Microsoft.Extensions.Logging;
 
 namespace Leto.Tls13.State
 {
@@ -19,8 +21,8 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
 
-        public ServerStateTls13Draft18(SecurePipeListener listener)
-            : base(listener)
+        public ServerStateTls13Draft18(SecurePipeListener listener, ILogger logger)
+            : base(listener, logger)
         {
             PskKeyExchangeMode = PskKeyExchangeMode.none;
         }
@@ -33,96 +35,93 @@ namespace Leto.Tls13.State
         public int PskIdentity { get; set; } = -1;
         public bool EarlyDataSupported { get; set; }
         public override ushort TlsRecordVersion => 0x0301;
-        
-        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe, IPipeConnection lowerConnection)
+        public override FrameWriter FrameWriter => throw new NotImplementedException();
+
+        public override void HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, ref WritableBuffer outBuffer)
         {
-            WritableBuffer writer;
-            switch (State)
-            {
-                case StateType.None:
-                case StateType.WaitHelloRetry:
-                    if (handshakeMessageType != HandshakeType.client_hello)
-                    {
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"State is wait hello retry but got {handshakeMessageType}");
-                    }
-                    Hello.ReadClientHelloTls13(buffer, this);
-                    if (CipherSuite == null)
-                    {
-                        //Couldn't agree a set of ciphers
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
-                    }
-                    this.StartHandshakeHash(buffer);
-                    //If we can't agree on a schedule we will have to send a hello retry and try again
-                    if (!NegotiationComplete())
-                    {
-                        writer = pipe.Alloc();
-                        this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
-                        ChangeState(StateType.WaitHelloRetry);
-                        await writer.FlushAsync();
-                        return;
-                    }
-                    if (PskIdentity != -1 && EarlyDataSupported)
-                    {
-                        KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
-                        Console.WriteLine("Generated Early Traffic Key");
-                    }
-                    //Write the server hello, the last of the unencrypted messages
-                    ChangeState(StateType.SendServerHello);
-                    writer = pipe.Alloc();
-                    this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello13);
-                    //block our next actions because we need to have sent the message before changing keys
-                    DataForCurrentScheduleSent.Reset();
-                    await writer.FlushAsync();
-                    await DataForCurrentScheduleSent;
-                    ChangeState(StateType.ServerAuthentication);
-                    //Generate the encryption keys and send the next set of messages
-                    GenerateHandshakeKeys();
-                    writer = pipe.Alloc();
-                    ServerHandshakeTls13.SendFlightOne(ref writer, this);
-                    ServerHandshakeTls13.SendFlightOne2(ref writer, this);
-                    DataForCurrentScheduleSent.Reset();
-                    await writer.FlushAsync();
-                    await DataForCurrentScheduleSent;
-                    writer = pipe.Alloc();
-                    ServerHandshakeTls13.SendFlightOne3(ref writer, this);
-                    ServerHandshakeTls13.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
-                    DataForCurrentScheduleSent.Reset();
-                    await writer.FlushAsync();
-                    await DataForCurrentScheduleSent;
-                    GenerateServerApplicationKey();
-                    if (EarlyDataSupported && PskIdentity != -1)
-                    {
-                        ChangeState(StateType.WaitEarlyDataFinished);
-                    }
-                    else
-                    {
-                        ChangeState(StateType.WaitClientFinished);
-                    }
-                    return;
-                case StateType.WaitClientFinished:
-                    if (handshakeMessageType != HandshakeType.finished)
-                    {
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Waiting for client finished but received {handshakeMessageType}");
-                    }
-                    Finished.ReadClientFinished(buffer, this);
-                    _readKey?.Dispose();
-                    _readKey = KeySchedule.GenerateClientApplicationKey();
-                    //Hash the finish message now we have made the traffic keys
-                    //Then we can make the resumption secret
-                    HandshakeHash.HashData(buffer);
-                    KeySchedule.GenerateResumptionSecret();
-                    HandshakeHash.Dispose();
-                    HandshakeHash = null;
-                    //Send a new session ticket
-                    writer = pipe.Alloc();
-                    this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
-                    await writer.FlushAsync();
-                    ChangeState(StateType.HandshakeComplete);
-                    break;
-                default:
-                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
-                    break;
-            }
+            //switch (State)
+            //{
+            //    case StateType.None:
+            //    case StateType.WaitHelloRetry:
+            //        if (handshakeMessageType != HandshakeType.client_hello)
+            //        {
+            //            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"State is wait hello retry but got {handshakeMessageType}");
+            //        }
+            //        Hello.ReadClientHelloTls13(buffer, this);
+            //        if (CipherSuite == null)
+            //        {
+            //            //Couldn't agree a set of ciphers
+            //            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
+            //        }
+            //        this.StartHandshakeHash(buffer);
+            //        //If we can't agree on a schedule we will have to send a hello retry and try again
+            //        if (!NegotiationComplete())
+            //        {
+            //            writer = pipe.Alloc();
+            //            this.WriteHandshake(ref writer, HandshakeType.hello_retry_request, Hello.SendHelloRetry);
+            //            ChangeState(StateType.WaitHelloRetry);
+            //            await writer.FlushAsync();
+            //            return;
+            //        }
+            //        if (PskIdentity != -1 && EarlyDataSupported)
+            //        {
+            //            KeySchedule.GenerateEarlyTrafficKey(ref _readKey);
+            //            Console.WriteLine("Generated Early Traffic Key");
+            //        }
+            //        //Write the server hello, the last of the unencrypted messages
+            //        ChangeState(StateType.SendServerHello);
+            //        writer = pipe.Alloc();
+            //        this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello13);
+            //        //block our next actions because we need to have sent the message before changing keys
+            //        await writer.FlushAsync();
+            //        await DataForCurrentScheduleSent;
+            //        ChangeState(StateType.ServerAuthentication);
+            //        //Generate the encryption keys and send the next set of messages
+            //        GenerateHandshakeKeys();
+            //        writer = pipe.Alloc();
+            //        ServerHandshakeTls13.SendFlightOne(ref writer, this);
+            //        ServerHandshakeTls13.SendFlightOne2(ref writer, this);
+            //        DataForCurrentScheduleSent.Reset();
+            //        await writer.FlushAsync();
+            //        writer = pipe.Alloc();
+            //        ServerHandshakeTls13.SendFlightOne3(ref writer, this);
+            //        ServerHandshakeTls13.ServerFinished(ref writer, this, KeySchedule.GenerateServerFinishKey());
+            //        DataForCurrentScheduleSent.Reset();
+            //        await writer.FlushAsync();
+            //        GenerateServerApplicationKey();
+            //        if (EarlyDataSupported && PskIdentity != -1)
+            //        {
+            //            ChangeState(StateType.WaitEarlyDataFinished);
+            //        }
+            //        else
+            //        {
+            //            ChangeState(StateType.WaitClientFinished);
+            //        }
+            //        return;
+            //    case StateType.WaitClientFinished:
+            //        if (handshakeMessageType != HandshakeType.finished)
+            //        {
+            //            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Waiting for client finished but received {handshakeMessageType}");
+            //        }
+            //        Finished.ReadClientFinished(buffer, this);
+            //        _readKey?.Dispose();
+            //        _readKey = KeySchedule.GenerateClientApplicationKey();
+            //        //Hash the finish message now we have made the traffic keys
+            //        //Then we can make the resumption secret
+            //        HandshakeHash.HashData(buffer);
+            //        KeySchedule.GenerateResumptionSecret();
+            //        HandshakeHash.Dispose();
+            //        HandshakeHash = null;
+            //        //Send a new session ticket
+            //        writer = pipe.Alloc();
+            //        this.WriteHandshake(ref writer, HandshakeType.new_session_ticket, SessionKeys.CreateNewSessionKey);
+            //        await writer.FlushAsync();
+            //        ChangeState(StateType.HandshakeComplete);
+            //        break;
+            //    default:
+            //        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
+            //        break;
+            //}
         }
 
         public override void HandleAlertMessage(ReadableBuffer messageBuffer)

@@ -20,12 +20,12 @@ namespace Leto.Tls13.State
         private IBulkCipherInstance _readKey;
         private IBulkCipherInstance _writeKey;
         private KeySchedule12 _schedule;
-        private int _counter = 0;
+        private FrameWriter _frameWriter;
 
         public ServerStateTls12(SecurePipeListener listener, ILogger logger)
-            : base(listener)
+            : base(listener, logger)
         {
-            _logger = logger;
+            _frameWriter = new FrameWriter(this);
             _schedule = new KeySchedule12(this, listener.KeyScheduleProvider.BufferPool);
         }
 
@@ -35,7 +35,8 @@ namespace Leto.Tls13.State
         public override ushort TlsRecordVersion => 0x0303;
         public Span<byte> ClientRandom => _schedule.ClientRandom;
         public Span<byte> ServerRandom => _schedule.ServerRandom;
-        
+        public override FrameWriter FrameWriter => _frameWriter;
+
         public override void HandleAlertMessage(ReadableBuffer messageBuffer)
         {
             var level = messageBuffer.ReadBigEndian<Alerts.AlertLevel>();
@@ -44,104 +45,84 @@ namespace Leto.Tls13.State
             Alerts.AlertException.ThrowAlert(level, description, "Alert from the client");
         }
 
-        public override async Task HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, IPipeWriter pipe,IPipeConnection lowerConnection)
+        public override void HandleHandshakeMessage(HandshakeType handshakeMessageType, ReadableBuffer buffer, ref WritableBuffer outBuffer)
         {
-            try
+            switch (State)
             {
-                Interlocked.Increment(ref _counter);
-                _logger?.LogTrace("Counter for handle handshake message {counter}", _counter);
+                case StateType.None:
+                    if (handshakeMessageType != HandshakeType.client_hello)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Tls 12 didnt get a client hello");
+                    }
+                    Hello.ReadClientHelloTls12(buffer, this);
+                    if (CipherSuite == null)
+                    {
+                        //Couldn't agree a set of ciphers
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
+                    }
+                    this.StartHandshakeHash(buffer);
+                    //Write server hello
+                    ChangeState(StateType.SendServerHello);
+                    _frameWriter.StartFrame(RecordType.Handshake, ref outBuffer);
+                    this.WriteHandshake(ref outBuffer, HandshakeType.server_hello, Hello.SendServerHello12);
+                    _frameWriter.FinishFrame(ref outBuffer);
+                    _frameWriter.StartFrame(RecordType.Handshake, ref outBuffer);
+                    this.WriteHandshake(ref outBuffer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
+                    _frameWriter.FinishFrame(ref outBuffer);
 
-                WritableBuffer writer;
-                switch (State)
-                {
-                    case StateType.None:
-                        if (handshakeMessageType != HandshakeType.client_hello)
+                    if (CipherSuite.ExchangeType == KeyExchangeType.Ecdhe || CipherSuite.ExchangeType == KeyExchangeType.Dhe)
+                    {
+                        if (KeyShare == null)
                         {
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, "Tls 12 didnt get a client hello");
+                            KeyShare = CryptoProvider.GetDefaultKeyShare(CipherSuite.ExchangeType);
                         }
-                        Hello.ReadClientHelloTls12(buffer, this);
-                        if (CipherSuite == null)
-                        {
-                            //Couldn't agree a set of ciphers
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Could not agree on a cipher suite during reading client hello");
-                        }
-                        this.StartHandshakeHash(buffer);
-                        //Write server hello
-                        ChangeState(StateType.SendServerHello);
-                        writer = pipe.Alloc();
-                        this.WriteHandshake(ref writer, HandshakeType.server_hello, Hello.SendServerHello12);
-                        await writer.FlushAsync();
+                        _frameWriter.StartFrame(RecordType.Handshake, ref outBuffer);
+                        this.WriteHandshake(ref outBuffer, HandshakeType.server_key_exchange, ServerHandshakeTls12.SendKeyExchange);
+                        _frameWriter.FinishFrame(ref outBuffer);
+                    }
+                    _frameWriter.StartFrame(RecordType.Handshake, ref outBuffer);
+                    this.WriteHandshake(ref outBuffer, HandshakeType.server_hello_done, (w, state) => w);
+                    _frameWriter.FinishFrame(ref outBuffer);
+                    ChangeState(StateType.WaitClientKeyExchange);
+                    break;
+                case StateType.WaitClientKeyExchange:
+                    if (handshakeMessageType != HandshakeType.client_key_exchange)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Received a {handshakeMessageType} when we expected a {HandshakeType.client_key_exchange}");
+                    }
+                    HandshakeHash.HashData(buffer);
+                    KeyShare.SetPeerKey(buffer.Slice(5));
+                    _schedule.GenerateMasterSecret();
+                    _schedule.CalculateClientFinished();
+                    //We can send the server finished because we have the expected client finished
+                    _schedule.GenerateKeyMaterial();
+                    ChangeState(StateType.ChangeCipherSpec);
+                    break;
+                case StateType.WaitClientFinished:
+                    if (handshakeMessageType != HandshakeType.finished)
+                    {
+                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"unexpected message");
+                    }
+                    _schedule.CompareClientFinishedGenerateServerFinished(buffer);
+                    _frameWriter.StartFrame(RecordType.ChangeCipherSpec, ref outBuffer);
+                    outBuffer.WriteBigEndian<byte>(1);
+                    _frameWriter.FinishFrame(ref outBuffer);
 
-                        writer = pipe.Alloc();
-                        this.WriteHandshake(ref writer, HandshakeType.certificate, ServerHandshakeTls12.SendCertificates);
-                        DataForCurrentScheduleSent.Reset();
-                        await writer.FlushAsync();
-                        await DataForCurrentScheduleSent;
-                        if (CipherSuite.ExchangeType == KeyExchangeType.Ecdhe || CipherSuite.ExchangeType == KeyExchangeType.Dhe)
-                        {
-                            if (KeyShare == null)
-                            {
-                                KeyShare = CryptoProvider.GetDefaultKeyShare(CipherSuite.ExchangeType);
-                            }
-                            DataForCurrentScheduleSent.Reset();
-                            writer = pipe.Alloc();
-                            this.WriteHandshake(ref writer, HandshakeType.server_key_exchange, ServerHandshakeTls12.SendKeyExchange);
-                            await writer.FlushAsync();
-                            await DataForCurrentScheduleSent;
-                        }
-                        writer = pipe.Alloc();
-                        this.WriteHandshake(ref writer, HandshakeType.server_hello_done, (w, state) => w);
-                        DataForCurrentScheduleSent.Reset();
-                        await writer.FlushAsync();
-                        ChangeState(StateType.WaitClientKeyExchange);
-                        await DataForCurrentScheduleSent;
-                        break;
-                    case StateType.WaitClientKeyExchange:
-                        if (handshakeMessageType != HandshakeType.client_key_exchange)
-                        {
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Received a {handshakeMessageType} when we expected a {HandshakeType.client_key_exchange}");
-                        }
-                        HandshakeHash.HashData(buffer);
-                        KeyShare.SetPeerKey(buffer.Slice(5));
-                        _schedule.GenerateMasterSecret();
-                        _schedule.CalculateClientFinished();
-                        //We can send the server finished because we have the expected client finished
-                        _schedule.GenerateKeyMaterial();
-                        ChangeState(StateType.ChangeCipherSpec);
-                        break;
-                    case StateType.WaitClientFinished:
-                        if (handshakeMessageType != HandshakeType.finished)
-                        {
-                            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"unexpected message");
-                        }
-                        _schedule.CompareClientFinishedGenerateServerFinished(buffer);
-                        var outbuffer = lowerConnection.Output.Alloc();
-                        var cipherBuffer = new byte[1];
-                        cipherBuffer[0] = 1;
-                        RecordProcessor.WriteRecord(ref outbuffer, RecordType.ChangeCipherSpec, cipherBuffer, this);
-                        await outbuffer.FlushAsync();
+                    _writeKey = _schedule.GetServerKey();
 
-                        _writeKey = _schedule.GetServerKey();
-                        writer = pipe.Alloc();
-                        this.WriteHandshake(ref writer, HandshakeType.finished, _schedule.WriteServerFinished);
-                        KeyShare?.Dispose();
-                        KeyShare = null;
-                        DataForCurrentScheduleSent.Reset();
-                        await writer.FlushAsync();
-                        await DataForCurrentScheduleSent;
-                        ChangeState(StateType.HandshakeComplete);
-                        break;
-                    default:
-                        Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
-                        break;
-                }
-            }
-            finally
-            {
-                Interlocked.Decrement(ref _counter);
+                    _frameWriter.StartFrame(RecordType.Handshake, ref outBuffer);
+                    this.WriteHandshake(ref outBuffer, HandshakeType.finished, _schedule.WriteServerFinished);
+                    _frameWriter.FinishFrame(ref outBuffer);
+                    KeyShare?.Dispose();
+                    KeyShare = null;
+                    ChangeState(StateType.HandshakeComplete);
+                    break;
+                default:
+                    Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.unexpected_message, $"Not in any known state {State} that we expected a handshake messge from {handshakeMessageType}");
+                    break;
             }
         }
-        
+
         public override void Dispose()
         {
             KeyShare?.Dispose();
