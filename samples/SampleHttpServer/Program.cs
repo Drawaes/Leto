@@ -76,7 +76,7 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
             var logFactory = new LoggerFactory();
             logFactory.AddConsole(LogLevel.Trace);
 
-            using (var factory = new PipelineFactory())
+            using (var factory = new PipeFactory())
             using (var list = new CertificateList())
             {
                 var thumb = "48026c976caaf7f3a72d38c17d16ce69d04a6053".ToUpper();
@@ -85,10 +85,10 @@ D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
                 //list.AddCertificate(provider.LoadCertificateFromStore(thumb,true));
                 var provider = new Leto.Tls13.Certificates.OpenSsl11.CertificateProvider();
                 list.AddCertificate(provider.LoadPfx12(_ecdsaCertPath, _certificatePassword));
-                using (var serverContext = new SecurePipelineListener(factory, list, logFactory))
+                using (var serverContext = new SecurePipeListener(factory, list, logFactory))
                 using (var socketClient = new System.IO.Pipelines.Networking.Sockets.SocketListener(factory))
                 {
-                    var ip = IPAddress.Any;
+                    var ip = IPAddress.Loopback;
                     int port = 443;
                     var ipEndPoint = new IPEndPoint(ip, port);
                     socketClient.OnConnection(s =>

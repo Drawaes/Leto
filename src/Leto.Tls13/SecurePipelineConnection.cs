@@ -23,7 +23,7 @@ namespace Leto.Tls13
         private ILogger<SecurePipelineConnection> _logger;
         private TaskCompletionSource<bool> _handshakeDone = new TaskCompletionSource<bool>();
         private object _lock = new object();
-
+        
         public SecurePipelineConnection(IPipeConnection pipeline, PipeFactory factory, SecurePipeListener listener, ILogger<SecurePipelineConnection> logger)
         {
             _logger = logger;
@@ -68,8 +68,8 @@ namespace Leto.Tls13
                                 {
                                     _logger?.LogInformation("Handshake complete starting application writing");
                                     _startedApplicationWrite = true;
-                                    _handshakeDone.SetResult(true);
                                     ApplicationWriting();
+                                    _handshakeDone.SetResult(true);
                                 }
                                 continue;
                             }
@@ -154,11 +154,9 @@ namespace Leto.Tls13
                 {
                     var result = await _inputPipe.Reader.ReadAsync();
                     var buffer = result.Buffer;
-                    if (result.IsCompleted && buffer.IsEmpty)
+                    bool isCompleted = result.IsCancelled | result.IsCancelled;
+                    if (isCompleted && buffer.IsEmpty)
                     {
-                        //var output = _lowerConnection.Output.Alloc();
-                        //Alerts.AlertException.WriteAlert(ref output, Alerts.AlertLevel.Warning, Alerts.AlertDescription.close_notify, _state);
-                        //await output.FlushAsync();
                         break;
                     }
                     try
@@ -189,6 +187,10 @@ namespace Leto.Tls13
                     finally
                     {
                         _inputPipe.Reader.Advance(buffer.Start, buffer.End);   
+                    }
+                    if(isCompleted)
+                    {
+                        return;
                     }
                 }
             }

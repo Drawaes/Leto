@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,9 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-*" />
-    <PackageReference Include="System.IO.Pipelines.Text.Primitives" Version="0.1.0-*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170217-1" />
+    <PackageReference Include="System.IO.Pipelines.Text.Primitives" Version="0.1.0-e170217-1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.2.0-preview1-23520" />
+    <PackageReference Include="System.Threading" Version="4.4.0-beta-24913-02" />
   </ItemGroup>
 
 </Project>

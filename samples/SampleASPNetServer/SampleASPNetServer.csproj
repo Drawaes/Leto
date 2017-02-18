@@ -5,6 +5,7 @@
     <AssemblyName>SampleASPNetServer</AssemblyName>
     <OutputType>Exe</OutputType>
     <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <PackageId>SampleASPNetServer</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -19,10 +20,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.2.0-preview1-23409" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-preview1-23520" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.2.0-preview1-23409" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.2.0-preview1-23409" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.2.0-preview1-23409" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.2.0-preview1-23520" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="1.2.0-preview1-23409" />
   </ItemGroup>
 

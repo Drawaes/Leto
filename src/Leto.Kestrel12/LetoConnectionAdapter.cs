@@ -32,6 +32,7 @@ namespace Leto.Kestrel12
             var provider = new Tls13.Certificates.OpenSsl11.CertificateProvider();
             _certList.AddCertificate(provider.LoadPfx12(options.PfxPath, options.PfxPassword));
             _listener = new SecurePipeListener(_pipeFactory, _certList, loggerFactory);
+            _logger = loggerFactory?.CreateLogger<LetoConnectionAdapter>();
         }
 
         public async Task<IAdaptedConnection> OnConnectionAsync(ConnectionAdapterContext context)

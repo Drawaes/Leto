@@ -19,7 +19,7 @@ namespace SampleHttpServer
         static readonly byte[] _getMethod = Encoding.UTF8.GetBytes("GET");
         static readonly FileCache _cache = new FileCache();
 
-        public static async Task HandleConnection(IPipelineConnection connection, ILoggerFactory loggerFactory)
+        public static async Task HandleConnection(IPipeConnection connection, ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory?.CreateLogger<ServerLoop>();
             var httpParser = new HttpRequestParser(loggerFactory);
