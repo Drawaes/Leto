@@ -1,13 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\..\build\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <AssemblyName>Leto.Kestrel12</AssemblyName>
     <PackageId>Leto.Kestrel12</PackageId>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <NetStandardImplicitPackageVersion>1.6.2-beta-24913-01</NetStandardImplicitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-preview1-23520" />
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170217-1" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.2.0-*" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

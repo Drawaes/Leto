@@ -32,6 +32,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleASPNetServer", "sampl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.Kestrel12", "src\Leto.Kestrel12\Leto.Kestrel12.csproj", "{40AA8C85-C2C1-4979-A0EE-488D7F99A97C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{837E39A4-9D4D-4D2F-A268-52194AD39AAE}"
+	ProjectSection(SolutionItems) = preProject
+		build\common.props = build\common.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,8 +61,8 @@ Global
 		{CE44C40F-9DC5-4BF6-8C72-9CABA2B48FC3}.Release|x86.Build.0 = Release|x86
 		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x64.ActiveCfg = Debug|x64
-		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x64.Build.0 = Debug|x64
+		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x64.Build.0 = Debug|Any CPU
 		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x86.ActiveCfg = Debug|x86
 		{483BA398-32EF-48AE-99D8-14A530F8D749}.Debug|x86.Build.0 = Debug|x86
 		{483BA398-32EF-48AE-99D8-14A530F8D749}.Release|Any CPU.ActiveCfg = Release|Any CPU
