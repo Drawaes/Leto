@@ -116,6 +116,9 @@ namespace Leto.Tls13.Handshake
                     case ExtensionType.server_name:
                         ReadServerName(extensionBuffer, connectionState);
                         break;
+                    case ExtensionType.application_layer_protocol_negotiation:
+                        ReadApplicationProtocolExtension(extensionBuffer, connectionState);
+                        break;
                     //case ExtensionType.signature_algorithms:
                     //    signatureAlgoBuffer = extensionBuffer;
                     //    break;
@@ -160,11 +163,9 @@ namespace Leto.Tls13.Handshake
             while (identities.Length > 0)
             {
                 var identity = BufferExtensions.SliceVector<ushort>(ref identities);
-                long serviceId, keyId;
-                identity = identity.SliceBigEndian(out serviceId);
-                identity = identity.SliceBigEndian(out keyId);
-                int ticketAge;
-                identities = identities.SliceBigEndian(out ticketAge);
+                identity = identity.SliceBigEndian(out long serviceId);
+                identity = identity.SliceBigEndian(out long keyId);
+                identities = identities.SliceBigEndian(out int ticketAge);
                 if (!connectionState.ResumptionProvider.TryToResume(serviceId, keyId, identity, connectionState))
                 {
                     continue;
@@ -199,9 +200,16 @@ namespace Leto.Tls13.Handshake
         public static void ReadApplicationProtocolExtension(ReadableBuffer buffer, IConnectionState connectionState)
         {
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
-
-            //if(connectionState.Listener.ServerNameProvider.MatchServerName(buffer))
-            //buffer.Equals()
+            while(buffer.Length > 0)
+            {
+                var alpn = BufferExtensions.SliceVector<byte>(ref buffer);
+                var alpnResult = connectionState.Listener.AlpnProvider.MatchBuffer(alpn);
+                if(alpnResult != ApplicationLayerProtocolType.None)
+                {
+                    connectionState.NegotiatedApplicationProcotol = alpnResult;
+                    return;
+                }
+            }
         }
 
         public static TlsVersion ReadSupportedVersion(ReadableBuffer buffer, TlsVersion[] supportedVersions)
@@ -249,8 +257,7 @@ namespace Leto.Tls13.Handshake
             buffer = BufferExtensions.SliceVector<ushort>(ref buffer);
             while (buffer.Length > 1)
             {
-                SignatureScheme scheme;
-                buffer = buffer.SliceBigEndian(out scheme);
+                buffer = buffer.SliceBigEndian(out SignatureScheme scheme);
                 var cert = connectionState.CertificateList.GetCertificate(connectionState.ServerName, scheme);
                 if (cert != null)
                 {

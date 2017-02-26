@@ -21,14 +21,12 @@ namespace Leto.Tls13
 
         public static unsafe void* GetPointer(this Memory<byte> buffer, out GCHandle handle)
         {
-            void* ptr;
-            if (buffer.TryGetPointer(out ptr))
+            if (buffer.TryGetPointer(out void* ptr))
             {
                 handle = default(GCHandle);
                 return ptr;
             }
-            ArraySegment<byte> array;
-            buffer.TryGetArray(out array);
+            buffer.TryGetArray(out ArraySegment<byte> array);
             handle = GCHandle.Alloc(array.Array, GCHandleType.Pinned);
             ptr = (void*)IntPtr.Add(handle.AddrOfPinnedObject(), array.Offset);
             return ptr;
@@ -143,14 +141,14 @@ namespace Leto.Tls13
 
         public static Span<byte> Write16BitNumber(this Span<byte> span, ushort value)
         {
-            value = System.Runtime.UnsafeUtilities.Reverse(value);
+            value = UnsafeUtilities.Reverse(value);
             span.Write(value);
             return span.Slice(sizeof(ushort));
         }
 
         public static Span<byte> Write64BitNumber(this Span<byte> span, ulong value)
         {
-            value = System.Runtime.UnsafeUtilities.Reverse(value);
+            value = UnsafeUtilities.Reverse(value);
             span.Write(value);
             return span.Slice(sizeof(ulong));
         }

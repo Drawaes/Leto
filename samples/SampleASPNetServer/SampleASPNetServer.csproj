@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\common.props" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.1</TargetFrameworks>
+    <AssemblyName>SampleASPNetServer</AssemblyName>
+    <PackageId>SampleASPNetServer</PackageId>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <!-- TODO remove rid when https://github.com/dotnet/sdk/issues/396 is resolved -->
-    <RuntimeIdentifier Condition="'$(TargetFramework)'!='netcoreapp1.1'">win7-x64</RuntimeIdentifier>
-    <IsPackable>false</IsPackable>
+    <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <RuntimeIdentifier>win8-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +23,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.2.0-preview1-23520" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.2.0-preview1-23520" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="1.2.0-preview1-23520" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>

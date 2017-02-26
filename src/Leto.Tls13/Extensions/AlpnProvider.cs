@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,9 +24,32 @@ namespace Leto.Tls13.Extensions
             Tuple.Create(ApplicationLayerProtocolType.Ftp, Encoding.ASCII.GetBytes("ftp"))
         };
 
+        private readonly ApplicationLayerProtocolType[] _supportedProtocols;
+
         public AlpnProvider(params ApplicationLayerProtocolType[] supportedProtocols)
         {
+            _supportedProtocols = supportedProtocols;
+        }
 
+        public byte[] GetBytesForProtocol(ApplicationLayerProtocolType protocol)
+        {
+            return _protocols[(int)protocol - 1].Item2;
+        }
+
+        public ApplicationLayerProtocolType MatchBuffer(ReadableBuffer alpn)
+        {
+            var bytes = alpn.ToArray();
+            for (int i = 0; i < _protocols.Length; i++)
+            {
+                if (_protocols[i].Item2.SequenceEqual(bytes))
+                {
+                    if (_supportedProtocols.Contains(_protocols[i].Item1))
+                    {
+                        return _protocols[i].Item1;
+                    }
+                }
+            }
+            return ApplicationLayerProtocolType.None;
         }
     }
 }

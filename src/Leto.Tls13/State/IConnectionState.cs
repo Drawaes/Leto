@@ -35,6 +35,7 @@ namespace Leto.Tls13.State
         SecurePipeListener Listener { get; }
         ushort TlsRecordVersion { get; }
         FrameWriter FrameWriter { get; }
+        Extensions.ApplicationLayerProtocolType NegotiatedApplicationProcotol { get; set;}
         void SetClientRandom(ReadableBuffer readableBuffer);
         void SetServerRandom(Memory<byte> memory);
         void HandleAlertMessage(ReadableBuffer readable);

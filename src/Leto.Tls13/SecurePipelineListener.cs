@@ -23,9 +23,11 @@ namespace Leto.Tls13
         private ILoggerFactory _logFactory;
         private ILogger<SecurePipeListener> _logger;
         private ILogger<SecurePipelineConnection> _connectionLogger;
+        private Extensions.AlpnProvider _alpnProvider;
         
         public SecurePipeListener(PipeFactory factory, CertificateList certificateList, ILoggerFactory logFactory)
         {
+            _alpnProvider = new Extensions.AlpnProvider(Extensions.ApplicationLayerProtocolType.Http2_Tls, Extensions.ApplicationLayerProtocolType.Http1_1);
             _logFactory = logFactory;
             _logger = logFactory?.CreateLogger<SecurePipeListener>();
             _connectionLogger = logFactory?.CreateLogger<SecurePipelineConnection>();
@@ -42,6 +44,7 @@ namespace Leto.Tls13
         public KeyScheduleProvider KeyScheduleProvider => _keyscheduleProvider;
         public ResumptionProvider ResumptionProvider => _resumptionProvider;
         public ServerNameProvider ServerNameProvider => _serverNameProvider;
+        public Extensions.AlpnProvider AlpnProvider => _alpnProvider;
         public Func<X509Certificate2Collection, bool> CertificateValidation { get; set; }
 
         public SecurePipelineConnection CreateSecurePipeline(IPipeConnection pipeline)

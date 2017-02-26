@@ -54,6 +54,7 @@ namespace Leto.Tls13.Handshake
         {
             WriteServerNameFromServer(ref buffer, connectionState);
             WriteSecureRenegotiation(ref buffer, connectionState);
+            WriteAlpnHeader(ref buffer, connectionState);
             return buffer;
         }
 
@@ -66,6 +67,20 @@ namespace Leto.Tls13.Handshake
             buffer.WriteBigEndian(ExtensionType.renegotiation_info);
             buffer.WriteBigEndian<ushort>(1);
             buffer.WriteBigEndian<byte>(0);
+        }
+
+        public static void WriteAlpnHeader(ref WritableBuffer buffer, IConnectionState connectionState)
+        {
+            if(connectionState.NegotiatedApplicationProcotol == ApplicationLayerProtocolType.None)
+            {
+               return;
+            }
+            buffer.WriteBigEndian(ExtensionType.application_layer_protocol_negotiation);
+            var bytesToWrite = connectionState.Listener.AlpnProvider.GetBytesForProtocol(connectionState.NegotiatedApplicationProcotol);
+            buffer.WriteBigEndian((ushort)(bytesToWrite.Length + 3));
+            buffer.WriteBigEndian((ushort)(bytesToWrite.Length + 1));
+            buffer.WriteBigEndian((byte)bytesToWrite.Length);
+            buffer.Write(bytesToWrite);
         }
 
         public static void WriteSupportedGroups(ref WritableBuffer buffer, IConnectionStateTls13 connectionState)

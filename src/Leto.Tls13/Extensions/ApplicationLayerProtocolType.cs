@@ -7,6 +7,7 @@ namespace Leto.Tls13.Extensions
 {
     public enum ApplicationLayerProtocolType
     {
+        None = 0,
         Http1_1,
         Spdy1,
         Spdy2,

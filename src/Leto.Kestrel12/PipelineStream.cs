@@ -21,8 +21,6 @@ namespace Leto.Kestrel12
 
         public void Dispose()
         {
-            Input.Complete();
-            Output.Complete();
         }
     }
 }
