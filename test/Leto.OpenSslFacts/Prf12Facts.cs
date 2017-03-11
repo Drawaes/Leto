@@ -42,7 +42,7 @@ namespace Leto.OpenSslFacts
         {
             var provider = new OpenSslHashProvider();
             var result = new byte[Sha256Output.Length];
-            provider.Tls12(HashType.SHA256, result, Sha256Secret, Sha256Label, Sha256Seed);
+            provider.Tls12Prf(HashType.SHA256, result, Sha256Secret, Sha256Label, Sha256Seed);
             Assert.Equal(Sha256Output, result);
         }
 
@@ -51,7 +51,7 @@ namespace Leto.OpenSslFacts
         {
             var provider = new OpenSslHashProvider();
             var result = new byte[Sha384Output.Length];
-            provider.Tls12(HashType.SHA384, result, Sha384Secret, Sha384Label, Sha384Seed);
+            provider.Tls12Prf(HashType.SHA384, result, Sha384Secret, Sha384Label, Sha384Seed);
             Assert.Equal(Sha384Output, result);
         }
 
@@ -60,7 +60,7 @@ namespace Leto.OpenSslFacts
         {
             var provider = new OpenSslHashProvider();
             var result = new byte[Sha512Output.Length];
-            provider.Tls12(HashType.SHA512, result, Sha512Secret, Sha512Label, Sha512Seed);
+            provider.Tls12Prf(HashType.SHA512, result, Sha512Secret, Sha512Label, Sha512Seed);
             Assert.Equal(Sha512Output, result);
         }
     }

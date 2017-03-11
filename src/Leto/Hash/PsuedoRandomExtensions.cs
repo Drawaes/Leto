@@ -9,7 +9,7 @@ namespace Leto.Hash
     {
         //https://tools.ietf.org/html/rfc5246#section-4.7
         //TLS 1.2 Secret Expansion into an n length run of bytes
-        public static void Tls12(this IHashProvider hashProvider, HashType hashType, Span<byte> keyMaterial, Span<byte> secret, Span<byte> label, Span<byte> seed)
+        public static void Tls12Prf(this IHashProvider hashProvider, HashType hashType, Span<byte> keyMaterial, Span<byte> secret, Span<byte> label, Span<byte> seed)
         {
             var hashSize = hashProvider.HashSize(hashType);
             var a1Length = hashSize + seed.Length + label.Length;
