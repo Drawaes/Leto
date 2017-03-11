@@ -9,35 +9,32 @@ namespace Leto.Hash
     {
         //https://tools.ietf.org/html/rfc5246#section-4.7
         //TLS 1.2 Secret Expansion into an n length run of bytes
-        public static void Tls12Prf(this IHashProvider hashProvider, HashType hashType, Span<byte> keyMaterial, Span<byte> secret, Span<byte> label, Span<byte> seed)
+        // P_hash(secret, seed) = HMAC_hash(secret, A(1) + seed) +
+        //                     HMAC_hash(secret, A(2) + seed) +
+        //                     HMAC_hash(secret, A(3) + seed) + ...
+        // A() is defined as:
+        // A(0) = seed
+        // A(i) = HMAC_hash(secret, A(i-1))
+        public static void Tls12Prf(this IHashProvider hashProvider, HashType hashType, Span<byte> secret, Span<byte> label, Span<byte> seed, Span<byte> keyMaterial)
         {
             var hashSize = hashProvider.HashSize(hashType);
-            var a1Length = hashSize + seed.Length + label.Length;
-            var a1 = new byte[a1Length];
-            label.CopyTo(a1.Slice(hashSize));
-            seed.CopyTo(a1.Slice(hashSize + label.Length));
-            var seedSpan = a1.Slice(hashSize);
-            hashProvider.HmacData(hashType, secret, seedSpan, a1.Slice(0, hashSize));
-            Tls12Expansion(hashProvider, hashType, hashSize, a1, keyMaterial, secret);
-        }
-
-        private static void Tls12Expansion(IHashProvider hash, HashType hashType, int hashSize, Span<byte> a1, Span<byte> keyMaterial, Span<byte> secret)
-        {
+            var aLength = hashSize + seed.Length + label.Length;
+            var a = new byte[aLength];
+            label.CopyTo(a.Slice(hashSize));
+            seed.CopyTo(a.Slice(hashSize + label.Length));
+            hashProvider.HmacData(hashType, secret, a.Slice(hashSize), a);
+            
             var currentKeyData = new byte[hashSize];
-            int keyMaterialIndex = 0;
-            while (true)
+            while (keyMaterial.Length > 0)
             {
-                hash.HmacData(hashType, secret, a1, currentKeyData);
-                for (var i = 0; i < hashSize; i++)
-                {
-                    keyMaterial[keyMaterialIndex] = currentKeyData[i];
-                    keyMaterialIndex++;
-                    if (keyMaterialIndex == keyMaterial.Length)
-                    {
-                        return;
-                    }
-                }
-                hash.HmacData(hashType, secret, a1.Slice(0, hashSize), a1.Slice(0, hashSize));
+                //HMAC_hash(secret, A(n) + seed)
+                hashProvider.HmacData(hashType, secret, a, currentKeyData);
+                //Copy required bytes into the output keymaterial and reduce size remaining
+                int amountToCopy = Math.Min(keyMaterial.Length, currentKeyData.Length);
+                currentKeyData.Slice(0, amountToCopy).CopyTo(keyMaterial);
+                keyMaterial = keyMaterial.Slice(amountToCopy);
+                //A(n) = HMAC_hash(secret, A(n-1))
+                hashProvider.HmacData(hashType, secret, a.Slice(0, hashSize), a);
             }
         }
     }

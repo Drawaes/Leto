@@ -9,11 +9,7 @@ namespace Leto.Hash
         public void HmacData(HashType hashType, Span<byte> key, Span<byte> message, Span<byte> result)
         {
             var (type, size) = GetHashType(hashType);
-            var resultLength = HMAC(type, key, message, result);
-            if (resultLength != size)
-            {
-                ExceptionHelper.ThrowException(new ArgumentOutOfRangeException());
-            }
+            HMAC(type, key, message, result);
         }
 
         public int HashSize(HashType hashType)
