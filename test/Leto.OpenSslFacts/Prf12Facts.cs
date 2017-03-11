@@ -3,6 +3,9 @@ using Xunit;
 
 namespace Leto.OpenSslFacts
 {
+
+    //https://www.ietf.org/mail-archive/web/tls/current/msg03416.html
+    //Test cases taken from the IETF mailing list
     public class Prf12Facts
     {
         private static readonly byte[] Sha256Secret = BulkCipherFacts.StringToByteArray(@"9b be 43 6b a9 40 f0 17 b1 76 52 84 9a 71 db 35");
