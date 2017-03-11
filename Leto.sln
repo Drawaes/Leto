@@ -34,6 +34,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{837E39A4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto", "src\Leto\Leto.csproj", "{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.OpenSslFacts", "test\Leto.OpenSslFacts\Leto.OpenSslFacts.csproj", "{72685434-D105-4004-B023-4E428AADDA26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72685434-D105-4004-B023-4E428AADDA26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72685434-D105-4004-B023-4E428AADDA26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72685434-D105-4004-B023-4E428AADDA26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72685434-D105-4004-B023-4E428AADDA26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,5 +57,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{8E98F636-35A0-46D9-8F2E-057F735FC6AA} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB} = {9E09D9AE-D033-4226-9A46-2344877FF699}
+		{72685434-D105-4004-B023-4E428AADDA26} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 	EndGlobalSection
 EndGlobal

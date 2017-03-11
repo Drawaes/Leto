@@ -1,23 +1,29 @@
 ﻿using System;
+using System.Buffers;
+using System.Buffers.Pools;
 using System.Collections.Generic;
 using System.Text;
 using static Leto.Interop.LibCrypto;
 
 namespace Leto.BulkCipher
 {
-    public class OpenSslBulkKey : IDisposable
+    public sealed class OpenSslBulkKey : IDisposable
     {
         private EVP_CIPHER_CTX _ctx;
         private Memory<byte> _key;
         private Memory<byte> _iv;
         private EVP_BulkCipher_Type _type;
         private int _tagSize;
+        private BufferPool _bufferPool;
+        private OwnedMemory<byte> _keyStore;
 
-        internal OpenSslBulkKey(EVP_BulkCipher_Type type, Memory<byte> key, Memory<byte> iv, int tagSize)
+        internal OpenSslBulkKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int ivSize, int keySize, int tagSize)
         {
             _tagSize = tagSize;
-            _key = key;
-            _iv = iv;
+            _bufferPool = bufferPool;
+            _keyStore = bufferPool.Rent(keySize + ivSize);
+            _key = _keyStore.Memory.Slice(0,keySize);
+            _iv = _keyStore.Memory.Slice(keySize,ivSize);
             _type = type;
             _ctx = EVP_CIPHER_CTX_new();
         }
@@ -67,7 +73,21 @@ namespace Leto.BulkCipher
 
         public void Dispose()
         {
-            _ctx.Free();
+            if (_ctx.IsValid())
+            {
+                _ctx.Free();
+            }
+            if (_keyStore != null)
+            {
+                _bufferPool.Return(_keyStore);
+                _keyStore = null;
+            }
+            GC.SuppressFinalize(this);
+        }
+
+        ~OpenSslBulkKey()
+        {
+            Dispose();
         }
     }
 }

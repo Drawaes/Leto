@@ -13,8 +13,6 @@ namespace Leto.BulkCipher
     {
         private static readonly IntPtr s_zeroBuffer = Marshal.AllocHGlobal(byte.MaxValue);
         private const int AdditionalInfoHeaderSize = 13;
-        private BufferPool _bufferPool;
-        private OwnedMemory<byte> _keyStore;
         private byte[] _sequence;
         private ulong _sequenceNumber;
         private OpenSslBulkKey _key;
@@ -26,12 +24,10 @@ namespace Leto.BulkCipher
             Marshal.Copy(array, 0, s_zeroBuffer, array.Length);
         }
 
-        internal AeadBulkCipher(EVP_BulkCipher_Type cipherType, BufferPool bufferPool, int ivLength, int keySize, int tagSize)
+        internal AeadBulkCipher(OpenSslBulkKey key)
         {
-            _bufferPool = bufferPool;
-            _keyStore = bufferPool.Rent(0);
-            _sequence = new byte[ivLength];
-            _key = new OpenSslBulkKey(cipherType, _keyStore.Memory.Slice(0, keySize), _keyStore.Memory.Slice(keySize, ivLength), tagSize);
+            _sequence = new byte[key.IV.Length];
+            _key = key;
         }
 
         public byte PaddingSize { get => _paddingSize; set => _paddingSize = value; }
@@ -83,10 +79,10 @@ namespace Leto.BulkCipher
             plainText = plainText.Slice(plainText.Length - plaintextLength);
             _key.Init(KeyMode.Encryption);
             _key.AddAdditionalInfo(additionalInfo);
-                        
+
             foreach (var b in plainText)
             {
-                if (b.Length == 0)                  continue;
+                if (b.Length == 0) continue;
                 _key.Update(b.Span);
             }
             _key.Finish();
@@ -110,14 +106,13 @@ namespace Leto.BulkCipher
 
             var nSpan = _key.IV.Span;
             headerSpan.Slice(5).CopyTo(nSpan.Slice(4));
-            
+
             return additionalInfo.PlainTextLength;
         }
 
         private unsafe void ReadTag(ref ReadableBuffer messageBuffer)
         {
             var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
-            tagBuffer.ToSpan();
             var tagSpan = tagBuffer.ToSpan();
             _key.WriteTag(tagSpan);
         }
@@ -147,11 +142,6 @@ namespace Leto.BulkCipher
         {
             _key?.Dispose();
             _key = null;
-            if (_keyStore != null)
-            {
-                _bufferPool.Return(_keyStore);
-                _keyStore = null;
-            }
             GC.SuppressFinalize(this);
         }
 

@@ -1,0 +1,20 @@
+<Project>
+  <Import Project="version.props" />
+
+  <PropertyGroup>
+    <Product>Condenser API Router</Product>
+    <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+    <PackageLicenseUrl>https://github.com/Drawaes/Leto/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Drawaes/Leto</RepositoryUrl>
+    <Copyright>Tim Seaward</Copyright>
+    <Authors>Tim Seaward</Authors>
+    <PackageProjectUrl>https://github.com/Drawaes/Leto</PackageProjectUrl>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework' AND '$(OutputType)'=='library'">
+    <PackageReference Include="NETStandard.Library" Version="$(NetStandardImplicitPackageVersion)" />
+  </ItemGroup>
+</Project>
