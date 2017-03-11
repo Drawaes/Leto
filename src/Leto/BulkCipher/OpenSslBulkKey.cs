@@ -17,13 +17,13 @@ namespace Leto.BulkCipher
         private BufferPool _bufferPool;
         private OwnedMemory<byte> _keyStore;
 
-        internal OpenSslBulkKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int ivSize, int keySize, int tagSize)
+        internal OpenSslBulkKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _bufferPool = bufferPool;
             _keyStore = bufferPool.Rent(keySize + ivSize);
-            _key = _keyStore.Memory.Slice(0,keySize);
-            _iv = _keyStore.Memory.Slice(keySize,ivSize);
+            _key = _keyStore.Memory.Slice(0, keySize);
+            _iv = _keyStore.Memory.Slice(keySize, ivSize);
             _type = type;
             _ctx = EVP_CIPHER_CTX_new();
         }

@@ -32,6 +32,8 @@ namespace Leto.BulkCipher
 
         public byte PaddingSize { get => _paddingSize; set => _paddingSize = value; }
         public int Overhead => _key.TagSize + _paddingSize;
+        public int KeySize => _key.Key.Length;
+        public int IVSize => _key.IV.Length;
 
         public unsafe void SetKey(Span<byte> key)
         {
@@ -41,7 +43,7 @@ namespace Leto.BulkCipher
         public void SetIV(Span<byte> iv)
         {
             var localIv = _key.IV.Span;
-            for (var i = 0; i < localIv.Length; i++)
+            for (var i = 0; i < iv.Length; i++)
             {
                 localIv[i] = (byte)(iv[i] ^ 0x0);
             }
@@ -49,14 +51,24 @@ namespace Leto.BulkCipher
 
         public void Decrypt(ref ReadableBuffer messageBuffer, bool requiresAdditionalInfo)
         {
-            _key.Init(KeyMode.Decryption);
-            ReadTag(ref messageBuffer);
-            var plainTextSize = messageBuffer.Length - _key.TagSize;
+            int plainTextSize, plainTextStart;
+            AdditionalInfo addInfo = default(AdditionalInfo);
             if (requiresAdditionalInfo)
             {
-                plainTextSize = ReadAdditionalInfo(ref messageBuffer);
+                addInfo = ReadAdditionalInfo(ref messageBuffer);
+                _key.Init(KeyMode.Decryption);
+                plainTextSize = addInfo.PlainTextLength;
+                plainTextStart = AdditionalInfoHeaderSize;
             }
-            messageBuffer = messageBuffer.Slice(AdditionalInfoHeaderSize, plainTextSize);
+            else
+            {
+                _key.Init(KeyMode.Decryption);
+                plainTextSize = messageBuffer.Length - _key.TagSize;
+                plainTextStart = 0;
+            }
+            ReadTag(ref messageBuffer);
+            _key.AddAdditionalInfo(addInfo);
+            messageBuffer = messageBuffer.Slice(plainTextStart, plainTextSize);
             foreach (var b in messageBuffer)
             {
                 if (b.Length == 0) continue;
@@ -93,7 +105,7 @@ namespace Leto.BulkCipher
             IncrementSequence();
         }
 
-        private unsafe int ReadAdditionalInfo(ref ReadableBuffer messageBuffer)
+        private unsafe AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer messageBuffer)
         {
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
             var headerSpan = messageBuffer.Slice(0, AdditionalInfoHeaderSize).ToSpan();
@@ -102,12 +114,11 @@ namespace Leto.BulkCipher
             headerSpan.Slice(0, 5).CopyTo(additionalSpan.Slice(sizeof(ulong)));
             var plainTextLength = additionalInfo.PlainTextLength - _key.TagSize - 8;
             additionalInfo.PlainTextLength = (ushort)plainTextLength;
-            _key.AddAdditionalInfo(additionalInfo);
 
             var nSpan = _key.IV.Span;
             headerSpan.Slice(5).CopyTo(nSpan.Slice(4));
 
-            return additionalInfo.PlainTextLength;
+            return additionalInfo;
         }
 
         private unsafe void ReadTag(ref ReadableBuffer messageBuffer)
