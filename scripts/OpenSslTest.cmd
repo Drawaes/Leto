@@ -1,0 +1,1 @@
+openssl s_time -connect localhost:443 -cipher ECDHE-ECDSA-AES128-GCM-SHA256
