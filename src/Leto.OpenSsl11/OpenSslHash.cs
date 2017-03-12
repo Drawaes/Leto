@@ -1,7 +1,8 @@
-﻿using System;
-using static Leto.Interop.LibCrypto;
+﻿using Leto.Hashes;
+using System;
+using static Leto.OpenSsl11.Interop.LibCrypto;
 
-namespace Leto.Hashes
+namespace Leto.OpenSsl11
 {
     public sealed class OpenSslHash : IHash
     {

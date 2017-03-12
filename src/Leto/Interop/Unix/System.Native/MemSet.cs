@@ -6,6 +6,6 @@ namespace Leto.Interop
     internal static partial class Sys
     {
         [DllImport(Libraries.SystemNative, EntryPoint = "SystemNative_MemSet")]
-        internal static extern unsafe void* MemSet(void* s, int c, UIntPtr n);
+        internal static extern IntPtr MemSet(IntPtr s, int c, UIntPtr n);
     }
 }

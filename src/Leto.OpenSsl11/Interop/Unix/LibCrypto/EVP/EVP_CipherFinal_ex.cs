@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Leto.Interop
+namespace Leto.OpenSsl11.Interop
 {
     internal static partial class LibCrypto
     {

@@ -1,4 +1,4 @@
-﻿namespace Leto.BulkCiphers
+﻿namespace Leto
 {
     public enum BulkCipherType
     {

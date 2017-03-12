@@ -1,10 +1,11 @@
-﻿using Leto.Internal;
+﻿using Leto.BulkCiphers;
+using Leto.Internal;
 using System;
 using System.Buffers;
 using System.Buffers.Pools;
-using static Leto.Interop.LibCrypto;
+using static Leto.OpenSsl11.Interop.LibCrypto;
 
-namespace Leto.BulkCiphers
+namespace Leto.OpenSsl11
 {
     public sealed class OpenSslBulkCipherKey : IBulkCipherKey
     {

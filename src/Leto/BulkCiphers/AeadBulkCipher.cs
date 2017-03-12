@@ -1,8 +1,6 @@
 ﻿using Leto.RecordLayer;
 using System;
 using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Leto.BulkCiphers
 {
@@ -14,7 +12,7 @@ namespace Leto.BulkCiphers
         private IBulkCipherKey _key;
         private byte _paddingSize;
 
-        internal AeadBulkCipher(IBulkCipherKey key)
+        public AeadBulkCipher(IBulkCipherKey key)
         {
             _sequence = new byte[key.IV.Length];
             _key = key;
@@ -86,10 +84,7 @@ namespace Leto.BulkCiphers
                     var val = vPtr[i] ^ _sequence[i];
                     _sequence[i] = (byte)(_sequence[i] + 1);
                     vPtr[i] = (byte)(_sequence[i] ^ val);
-                    if (_sequence[i] > 0)
-                    {
-                        return;
-                    }
+                    if (_sequence[i] > 0) return;
                 }
                 i -= 1;
             }
@@ -108,14 +103,14 @@ namespace Leto.BulkCiphers
             _key.AddAdditionalInfo(additionalInfo);
         }
 
-        private unsafe AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer messageBuffer)
+        private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer messageBuffer)
         {
             var headerSpan = messageBuffer.Slice(0, AdditionalInfoHeaderSize).ToSpan();
 
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
             (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
             (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<ushort>();
-            (additionalInfo.PlainTextLength, headerSpan) = headerSpan.Consume<ushort>();
+            (additionalInfo.PlainTextLengthBigEndian, headerSpan) = headerSpan.Consume<ushort>();
             additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
 
             headerSpan.CopyTo(_key.IV.Span.Slice(4));

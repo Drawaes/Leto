@@ -55,12 +55,11 @@ namespace Leto.Internal
             var ephemeralBuffer = buffer as EphemeralMemory;
             if (ephemeralBuffer == null)
             {
-                Debug.Fail("The buffer was not ephemeral");
-                return;
+                ExceptionHelper.MemoryBufferNotEphemeral();
             }
-            Debug.Assert(ephemeralBuffer.Rented, "Returning a buffer that isn't rented!");
             if (!ephemeralBuffer.Rented)
             {
+                Debug.Fail("Returning a buffer that isn't rented!");
                 return;
             }
             ephemeralBuffer.Rented = false;
