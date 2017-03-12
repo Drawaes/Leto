@@ -4,7 +4,7 @@ using static Leto.Interop.LibCrypto;
 
 namespace Leto.Hash
 {
-    public class OpenSslHashProvider:IHashProvider
+    public class OpenSslHashProvider : IHashProvider
     {
         public void HmacData(HashType hashType, Span<byte> key, Span<byte> message, Span<byte> result)
         {
@@ -40,6 +40,12 @@ namespace Leto.Hash
                     throw new InvalidOperationException();
             }
             return (type, size);
+        }
+
+        public IHash GetHash(HashType hashType)
+        {
+            var (type, size) = GetHashType(hashType);
+            return new OpenSslHash(type, size, hashType);
         }
     }
 }
