@@ -1,5 +1,7 @@
 ﻿namespace Leto.Alerts
 {
+    //http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+    //http://www.iana.org/go/rfc5246
     public enum AlertDescription : byte
     {
         close_notify = 0,

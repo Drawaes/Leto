@@ -8,7 +8,7 @@ namespace Leto.OpenSsl11.Interop
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
         private static extern unsafe void* HMAC(EVP_HashType evp_md, void* key, int key_len, void* d, int n, void* md, ref int md_len);
 
-        internal unsafe static int HMAC(EVP_HashType evp, Span<byte> key, Span<byte> data, Span<byte> output)
+        internal unsafe static int HMAC(EVP_HashType evp, ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> output)
         {
             fixed(void* keyPtr = &key.DangerousGetPinnableReference())
             fixed(void* dataPtr = &data.DangerousGetPinnableReference())

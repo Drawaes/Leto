@@ -1,5 +1,7 @@
 ﻿namespace Leto.Keyshares
 {
+    //http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+    //
     public enum NamedGroup : ushort
     {
         /* Elliptic Curve Groups (ECDHE) */

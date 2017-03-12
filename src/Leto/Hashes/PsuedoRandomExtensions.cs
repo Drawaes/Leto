@@ -14,7 +14,7 @@ namespace Leto.Hashes
         // A() is defined as:
         // A(0) = seed
         // A(i) = HMAC_hash(secret, A(i-1))
-        public static void Tls12Prf(this IHashProvider hashProvider, HashType hashType, Span<byte> secret, Span<byte> label, Span<byte> seed, Span<byte> keyMaterial)
+        public static void Tls12Prf(this IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> secret, ReadOnlySpan<byte> label, ReadOnlySpan<byte> seed, Span<byte> keyMaterial)
         {
             var hashSize = hashProvider.HashSize(hashType);
             var aLength = hashSize + seed.Length + label.Length;
@@ -38,7 +38,7 @@ namespace Leto.Hashes
         }
 
         //https://tools.ietf.org/html/rfc5869
-        public static void HkdfExtract(IHashProvider provider, HashType hashType, Span<byte> salt, Span<byte> ikm, Span<byte> output)
+        public static void HkdfExtract(this IHashProvider provider, HashType hashType, ReadOnlySpan<byte> salt, ReadOnlySpan<byte> ikm, Span<byte> output)
         {
             if (salt.Length == 0)
             {
@@ -52,7 +52,7 @@ namespace Leto.Hashes
         }
 
         //https://tools.ietf.org/html/rfc5869
-        public static void HkdfExpand(IHashProvider provider, HashType hashType, Span<byte> prk, Span<byte> info, Span<byte> output)
+        public static void HkdfExpand(this IHashProvider provider, HashType hashType, ReadOnlySpan<byte> prk, ReadOnlySpan<byte> info, Span<byte> output)
         {
             int hashLength = provider.HashSize(hashType);
             var tLength = hashLength + info.Length + sizeof(byte);
@@ -75,5 +75,29 @@ namespace Leto.Hashes
             }
         }
 
+        //https://tlswg.github.io/tls13-spec/#key-schedule
+        //HKDF-Expand-Label(Secret, Label, HashValue, Length) =
+        //HKDF-Expand(Secret, HkdfLabel, Length)
+        //Where HkdfLabel is specified as:
+        //struct {
+        //uint16 length = Length;
+        //opaque label<10..255> = "TLS 1.3, " + Label;
+        //opaque hash_value<0..255> = HashValue;
+        //}
+        //HkdfLabel;
+        public static void HkdfExpandLabel(this IHashProvider provider, HashType hashType, ReadOnlySpan<byte> secret, ReadOnlySpan<byte> label, ReadOnlySpan<byte> hash, Span<byte> output)
+        {
+            var hkdfSize = HkdfLabelHeaderSize + label.Length + hash.Length;
+            var hkdfLabel = new byte[hkdfSize];
+            
+            var hkdfSpan = hkdfLabel.WriteBigEndian((ushort)output.Length);
+            hkdfSpan = hkdfSpan.WriteBigEndian((byte)label.Length);
+            label.CopyTo(hkdfSpan);
+            hkdfSpan = hkdfSpan.Slice(label.Length);
+            hkdfSpan = hkdfSpan.WriteBigEndian((byte)hash.Length);
+            hash.CopyTo(hkdfSpan);
+            
+            HkdfExpand(provider, hashType, secret, hkdfLabel, output);
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Leto.OpenSsl11
 {
     public class OpenSslHashProvider : IHashProvider
     {
-        public void HmacData(HashType hashType, Span<byte> key, Span<byte> message, Span<byte> result)
+        public void HmacData(HashType hashType, ReadOnlySpan<byte> key, ReadOnlySpan<byte> message, Span<byte> result)
         {
             var (type, size) = GetHashType(hashType);
             HMAC(type, key, message, result);
