@@ -9,19 +9,18 @@ namespace Leto.Internal
 {
     public sealed class EphemeralBufferPoolWindows : BufferPool
     {
-        private IntPtr _memory;
-        private int _bufferCount;
-        private int _bufferSize;
-        private ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
-        private UIntPtr _totalAllocated;
+        private readonly IntPtr _memory;
+        private readonly int _bufferCount;
+        private readonly int _bufferSize;
+        private readonly ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
+        private readonly UIntPtr _totalAllocated;
 
         public EphemeralBufferPoolWindows(int bufferSize, int bufferCount)
         {
             if (bufferSize < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
             if (bufferCount < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
-            SYSTEM_INFO sysInfo;
-            GetSystemInfo(out sysInfo);
+            GetSystemInfo(out SYSTEM_INFO sysInfo);
             var pages = (int)Math.Ceiling((bufferCount * bufferSize) / (double)sysInfo.dwPageSize);
             var totalAllocated = pages * sysInfo.dwPageSize;
             _bufferCount = totalAllocated / bufferSize;
@@ -53,20 +52,20 @@ namespace Leto.Internal
 
         public override void Return(OwnedMemory<byte> buffer)
         {
-            var buffer2 = buffer as EphemeralMemory;
-            if (buffer2 == null)
+            var ephemeralBuffer = buffer as EphemeralMemory;
+            if (ephemeralBuffer == null)
             {
                 Debug.Fail("The buffer was not ephemeral");
                 return;
             }
-            Debug.Assert(buffer2.Rented, "Returning a buffer that isn't rented!");
-            if (!buffer2.Rented)
+            Debug.Assert(ephemeralBuffer.Rented, "Returning a buffer that isn't rented!");
+            if (!ephemeralBuffer.Rented)
             {
                 return;
             }
-            buffer2.Rented = false;
-            RtlZeroMemory(buffer2.Pointer, (UIntPtr)buffer2.Length);
-            _buffers.Enqueue(buffer2);
+            ephemeralBuffer.Rented = false;
+            RtlZeroMemory(ephemeralBuffer.Pointer, (UIntPtr)ephemeralBuffer.Length);
+            _buffers.Enqueue(ephemeralBuffer);
         }
 
         sealed class EphemeralMemory : OwnedMemory<byte>

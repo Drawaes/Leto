@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Leto.Interop
 {
@@ -11,10 +9,7 @@ namespace Leto.Interop
         [System.Diagnostics.DebuggerHidden()]
         private unsafe static int ThrowOnErrorReturnCode(int returnCode)
         {
-            if (returnCode != 1)
-            {
-                ThrowSecurityException();
-            }
+            if (returnCode != 1) ThrowSecurityException();
             return returnCode;
         }
 
@@ -36,20 +31,14 @@ namespace Leto.Interop
         [System.Diagnostics.DebuggerHidden()]
         private static unsafe void* ThrowOnNullPointer(void* ptr)
         {
-            if(ptr == null)
-            {
-                ThrowSecurityException();
-            }
+            if (ptr == null) ThrowSecurityException();
             return ptr;
         }
 
         [System.Diagnostics.DebuggerHidden()]
         private static IntPtr ThrowOnError(IntPtr returnCode)
         {
-            if (returnCode.ToInt64() < 1)
-            {
-                throw new NotImplementedException();
-            }
+            if (returnCode.ToInt64() < 1) ThrowSecurityException();
             return returnCode;
         }
     }

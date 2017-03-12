@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Alerts
+﻿namespace Leto.Alerts
 {
     public enum AlertDescription : byte
     {

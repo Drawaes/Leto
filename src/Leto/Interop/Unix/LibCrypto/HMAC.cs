@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Leto.Interop
 {
-    internal partial class LibCrypto
+    internal static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
         private static extern unsafe void* HMAC(EVP_HashType evp_md, void* key, int key_len, void* d, int n, void* md, ref int md_len);

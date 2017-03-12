@@ -1,5 +1,6 @@
 ﻿using System;
 using static Leto.Interop.LibCrypto;
+using Leto.Internal;
 
 namespace Leto.Hashes
 {
@@ -11,34 +12,22 @@ namespace Leto.Hashes
             HMAC(type, key, message, result);
         }
 
-        public int HashSize(HashType hashType)
-        {
-            var (type, size) = GetHashType(hashType);
-            return size;
-        }
+        public int HashSize(HashType hashType) => GetHashType(hashType).size;
 
         private static (EVP_HashType hash, int size) GetHashType(HashType hashType)
         {
-            EVP_HashType type;
-            int size;
             switch (hashType)
             {
                 case HashType.SHA256:
-                    type = EVP_sha256;
-                    size = 256 / 8;
-                    break;
+                    return (EVP_sha256, 256 / 8);
                 case HashType.SHA384:
-                    type = EVP_sha384;
-                    size = 384 / 8;
-                    break;
+                    return (EVP_sha384, 384 / 8);
                 case HashType.SHA512:
-                    type = EVP_sha512;
-                    size = 512 / 8;
-                    break;
+                    return (EVP_sha512, 512 / 8);
                 default:
-                    throw new InvalidOperationException();
+                    ExceptionHelper.ThrowException(new InvalidOperationException());
+                    return (default(EVP_HashType), default(int));
             }
-            return (type, size);
         }
 
         public IHash GetHash(HashType hashType)

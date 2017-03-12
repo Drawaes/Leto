@@ -1,38 +1,29 @@
-﻿using Leto.RecordLayer;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Leto.Alerts
 {
     public class AlertException : Exception
     {
-        private readonly AlertLevel _alertLevel;
-        private readonly AlertDescription _alertDescription;
-
-        public AlertException(AlertLevel alertLevel, AlertDescription description)
+        public AlertException(AlertLevel alertLevel, AlertDescription description, string message)
+            :base(message)
         {
-            _alertLevel = alertLevel;
-            _alertDescription = description;
+            Level = alertLevel;
+            Description = description;
         }
 
-        public AlertLevel Level => _alertLevel;
-        public AlertDescription Description => _alertDescription;
-        public override string Message => $"A {_alertLevel} {_alertDescription}";
+        public AlertLevel Level { get; }
+        public AlertDescription Description { get; }
+        public override string Message => $"A {Level} {Description} {base.Message}";
 
         public override string ToString() => Message;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerHidden()]
-        public static void ThrowAlert(AlertLevel alertLeve, AlertDescription description, string message)
+        public static void ThrowAlert(AlertLevel alertLevel, AlertDescription description, string message)
         {
-            Console.WriteLine($"Writing alert {alertLeve}-{description} message {message}");
-            throw new AlertException(alertLeve, description);
+            throw new AlertException(alertLevel, description, message);
         }
-
-        
     }
 }

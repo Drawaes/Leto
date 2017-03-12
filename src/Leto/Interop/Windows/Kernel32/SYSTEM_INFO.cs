@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Leto.Interop
 {
-    internal partial class Kernel32
+    internal static partial class Kernel32
     {
         [StructLayout(LayoutKind.Sequential)]
         internal struct SYSTEM_INFO

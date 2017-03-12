@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Interop
+﻿namespace Leto.Interop
 {
     internal static partial class Libraries
     {

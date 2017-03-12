@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Leto
 {
@@ -17,5 +16,11 @@ namespace Leto
             }
             return buffer.ToArray();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (T value, Span<byte> outBuffer) Consume<T>(this Span<byte> buffer) where T : struct
+        {
+            return (buffer.Read<T>(), buffer.Slice(Unsafe.SizeOf<T>()));
+        }       
     }
 }

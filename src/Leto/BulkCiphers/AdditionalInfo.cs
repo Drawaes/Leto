@@ -16,5 +16,6 @@ namespace Leto.BulkCiphers
         public RecordType RecordType { get => _recordType; set => _recordType = value; }
         public ushort TlsVersion { get => UnsafeUtilities.Reverse(_tlsVersion); set => _tlsVersion = UnsafeUtilities.Reverse(value); }
         public ushort PlainTextLength { get => UnsafeUtilities.Reverse(_plainTextLength); set => _plainTextLength = UnsafeUtilities.Reverse(value); }
+        public ushort PlainTextLengthBigEndian { set => _plainTextLength = value; }
     }
 }

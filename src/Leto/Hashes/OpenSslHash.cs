@@ -5,8 +5,8 @@ namespace Leto.Hashes
 {
     public sealed class OpenSslHash : IHash
     {
-        private HashType _hashType;
-        private int _size;
+        private readonly HashType _hashType;
+        private readonly int _size;
         private EVP_MD_CTX _ctx;
 
         internal OpenSslHash(EVP_HashType hashTypePointer, int size, HashType hashType)
@@ -19,16 +19,13 @@ namespace Leto.Hashes
         public int HashSize => _size;
         public HashType HashType => _hashType;
 
+        public void HashData(ReadOnlySpan<byte> data) => EVP_DigestUpdate(_ctx, data);
+
         public int FinishHash(Span<byte> output)
         {
             var result = EVP_DigestFinal_ex(_ctx, output);
             Dispose();
             return result;
-        }
-
-        public void HashData(ReadOnlySpan<byte> data)
-        {
-            EVP_DigestUpdate(_ctx, data);
         }
 
         public int InterimHash(Span<byte> output)
@@ -46,16 +43,10 @@ namespace Leto.Hashes
 
         public void Dispose()
         {
-            if (_ctx.IsValid())
-            {
-                _ctx.Free();
-            }
+            _ctx.Free();
             GC.SuppressFinalize(this);
         }
 
-        ~OpenSslHash()
-        {
-            Dispose();
-        }
+        ~OpenSslHash() => Dispose();
     }
 }

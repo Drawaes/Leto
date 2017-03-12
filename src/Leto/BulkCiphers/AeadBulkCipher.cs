@@ -8,18 +8,11 @@ namespace Leto.BulkCiphers
 {
     public sealed class AeadBulkCipher : IDisposable
     {
-        private static readonly IntPtr s_zeroBuffer = Marshal.AllocHGlobal(byte.MaxValue);
         private const int AdditionalInfoHeaderSize = 13;
-        private byte[] _sequence;
+        private readonly byte[] _sequence;
         private ulong _sequenceNumber;
         private IBulkCipherKey _key;
         private byte _paddingSize;
-
-        static AeadBulkCipher()
-        {
-            var array = new byte[byte.MaxValue];
-            Marshal.Copy(array, 0, s_zeroBuffer, array.Length);
-        }
 
         internal AeadBulkCipher(IBulkCipherKey key)
         {
@@ -32,19 +25,9 @@ namespace Leto.BulkCiphers
         public int KeySize => _key.Key.Length;
         public int IVSize => _key.IV.Length;
 
-        public void SetKey(Span<byte> key)
-        {
-            key.CopyTo(_key.Key.Span);
-        }
-
-        public void SetIV(Span<byte> iv)
-        {
-            var localIv = _key.IV.Span;
-            for (var i = 0; i < iv.Length; i++)
-            {
-                localIv[i] = (byte)(iv[i] ^ 0x0);
-            }
-        }
+        public void SetKey(Span<byte> key) => key.CopyTo(_key.Key.Span);
+        public void SetIV(Span<byte> iv) => iv.CopyTo(_key.IV.Span);
+        public void WriteNonce(ref WritableBuffer buffer) => buffer.Write(_key.IV.Span.Slice(4));
 
         public void Decrypt(ref ReadableBuffer messageBuffer, bool requiresAdditionalInfo)
         {
@@ -113,11 +96,6 @@ namespace Leto.BulkCiphers
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Failed to increment sequence on Aead Cipher");
         }
 
-        public void WriteNonce(ref WritableBuffer buffer)
-        {
-            buffer.Write(_key.IV.Span.Slice(4));
-        }
-
         private void WriteAdditionalInfo(RecordType recordType, ushort tlsVersion, int plaintextLength)
         {
             var additionalInfo = new AdditionalInfo()
@@ -135,14 +113,12 @@ namespace Leto.BulkCiphers
             var headerSpan = messageBuffer.Slice(0, AdditionalInfoHeaderSize).ToSpan();
 
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
-            var additionalSpan = new Span<byte>(Unsafe.AsPointer(ref additionalInfo), Marshal.SizeOf<AdditionalInfo>());
-            headerSpan.Slice(0, 5).CopyTo(additionalSpan.Slice(sizeof(ulong)));
-            var plainTextLength = additionalInfo.PlainTextLength - _key.TagSize - 8;
-            additionalInfo.PlainTextLength = (ushort)plainTextLength;
+            (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
+            (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<ushort>();
+            (additionalInfo.PlainTextLength, headerSpan) = headerSpan.Consume<ushort>();
+            additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
 
-            var nSpan = _key.IV.Span;
-            headerSpan.Slice(5).CopyTo(nSpan.Slice(4));
-
+            headerSpan.CopyTo(_key.IV.Span.Slice(4));
             return additionalInfo;
         }
 
@@ -167,9 +143,6 @@ namespace Leto.BulkCiphers
             GC.SuppressFinalize(this);
         }
 
-        ~AeadBulkCipher()
-        {
-            Dispose();
-        }
+        ~AeadBulkCipher() => Dispose();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Leto.Interop;
+﻿using Leto.Internal;
+using Leto.Interop;
 using System;
 using System.Buffers.Pools;
 using System.Runtime.InteropServices;
@@ -10,23 +11,23 @@ namespace Leto.BulkCiphers
         private static readonly int s_maxKeyIVSize = 32 + 12;
         //this should be configured at some point as this will be the
         //max number of connections at any one time /2
-        //space pinned out of swappable memory will be ~429k at 10k keys (5k connections)
-        private static readonly int s_maxKeys = 10000;
+        //space pinned out of swappable memory will be ~850k at 20k keys (10k connections)
+        private static readonly int s_maxKeys = 20000;
         private BufferPool _ephemeralPool;
 
         public OpenSslBulkKeyProvider()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                _ephemeralPool = new Internal.EphemeralBufferPoolUnix(s_maxKeyIVSize, s_maxKeys);
+                _ephemeralPool = new EphemeralBufferPoolUnix(s_maxKeyIVSize, s_maxKeys);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _ephemeralPool = new Internal.EphemeralBufferPoolWindows(s_maxKeyIVSize, s_maxKeys);
+                _ephemeralPool = new EphemeralBufferPoolWindows(s_maxKeyIVSize, s_maxKeys);
             }
             else
             {
-                throw new NotImplementedException("Unknown OS for ephemeral buffer pool");
+                ExceptionHelper.ThrowException(new NotImplementedException("Unknown OS for ephemeral buffer pool"));
             }
         }
 
@@ -45,7 +46,8 @@ namespace Leto.BulkCiphers
                     key = new OpenSslBulkCipherKey(LibCrypto.EVP_chacha20_poly1305, _ephemeralPool, 32, 12, 16);
                     break;
                 default:
-                    throw new NotImplementedException();
+                    ExceptionHelper.ThrowException(new NotImplementedException());
+                    return null;
             }
             return new AeadBulkCipher(key);
         }

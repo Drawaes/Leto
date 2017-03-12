@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Leto.Interop
 {
-    internal partial class LibCrypto
+    internal static partial class LibCrypto
     {
         [StructLayout(LayoutKind.Sequential)]
         internal struct EVP_MD_CTX
@@ -14,11 +12,10 @@ namespace Leto.Interop
 
             public void Free()
             {
+                if (_ptr == IntPtr.Zero) return;
                 EVP_MD_CTX_free(_ptr);
                 _ptr = IntPtr.Zero;
             }
-
-            public bool IsValid() => _ptr != IntPtr.Zero;
         }
     }
 }

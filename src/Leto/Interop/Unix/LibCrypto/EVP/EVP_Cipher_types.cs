@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Leto.Interop
 {
@@ -27,7 +25,7 @@ namespace Leto.Interop
             private IntPtr _ptr;
         }
 
-        internal enum EVP_CIPHER_CTRL : int
+        private enum EVP_CIPHER_CTRL : int
         {
             EVP_CTRL_INIT = 0x0,
             EVP_CTRL_SET_KEY_LENGTH = 0x1,

@@ -40,16 +40,7 @@ namespace Leto.OpenSslFacts
         private static void SetIVAndKey(AeadBulkCipher cipher)
         {
             var tempIv = new byte[12];
-            for (int i = 0; i < s_iv.Length; i++)
-            {
-                tempIv[i] = (byte)(s_iv[i] ^ 0x00);
-            }
-            //We need to do this because we use the sequence xored but chrome uses the 
-            //sequence both are valid but the test data is from chrome to a server connection
-            for(int i = s_iv.Length; i < tempIv.Length;i++)
-            {
-                tempIv[i] = (byte)(tempIv[i] ^ 0x00);
-            }
+            s_iv.CopyTo(tempIv);
             cipher.SetKey(s_key);
             cipher.SetIV(tempIv);
         }

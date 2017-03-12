@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Buffers.Pools;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using static Leto.Interop.Sys;
 
@@ -10,11 +9,11 @@ namespace Leto.Internal
 {
     public sealed class EphemeralBufferPoolUnix : BufferPool
     {
-        private IntPtr _memory;
-        private int _bufferCount;
-        private int _bufferSize;
-        private ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
-        private long _totalAllocated;
+        private readonly IntPtr _memory;
+        private readonly int _bufferCount;
+        private readonly int _bufferSize;
+        private readonly ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
+        private readonly long _totalAllocated;
 
         public EphemeralBufferPoolUnix(int bufferSize, int bufferCount)
         {
@@ -61,10 +60,9 @@ namespace Leto.Internal
             {
                 ExceptionHelper.ThrowException(new OutOfMemoryException("Buffer requested was larger than the max size"));
             }
-            EphemeralMemory returnValue;
-            if (!_buffers.TryDequeue(out returnValue))
+            if (!_buffers.TryDequeue(out EphemeralMemory returnValue))
             {
-                ExceptionHelper.ThrowException(new OutOfMemoryException());
+                ExceptionHelper.ThrowException(new OutOfMemoryException("Ran out of free buffers"));
             }
             returnValue.Rented = true;
             return returnValue;
@@ -72,20 +70,20 @@ namespace Leto.Internal
 
         public override unsafe void Return(OwnedMemory<byte> buffer)
         {
-            var buffer2 = buffer as EphemeralMemory;
-            if (buffer2 == null)
+            var emphemeralBuffer = buffer as EphemeralMemory;
+            if (emphemeralBuffer == null)
             {
                 Debug.Fail("The buffer was not Ephemeral");
                 return;
             }
-            Debug.Assert(buffer2.Rented, "Returning a buffer that isn't rented!");
-            if (!buffer2.Rented)
+            Debug.Assert(emphemeralBuffer.Rented, "Returning a buffer that isn't rented!");
+            if (!emphemeralBuffer.Rented)
             {
                 return;
             }
-            buffer2.Rented = false;
-            MemSet((void*)buffer2.Pointer, 0, (UIntPtr)buffer2.Length);
-            _buffers.Enqueue(buffer2);
+            emphemeralBuffer.Rented = false;
+            MemSet((void*)emphemeralBuffer.Pointer, 0, (UIntPtr)emphemeralBuffer.Length);
+            _buffers.Enqueue(emphemeralBuffer);
         }
 
         protected unsafe override void Dispose(bool disposing)
