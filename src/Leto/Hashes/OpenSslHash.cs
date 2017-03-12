@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using static Leto.Interop.LibCrypto;
 
-namespace Leto.Hash
+namespace Leto.Hashes
 {
     public sealed class OpenSslHash : IHash
     {

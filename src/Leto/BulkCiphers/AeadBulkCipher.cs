@@ -1,13 +1,10 @@
 ﻿using Leto.RecordLayer;
 using System;
-using System.Buffers;
-using System.Buffers.Pools;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static Leto.Interop.LibCrypto;
 
-namespace Leto.BulkCipher
+namespace Leto.BulkCiphers
 {
     public sealed class AeadBulkCipher : IDisposable
     {

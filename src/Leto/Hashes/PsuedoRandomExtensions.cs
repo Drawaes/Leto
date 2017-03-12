@@ -1,9 +1,6 @@
-﻿using Leto.Hash;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
-namespace Leto.Hash
+namespace Leto.Hashes
 {
     public static class PsuedoRandomExtensions
     {

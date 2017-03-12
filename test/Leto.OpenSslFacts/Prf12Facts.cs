@@ -1,4 +1,4 @@
-﻿using Leto.Hash;
+﻿using Leto.Hashes;
 using Xunit;
 
 namespace Leto.OpenSslFacts

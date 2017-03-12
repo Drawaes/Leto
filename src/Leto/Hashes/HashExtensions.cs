@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Text;
+﻿using System.IO.Pipelines;
 
-namespace Leto.Hash
+namespace Leto.Hashes
 {
     public static class HashExtensions
     {

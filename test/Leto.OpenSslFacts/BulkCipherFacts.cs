@@ -1,9 +1,8 @@
-﻿using Leto.Hash;
+﻿using Leto.BulkCiphers;
 using Leto.RecordLayer;
 using System;
 using System.IO.Pipelines;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,8 +19,8 @@ namespace Leto.OpenSslFacts
         [Fact]
         public async Task EncryptClientMessage()
         {
-            var provider = new BulkCipher.OpenSslBulkKeyProvider();
-            var cipher = provider.GetCipher(BulkCipher.BulkCipherType.AES_128_GCM);
+            var provider = new OpenSslBulkKeyProvider();
+            var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM);
             SetIVAndKey(cipher);
             using (var pipeFactory = new PipeFactory())
             {
@@ -38,7 +37,7 @@ namespace Leto.OpenSslFacts
             }
         }
 
-        private static void SetIVAndKey(BulkCipher.AeadBulkCipher cipher)
+        private static void SetIVAndKey(AeadBulkCipher cipher)
         {
             var tempIv = new byte[12];
             for (int i = 0; i < s_iv.Length; i++)
@@ -58,8 +57,8 @@ namespace Leto.OpenSslFacts
         [Fact]
         public async Task DecryptClientMessage()
         {
-            var provider = new BulkCipher.OpenSslBulkKeyProvider();
-            var cipher = provider.GetCipher(BulkCipher.BulkCipherType.AES_128_GCM);
+            var provider = new OpenSslBulkKeyProvider();
+            var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM);
             SetIVAndKey(cipher);            
 
             using (var pipeFactory = new PipeFactory())

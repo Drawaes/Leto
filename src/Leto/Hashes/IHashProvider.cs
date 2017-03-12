@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Leto.Hash
+namespace Leto.Hashes
 {
     public interface IHashProvider
     {

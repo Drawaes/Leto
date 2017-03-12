@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.BulkCipher
+﻿namespace Leto.BulkCiphers
 {
     public enum BulkCipherType
     {
