@@ -7,7 +7,7 @@ using static Leto.Interop.LibCrypto;
 
 namespace Leto.BulkCipher
 {
-    public sealed class OpenSslBulkKey : IDisposable
+    public sealed class OpenSslBulkCipherKey : IBulkCipherKey
     {
         private EVP_CIPHER_CTX _ctx;
         private Memory<byte> _key;
@@ -17,7 +17,7 @@ namespace Leto.BulkCipher
         private BufferPool _bufferPool;
         private OwnedMemory<byte> _keyStore;
 
-        internal OpenSslBulkKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _bufferPool = bufferPool;
@@ -47,9 +47,9 @@ namespace Leto.BulkCipher
             return EVP_CipherUpdate(_ctx, inputAndOutput, inputAndOutput);
         }
 
-        public unsafe int AddAdditionalInfo(AdditionalInfo addInfo)
+        public void AddAdditionalInfo(AdditionalInfo addInfo)
         {
-            return EVP_CipherUpdate(_ctx, addInfo);
+            EVP_CipherUpdate(_ctx, addInfo);
         }
 
         public void ReadTag(Span<byte> span)
@@ -85,7 +85,7 @@ namespace Leto.BulkCipher
             GC.SuppressFinalize(this);
         }
 
-        ~OpenSslBulkKey()
+        ~OpenSslBulkCipherKey()
         {
             Dispose();
         }

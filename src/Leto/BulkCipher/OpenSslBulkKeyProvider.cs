@@ -7,21 +7,24 @@ using System.Text;
 
 namespace Leto.BulkCipher
 {
-    public class OpenSslBulkKeyProvider
+    public sealed class OpenSslBulkKeyProvider : IBulkCipherKeyProvider
     {
         private static readonly int s_maxKeyIVSize = 32 + 12;
-        private static readonly int s_maxSessions = 10000;
+        //this should be configured at some point as this will be the
+        //max number of connections at any one time /2
+        //space pinned out of swappable memory will be ~429k at 10k keys (5k connections)
+        private static readonly int s_maxKeys = 10000;
         private BufferPool _ephemeralPool;
 
         public OpenSslBulkKeyProvider()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                _ephemeralPool = new Internal.EphemeralBufferPoolUnix(s_maxKeyIVSize, s_maxSessions);
+                _ephemeralPool = new Internal.EphemeralBufferPoolUnix(s_maxKeyIVSize, s_maxKeys);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _ephemeralPool = new Internal.EphemeralBufferPoolWindows(s_maxKeyIVSize, s_maxSessions);
+                _ephemeralPool = new Internal.EphemeralBufferPoolWindows(s_maxKeyIVSize, s_maxKeys);
             }
             else
             {
@@ -31,22 +34,37 @@ namespace Leto.BulkCipher
 
         public AeadBulkCipher GetCipher(BulkCipherType cipherType)
         {
-            OpenSslBulkKey key;
+            OpenSslBulkCipherKey key;
             switch (cipherType)
             {
                 case BulkCipherType.AES_128_GCM:
-                    key = new OpenSslBulkKey(LibCrypto.EVP_aes_128_gcm, _ephemeralPool, 16, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_128_gcm, _ephemeralPool, 16, 12, 16);
                     break;
                 case BulkCipherType.AES_256_GCM:
-                    key = new OpenSslBulkKey(LibCrypto.EVP_aes_256_gcm, _ephemeralPool, 32, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_256_gcm, _ephemeralPool, 32, 12, 16);
                     break;
                 case BulkCipherType.CHACHA20_POLY1305:
-                    key = new OpenSslBulkKey(LibCrypto.EVP_chacha20_poly1305, _ephemeralPool, 32, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_chacha20_poly1305, _ephemeralPool, 32, 12, 16);
                     break;
                 default:
                     throw new NotImplementedException();
             }
             return new AeadBulkCipher(key);
+        }
+
+        public void Dispose()
+        {
+            if (_ephemeralPool != null)
+            {
+                _ephemeralPool.Dispose();
+                _ephemeralPool = null;
+            }
+            GC.SuppressFinalize(this);
+        }
+
+        ~OpenSslBulkKeyProvider()
+        {
+            Dispose();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Leto.BulkCipher
         private const int AdditionalInfoHeaderSize = 13;
         private byte[] _sequence;
         private ulong _sequenceNumber;
-        private OpenSslBulkKey _key;
+        private IBulkCipherKey _key;
         private byte _paddingSize;
 
         static AeadBulkCipher()
@@ -24,7 +24,7 @@ namespace Leto.BulkCipher
             Marshal.Copy(array, 0, s_zeroBuffer, array.Length);
         }
 
-        internal AeadBulkCipher(OpenSslBulkKey key)
+        internal AeadBulkCipher(IBulkCipherKey key)
         {
             _sequence = new byte[key.IV.Length];
             _key = key;
@@ -35,7 +35,7 @@ namespace Leto.BulkCipher
         public int KeySize => _key.Key.Length;
         public int IVSize => _key.IV.Length;
 
-        public unsafe void SetKey(Span<byte> key)
+        public void SetKey(Span<byte> key)
         {
             key.CopyTo(_key.Key.Span);
         }
@@ -116,7 +116,7 @@ namespace Leto.BulkCipher
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Failed to increment sequence on Aead Cipher");
         }
 
-        public unsafe void WriteNonce(ref WritableBuffer buffer)
+        public void WriteNonce(ref WritableBuffer buffer)
         {
             buffer.Write(_key.IV.Span.Slice(4));
         }
@@ -149,7 +149,7 @@ namespace Leto.BulkCipher
             return additionalInfo;
         }
 
-        private unsafe void ReadTag(ref ReadableBuffer messageBuffer)
+        private void ReadTag(ref ReadableBuffer messageBuffer)
         {
             var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
             var tagSpan = tagBuffer.ToSpan();
