@@ -25,5 +25,15 @@ namespace Leto.Alerts
         {
             throw new AlertException(alertLevel, description, message);
         }
+
+        public static void ThrowUnexpectedMessage(RecordLayer.RecordType recordType)
+        {
+            ThrowAlert(AlertLevel.Fatal, AlertDescription.unexpected_message, $"Unexpected message of type {recordType}");
+        }
+
+        public static void ThrowUnexpectedMessage(Handshake.HandshakeType handshakeType)
+        {
+            ThrowAlert(AlertLevel.Fatal, AlertDescription.unexpected_message, $"Unexpected message of type {handshakeType}");
+        }
     }
 }

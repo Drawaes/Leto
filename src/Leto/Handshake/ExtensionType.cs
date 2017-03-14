@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Leto.Handshake
 {
+    //https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     public enum ExtensionType : ushort
     {
         server_name = 0,

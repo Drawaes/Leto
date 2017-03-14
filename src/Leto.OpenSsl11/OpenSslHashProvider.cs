@@ -1,6 +1,8 @@
 ﻿using Leto.Hashes;
 using System;
+using System.Collections.Generic;
 using static Leto.OpenSsl11.Interop.LibCrypto;
+using static System.Math;
 
 namespace Leto.OpenSsl11
 {

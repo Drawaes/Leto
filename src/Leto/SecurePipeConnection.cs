@@ -1,0 +1,33 @@
+﻿using Leto.ConnectionStates;
+using System;
+using System.Collections.Generic;
+using System.IO.Pipelines;
+using System.Text;
+
+namespace Leto
+{
+    public class SecurePipeConnection : IPipeConnection
+    {
+        private IPipe _inputPipe;
+        private IPipe _outputPipe;
+        private IPipeConnection _connection;
+        private IConnectionState _state;
+
+        public SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, ICryptoProvider cryptoProvider)
+        {
+            _state = new ServerUnknownVersionState((state) => _state = state, cryptoProvider);
+            _inputPipe = pipeFactory.Create();
+            _outputPipe = pipeFactory.Create();
+            _connection = connection;
+        }
+
+        public IConnectionState State => _state;
+        public IPipeReader Input => _outputPipe.Reader;
+        public IPipeWriter Output => _inputPipe.Writer;
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

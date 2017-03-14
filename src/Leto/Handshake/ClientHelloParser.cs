@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Text;
+using System.Runtime.InteropServices;
+using static Leto.BufferExtensions;
 
 namespace Leto.Handshake
 {
@@ -14,30 +15,34 @@ namespace Leto.Handshake
         private Span<byte> _compressionMethods;
         private List<(ExtensionType, Span<byte>)> _extensions;
 
-        public ClientHelloParser(ReadableBuffer buffer)
+        public ClientHelloParser(ref ReadableBuffer buffer)
         {
-            var span = new BigEndianSpanReader(buffer.ToSpan());
-            _tlsVersion = (TlsVersion) span.Read<ushort>();
-            _clientRandom = span.ReadFixed(32);
-            _sessionId = span.ReadVector8();
-            _cipherSuite = span.ReadVector16();
-            _compressionMethods = span.ReadVector8();
+            var span = buffer.ToSpan();
+            span = span.Slice(Marshal.SizeOf<HandshakePrefix>());
+            _tlsVersion = (TlsVersion)ReadBigEndian<ushort>(ref span);
+            _clientRandom = ReadFixedVector(ref span, TlsConstants.RandomLength);
+            _sessionId = ReadVector8(ref span);
+            _cipherSuite = ReadVector16(ref span);
+            _compressionMethods = ReadVector8(ref span);
             if (span.Length == 0)
             {
                 _extensions = null;
                 return;
             }
             _extensions = new List<(ExtensionType, Span<byte>)>();
-            var extensionSpan = new BigEndianSpanReader(span.ReadVector16());
-            if(span.Length > 0)
+            var extensionSpan = ReadVector16(ref span);
+            if (span.Length > 0)
             {
                 ThrowBytesLeftOver();
             }
-            while(extensionSpan.Length > 0)
+            while (extensionSpan.Length > 0)
             {
-                var type = (ExtensionType)extensionSpan.Read<ushort>();
-                var extSpan = extensionSpan.ReadVector16();
-                _extensions.Add((type, extSpan));
+                var type = ReadBigEndian<ExtensionType>(ref extensionSpan);
+                var extSpan = ReadVector16(ref extensionSpan);
+                if (Enum.IsDefined(typeof(ExtensionType), type))
+                {
+                    _extensions.Add((type, extSpan));
+                }
             }
         }
 
@@ -48,5 +53,7 @@ namespace Leto.Handshake
 
         public TlsVersion TlsVersion => _tlsVersion;
         public Span<byte> ClientRandom => _clientRandom;
+        public List<(ExtensionType, Span<byte>)> Extensions => _extensions;
+        public Span<byte> CipherSuites => _cipherSuite;
     }
 }

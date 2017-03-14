@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Leto.Handshake
+namespace Leto
 {
     public enum TlsVersion : ushort
     {

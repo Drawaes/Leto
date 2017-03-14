@@ -6,7 +6,7 @@ namespace Leto.Keyshares
 {
     public enum KeyExchangeType
     {
-        None_Rsa,
+        Rsa,
         Ecdhe,
         Dhe
     }
