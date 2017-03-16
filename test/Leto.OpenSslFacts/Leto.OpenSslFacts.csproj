@@ -21,4 +21,10 @@
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\TestCert.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

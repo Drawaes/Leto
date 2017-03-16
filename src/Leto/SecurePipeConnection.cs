@@ -12,10 +12,12 @@ namespace Leto
         private IPipe _outputPipe;
         private IPipeConnection _connection;
         private IConnectionState _state;
+        private ISecurePipeListener _listener;
 
-        public SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, ICryptoProvider cryptoProvider)
+        public SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, ISecurePipeListener listener)
         {
-            _state = new ServerUnknownVersionState((state) => _state = state, cryptoProvider);
+            _listener = listener;
+            _state = new ServerUnknownVersionState((state) => _state = state, listener);
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();
             _connection = connection;

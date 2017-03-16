@@ -35,5 +35,10 @@ namespace Leto.Alerts
         {
             ThrowAlert(AlertLevel.Fatal, AlertDescription.unexpected_message, $"Unexpected message of type {handshakeType}");
         }
+
+        public static void ThrowInvalidLength(int expected, int actual)
+        {
+            ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, $"Invalid vector length expected {expected} actual {actual}");
+        }
     }
 }

@@ -5,13 +5,15 @@ using System.IO.Pipelines;
 using System.Linq;
 using static Leto.BufferExtensions;
 using Leto.CipherSuites;
+using Leto.RecordLayer;
+using Leto.Handshake.Extensions;
 
 namespace Leto.ConnectionStates
 {
     public class ServerUnknownVersionState : IConnectionState
     {
         private Action<IConnectionState> _replaceConnectionState;
-        private ICryptoProvider _cryptoProvider;
+        private ISecurePipeListener _listener;
 
         private static TlsVersion[] s_supportedVersions =
         {
@@ -21,10 +23,12 @@ namespace Leto.ConnectionStates
 
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
 
-        public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, ICryptoProvider cryptoProvider)
+        public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, ISecurePipeListener listener)
         {
             _replaceConnectionState = replaceConnectionState;
-            _cryptoProvider = cryptoProvider;
+            _listener = listener;
         }
 
         private TlsVersion GetVersion(ref ClientHelloParser helloParser)
@@ -80,21 +84,24 @@ namespace Leto.ConnectionStates
             }
             var helloParser = new ClientHelloParser(ref record);
             var version = GetVersion(ref helloParser);
+            IConnectionState connectionState;
             switch (version)
             {
                 case TlsVersion.Tls12:
-                    _replaceConnectionState(new Server12ConnectionState(ref helloParser, _cryptoProvider));
+                    connectionState = new Server12ConnectionState(_listener);
                     break;
                 case TlsVersion.Tls13Draft18:
                     throw new NotImplementedException();
                 default:
                     throw new NotImplementedException();
             }
+            connectionState.HandleClientHello(ref helloParser, ref writer);
+            _replaceConnectionState(connectionState);
         }
 
         public void HandleChangeCipherSpecRecord(ref ReadableBuffer record, ref WritableBuffer writer)
         {
-            Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.ChangeCipherSpec);
+            Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
         public void HandleApplicationRecord(ref ReadableBuffer record, ref WritableBuffer writer)
@@ -105,6 +112,11 @@ namespace Leto.ConnectionStates
         public void HandAlertRecord(ref ReadableBuffer record, ref WritableBuffer writer)
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.Alert);
+        }
+
+        public void HandleClientHello(ref ClientHelloParser clientHelloParser, ref WritableBuffer writer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

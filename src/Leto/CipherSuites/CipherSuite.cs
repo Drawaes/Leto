@@ -15,6 +15,7 @@ namespace Leto.CipherSuites
         {
             _code = code;
             _name = name;
+            _keyExchange = keyExchange;
             _supportedVersions = supportedVersions ?? new TlsVersion[0];
         }
 

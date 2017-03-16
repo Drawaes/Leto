@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Leto.Certificates;
+using System;
 
 namespace Leto.Keyshares
 {
-    public interface IKeyshareProvider:IDisposable
+    public interface IKeyshareProvider : IDisposable
     {
-        IKeyshare GetKeyShare(NamedGroup namedGroup);
+        IKeyshare GetKeyshare(NamedGroup namedGroup);
+        IKeyshare GetKeyshare(KeyExchangeType keyExchange, Span<byte> supportedGroups);
     }
 }

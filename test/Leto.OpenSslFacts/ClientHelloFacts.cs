@@ -23,7 +23,7 @@ namespace Leto.OpenSslFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;
                 IConnectionState newState = null;
-                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslCryptoProvider());
+                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
                 state.HandleHandshakeRecord(ref buffer, ref writer);
                 Assert.IsType(typeof(Server12ConnectionState), newState);
             }
@@ -41,7 +41,7 @@ namespace Leto.OpenSslFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;
                 IConnectionState newState = null;
-                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslCryptoProvider());
+                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
                 Assert.Throws<Alerts.AlertException>(() => state.HandleHandshakeRecord(ref buffer, ref writer));        
             }
         }
