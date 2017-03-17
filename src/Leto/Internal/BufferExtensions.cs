@@ -75,6 +75,32 @@ namespace Leto
         public static (T value, Span<byte> outBuffer) Consume<T>(this Span<byte> buffer) where T : struct
         {
             return (buffer.Read<T>(), buffer.Slice(Unsafe.SizeOf<T>()));
-        }       
+        }
+
+        public static void Write24BitNumber(ref WritableBuffer buffer, int numberToWrite)
+        {
+            buffer.Ensure(3);
+            var span = buffer.Memory.Span;
+            Write24BitNumber(span, numberToWrite);
+            buffer.Advance(3);
+        }
+
+        public static void Write24BitNumber(this Span<byte> span, int numberToWrite)
+        {
+            span[0] = ((byte)(((numberToWrite & 0xFF0000) >> 16)));
+            span[1] = ((byte)(((numberToWrite & 0x00ff00) >> 8)));
+            span[2] = ((byte)(numberToWrite & 0x0000ff));
+         }
+
+        public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, WritableBuffer> contentWriter)
+        {
+            buffer.Ensure(3);
+            var bookmark = buffer.Memory;
+            buffer.Advance(3);
+            int currentSize = buffer.BytesWritten;
+            buffer = contentWriter(buffer);
+            currentSize = buffer.BytesWritten - currentSize;
+            bookmark.Span.Write24BitNumber(currentSize);
+        }
     }
 }

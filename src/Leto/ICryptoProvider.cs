@@ -1,5 +1,6 @@
 ﻿using Leto.CipherSuites;
 using Leto.Handshake;
+using Leto.Hashes;
 using Leto.Keyshares;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace Leto
     {
         CipherSuiteProvider CipherSuites { get; }
         IKeyshareProvider KeyshareProvider { get; }
-
+        IHashProvider HashProvider { get; }
         void FillWithRandom(Span<byte> span);
     }
 }

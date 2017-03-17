@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
 using static Leto.BufferExtensions;
@@ -9,7 +10,7 @@ namespace Leto.Handshake.Extensions
     public class ApplicationLayerProtocolProvider
     {
         //https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
-        private readonly static (ApplicationLayerProtocolType, byte[])[] _protocols = new (ApplicationLayerProtocolType, byte[])[]
+        private readonly static (ApplicationLayerProtocolType, byte[])[] _protocols = new(ApplicationLayerProtocolType, byte[])[]
         {
             (ApplicationLayerProtocolType.Http1_1, Encoding.ASCII.GetBytes("http/1.1")),
             (ApplicationLayerProtocolType.Spdy1, Encoding.ASCII.GetBytes("spdy/1")),
@@ -29,19 +30,41 @@ namespace Leto.Handshake.Extensions
 
         public ApplicationLayerProtocolProvider(params ApplicationLayerProtocolType[] supportedProtocols)
         {
-            if(supportedProtocols?.Length > 0)
+            if (supportedProtocols?.Length > 0)
             {
                 _supportedProtocols = new(ApplicationLayerProtocolType, byte[])[supportedProtocols.Length];
-                for(var i = 0; i < _supportedProtocols.Length;i++)
+                for (var i = 0; i < _supportedProtocols.Length; i++)
                 {
                     _supportedProtocols[i] = _protocols.First((protoType) => protoType.Item1 == supportedProtocols[i]);
                 }
             }
         }
 
+        public void WriteExtension(ref WritableBuffer writer, ApplicationLayerProtocolType negotiatedAlpn)
+        {
+            var buffer = GetBufferForProtocol(negotiatedAlpn);
+            writer.WriteBigEndian(negotiatedAlpn);
+            writer.WriteBigEndian((byte)(buffer.Length + 1));
+            writer.WriteBigEndian((byte)buffer.Length);
+            writer.Write(buffer);
+        }
+
+        public Span<byte> GetBufferForProtocol(ApplicationLayerProtocolType protocolType)
+        {
+            foreach (var (proto, buffer) in _supportedProtocols)
+            {
+                if (proto == protocolType)
+                {
+                    return buffer;
+                }
+            }
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unknown protocol type negotiated");
+            return null;
+        }
+
         public ApplicationLayerProtocolType ProcessExtension(Span<byte> span)
         {
-            if(_protocols == null)
+            if (_protocols == null)
             {
                 return ApplicationLayerProtocolType.None;
             }
@@ -52,7 +75,7 @@ namespace Leto.Handshake.Extensions
                 while (loopSpan.Length > 0)
                 {
                     var protocol = ReadVector8(ref loopSpan);
-                    if(protocol.SequenceEqual(buffer))
+                    if (protocol.SequenceEqual(buffer))
                     {
                         return alpn;
                     }

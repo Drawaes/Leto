@@ -7,6 +7,7 @@ using static Leto.BufferExtensions;
 using Leto.CipherSuites;
 using Leto.RecordLayer;
 using Leto.Handshake.Extensions;
+using Leto.Hashes;
 
 namespace Leto.ConnectionStates
 {
@@ -22,8 +23,8 @@ namespace Leto.ConnectionStates
         };
 
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
-
         public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IHash HandshakeHash => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, ISecurePipeListener listener)
         {
@@ -117,6 +118,11 @@ namespace Leto.ConnectionStates
         public void HandleClientHello(ref ClientHelloParser clientHelloParser, ref WritableBuffer writer)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            //The version selector has no resources to cleanup
         }
     }
 }

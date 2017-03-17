@@ -9,7 +9,7 @@ namespace Leto.Handshake
 {
     public static class ServerHelloWriter12
     {
-        public static void Write(ref WritableBuffer writer, Server12ConnectionState state)
+        public static WritableBuffer Write(WritableBuffer writer, Server12ConnectionState state)
         {
             var fixedSize = Tls12.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort);
             writer.Ensure(fixedSize);
@@ -29,9 +29,23 @@ namespace Leto.Handshake
             span = span.WriteBigEndian(state.CipherSuite.Code);
             //We don't support compression at the TLS level as it is prone to attacks
             span = span.WriteBigEndian<byte>(0);
+
             writer.Advance(fixedSize);
             //Completed the fixed section now we write the extensions
+            WriteExtensions(ref writer, state);
+            return writer;
+        }
 
+        public static void WriteExtensions(ref WritableBuffer writer, Server12ConnectionState state)
+        {
+            if(state.SecureRenegotiationSupported)
+            {
+                state.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
+            }
+            if(state.NegotiatedAlpn != Extensions.ApplicationLayerProtocolType.None)
+            {
+                state.Listener.AlpnProvider.WriteExtension(ref writer, state.NegotiatedAlpn);
+            }
         }
     }
 }

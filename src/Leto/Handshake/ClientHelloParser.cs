@@ -14,10 +14,12 @@ namespace Leto.Handshake
         private Span<byte> _cipherSuite;
         private Span<byte> _compressionMethods;
         private List<(ExtensionType, Span<byte>)> _extensions;
+        private Span<byte> _originalMessage;
 
         public ClientHelloParser(ref ReadableBuffer buffer)
         {
             var span = buffer.ToSpan();
+            _originalMessage = span;
             span = span.Slice(Marshal.SizeOf<HandshakePrefix>());
             _tlsVersion = (TlsVersion)ReadBigEndian<ushort>(ref span);
             _clientRandom = ReadFixedVector(ref span, TlsConstants.RandomLength);
@@ -55,5 +57,6 @@ namespace Leto.Handshake
         public Span<byte> ClientRandom => _clientRandom;
         public List<(ExtensionType, Span<byte>)> Extensions => _extensions;
         public Span<byte> CipherSuites => _cipherSuite;
+        public Span<byte> OriginalMessage => _originalMessage;
     }
 }
