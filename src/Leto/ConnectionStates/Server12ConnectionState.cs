@@ -16,22 +16,23 @@ namespace Leto.ConnectionStates
     {
         private byte[] _clientRandom;
         private CipherSuite _cipherSuite;
-        private ISecurePipeListener _listener;
+        private SecurePipeConnection _secureConnection;
         private ApplicationLayerProtocolType _negotiatedAlpn;
         private IKeyshare _keyshare;
         private bool _secureRenegotiation;
         private IHash _handshakeHash;
 
-        public Server12ConnectionState(ISecurePipeListener listener)
+        public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
-            _listener = listener;
+            _secureConnection = secureConnection;
         }
 
         public CipherSuite CipherSuite => _cipherSuite;
         public ApplicationLayerProtocolType NegotiatedAlpn => _negotiatedAlpn;
-        public ISecurePipeListener Listener => _listener;
         internal bool SecureRenegotiationSupported => _secureRenegotiation;
+        internal SecurePipeConnection SecureConnection => _secureConnection;
         public IHash HandshakeHash => _handshakeHash;
+        public ushort RecordVersion => (ushort) TlsVersion.Tls12;
 
         private void ParseExtensions(ref ClientHelloParser clientHello)
         {
@@ -40,15 +41,15 @@ namespace Leto.ConnectionStates
                 switch (extensionType)
                 {
                     case ExtensionType.application_layer_protocol_negotiation:
-                        _negotiatedAlpn = _listener.AlpnProvider.ProcessExtension(buffer);
+                        _negotiatedAlpn = _secureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
                         break;
                     case ExtensionType.supported_groups:
-                        _keyshare = _listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, buffer);
+                        _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, buffer);
                         break;
                     case ExtensionType.signature_algorithms:
                         break;
                     case ExtensionType.renegotiation_info:
-                        _listener.SecureRenegotiationProvider.ProcessExtension(buffer);
+                        _secureConnection.Listener.SecureRenegotiationProvider.ProcessExtension(buffer);
                         _secureRenegotiation = true;
                         break;
                     default:
@@ -66,21 +67,16 @@ namespace Leto.ConnectionStates
         {
             throw new NotImplementedException();
         }
-
-        public void HandleApplicationRecord(ref ReadableBuffer record, ref WritableBuffer writer)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void HandleClientHello(ref ClientHelloParser clientHello, ref WritableBuffer writer)
         {
             _clientRandom = clientHello.ClientRandom.ToArray();
-            _cipherSuite = _listener.CryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
-            _handshakeHash = _listener.CryptoProvider.HashProvider.GetHash(_cipherSuite.HashType);
+            _cipherSuite = _secureConnection.Listener.CryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
+            _handshakeHash = _secureConnection.Listener.CryptoProvider.HashProvider.GetHash(_cipherSuite.HashType);
             ParseExtensions(ref clientHello);
             if (_keyshare == null)
             {
-                _keyshare = _listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
+                _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
             }
             writer = WriteServerHello(writer);
         }

@@ -23,7 +23,9 @@ namespace Leto.OpenSslFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;
                 IConnectionState newState = null;
-                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
+                var pipeConnection = new LoopbackPipeline(factory);
+                var secureConnection = new SecurePipeConnection(factory, pipeConnection.ClientPipeline, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
+                var state = new ServerUnknownVersionState((connecter) => newState = connecter, secureConnection);
                 state.HandleHandshakeRecord(ref buffer, ref writer);
                 Assert.IsType(typeof(Server12ConnectionState), newState);
             }
@@ -41,8 +43,10 @@ namespace Leto.OpenSslFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;
                 IConnectionState newState = null;
-                var state = new ServerUnknownVersionState((connecter) => newState = connecter, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
-                Assert.Throws<Alerts.AlertException>(() => state.HandleHandshakeRecord(ref buffer, ref writer));        
+                var pipeConnection = new LoopbackPipeline(factory);
+                var secureConnection = new SecurePipeConnection(factory, pipeConnection.ClientPipeline, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
+                var state = new ServerUnknownVersionState((connecter) => newState = connecter, secureConnection);
+                Assert.Throws<Alerts.AlertException>(() => state.HandleHandshakeRecord(ref buffer, ref writer));
             }
         }
     }

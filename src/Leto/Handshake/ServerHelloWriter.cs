@@ -17,7 +17,7 @@ namespace Leto.Handshake
             span = span.WriteBigEndian(TlsVersion.Tls12);
 
             var randomBytes = Tls12.RandomLength - Tls12.EndOfRandomDowngradeProtection.Length;
-            state.Listener.CryptoProvider.FillWithRandom(span.Slice(0, randomBytes));
+            state.SecureConnection.Listener.CryptoProvider.FillWithRandom(span.Slice(0, randomBytes));
             span = span.Slice(randomBytes);
             Tls12.EndOfRandomDowngradeProtection.CopyTo(span);
             
@@ -40,11 +40,11 @@ namespace Leto.Handshake
         {
             if(state.SecureRenegotiationSupported)
             {
-                state.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
+                state.SecureConnection.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
             }
             if(state.NegotiatedAlpn != Extensions.ApplicationLayerProtocolType.None)
             {
-                state.Listener.AlpnProvider.WriteExtension(ref writer, state.NegotiatedAlpn);
+                state.SecureConnection.Listener.AlpnProvider.WriteExtension(ref writer, state.NegotiatedAlpn);
             }
         }
     }

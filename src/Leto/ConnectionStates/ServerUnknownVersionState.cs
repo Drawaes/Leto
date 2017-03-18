@@ -14,7 +14,7 @@ namespace Leto.ConnectionStates
     public class ServerUnknownVersionState : IConnectionState
     {
         private Action<IConnectionState> _replaceConnectionState;
-        private ISecurePipeListener _listener;
+        private SecurePipeConnection _securePipe;
 
         private static TlsVersion[] s_supportedVersions =
         {
@@ -25,11 +25,12 @@ namespace Leto.ConnectionStates
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
         public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IHash HandshakeHash => throw new NotImplementedException();
+        public ushort RecordVersion => throw new NotImplementedException();
 
-        public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, ISecurePipeListener listener)
+        public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {
             _replaceConnectionState = replaceConnectionState;
-            _listener = listener;
+            _securePipe = securePipe;
         }
 
         private TlsVersion GetVersion(ref ClientHelloParser helloParser)
@@ -89,7 +90,7 @@ namespace Leto.ConnectionStates
             switch (version)
             {
                 case TlsVersion.Tls12:
-                    connectionState = new Server12ConnectionState(_listener);
+                    connectionState = new Server12ConnectionState(_securePipe);
                     break;
                 case TlsVersion.Tls13Draft18:
                     throw new NotImplementedException();
