@@ -13,12 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170310-1" />
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170310-1" />
-    <PackageReference Include="System.IO.Pipelines.Extensions" Version="0.1.0-e170310-1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0-beta-25109-03" />
-    <PackageReference Include="System.Slices" Version="0.1.0-e170310-1" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
+    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170317-1" />
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170317-1" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170317-1" />
+    <PackageReference Include="System.IO.Pipelines.Extensions" Version="0.1.0-e170317-1" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0-beta-25118-01" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0-beta-25118-01" />
   </ItemGroup>
 
   <ItemGroup>

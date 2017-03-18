@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Leto
 {
@@ -10,6 +11,7 @@ namespace Leto
     {
         private IPipe _inputPipe;
         private IPipe _outputPipe;
+        private IPipe _handshakePipe;
         private IPipeConnection _connection;
         private IConnectionState _state;
         private ISecurePipeListener _listener;
@@ -21,11 +23,18 @@ namespace Leto
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();
             _connection = connection;
+            _handshakePipe = pipeFactory.Create();
+            var ignore = ReadingLoop();
         }
 
         public IConnectionState State => _state;
         public IPipeReader Input => _outputPipe.Reader;
         public IPipeWriter Output => _inputPipe.Writer;
+
+        private async Task ReadingLoop()
+        {
+
+        }
 
         public void Dispose()
         {

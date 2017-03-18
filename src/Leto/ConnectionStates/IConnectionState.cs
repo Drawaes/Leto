@@ -11,7 +11,6 @@ namespace Leto.ConnectionStates
         CipherSuite CipherSuite { get; }
         void HandleHandshakeRecord(ref ReadableBuffer record, ref WritableBuffer writer);
         void HandleChangeCipherSpecRecord(ref ReadableBuffer record, ref WritableBuffer writer);
-        void HandleApplicationRecord(ref ReadableBuffer record, ref WritableBuffer writer);
         void HandleClientHello(ref ClientHelloParser clientHelloParser, ref WritableBuffer writer);
         IHash HandshakeHash { get; }
     }

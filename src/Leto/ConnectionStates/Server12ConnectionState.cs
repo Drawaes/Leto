@@ -8,6 +8,7 @@ using Leto.CipherSuites;
 using Leto.Handshake.Extensions;
 using Leto.Keyshares;
 using Leto.Hashes;
+using System.Threading.Tasks;
 
 namespace Leto.ConnectionStates
 {
@@ -81,10 +82,16 @@ namespace Leto.ConnectionStates
             {
                 _keyshare = _listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
             }
+            writer = WriteServerHello(writer);
+        }
+
+        private WritableBuffer WriteServerHello(WritableBuffer writer)
+        {
             WriteHandshake(ref writer, (buffer) =>
             {
                 return ServerHelloWriter12.Write(buffer, this);
             }, this, HandshakeType.server_hello);
+            return writer;
         }
 
         private void WriteHandshake(ref WritableBuffer writer, Func<WritableBuffer, WritableBuffer> contentWriter, IConnectionState state, HandshakeType handshakeType)

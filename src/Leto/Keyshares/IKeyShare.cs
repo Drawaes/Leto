@@ -6,6 +6,7 @@ namespace Leto.Keyshares
     public interface IKeyshare : IDisposable
     {
         bool HasPeerKey { get; }
+        bool RequiresServerKeyExchange { get; }
         void SetPeerKey(ReadOnlySpan<byte> peerKey);
         int KeyExchangeSize { get; }
         int WritePublicKey(Span<byte> keyBuffer);

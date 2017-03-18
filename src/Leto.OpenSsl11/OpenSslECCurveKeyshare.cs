@@ -39,6 +39,7 @@ namespace Leto.OpenSsl11
         public bool HasPeerKey => _peerKey.IsValid;
         public int KeyExchangeSize => _keyExchangeSize;
         public NamedGroup NamedGroup => _namedGroup;
+        public bool RequiresServerKeyExchange => true;
 
         public void DeriveMasterSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
         {
@@ -113,7 +114,7 @@ namespace Leto.OpenSsl11
                 curveParameters.Free();
             }
         }
-                
+
         public void Dispose()
         {
             _keyPair.Free();

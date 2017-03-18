@@ -31,7 +31,7 @@ namespace Leto.Internal
             VirtualLock(_memory, _totalAllocated);
             for (var i = 0; i < totalAllocated; i += bufferSize)
             {
-                var mem = new EphemeralMemory(IntPtr.Add(_memory, i), bufferSize);
+                var mem = new EphemeralMemory(IntPtr.Add(_memory, i), bufferSize, this);
                 _buffers.Enqueue(mem);
             }
         }
@@ -50,7 +50,7 @@ namespace Leto.Internal
             return returnValue;
         }
 
-        public override void Return(OwnedMemory<byte> buffer)
+        private void Return(OwnedMemory<byte> buffer)
         {
             var ephemeralBuffer = buffer as EphemeralMemory;
             if (ephemeralBuffer == null)
@@ -69,11 +69,17 @@ namespace Leto.Internal
 
         sealed class EphemeralMemory : OwnedMemory<byte>
         {
-            public EphemeralMemory(IntPtr memory, int length) : base(null, 0, length, memory)
+            private EphemeralBufferPoolWindows _pool;
+            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolWindows pool) : base(null, 0, length, memory)
             {
+                _pool = pool;
             }
             internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
+            protected override void Dispose(bool disposing)
+            {
+                _pool.Return(this);
+            }
         }
 
         protected override void Dispose(bool disposing)

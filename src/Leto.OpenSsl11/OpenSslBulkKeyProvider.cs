@@ -39,13 +39,13 @@ namespace Leto.OpenSsl11
             switch (cipherType)
             {
                 case BulkCipherType.AES_128_GCM:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_128_gcm, _ephemeralPool, 16, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_128_gcm, _ephemeralPool.Rent(16+12), 16, 12, 16);
                     break;
                 case BulkCipherType.AES_256_GCM:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_256_gcm, _ephemeralPool, 32, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_256_gcm, _ephemeralPool.Rent(32 + 12), 32, 12, 16);
                     break;
                 case BulkCipherType.CHACHA20_POLY1305:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_chacha20_poly1305, _ephemeralPool, 32, 12, 16);
+                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_chacha20_poly1305, _ephemeralPool.Rent(32 + 12), 32, 12, 16);
                     break;
                 default:
                     ExceptionHelper.ThrowException(new NotImplementedException());

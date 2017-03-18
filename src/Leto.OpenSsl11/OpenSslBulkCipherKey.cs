@@ -14,14 +14,12 @@ namespace Leto.OpenSsl11
         private readonly Memory<byte> _iv;
         private readonly EVP_BulkCipher_Type _type;
         private readonly int _tagSize;
-        private readonly BufferPool _bufferPool;
         private OwnedMemory<byte> _keyStore;
 
-        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, BufferPool bufferPool, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, OwnedMemory<byte> keyStore, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
-            _bufferPool = bufferPool;
-            _keyStore = bufferPool.Rent(keySize + ivSize);
+            _keyStore = keyStore;
             _key = _keyStore.Memory.Slice(0, keySize);
             _iv = _keyStore.Memory.Slice(keySize, ivSize);
             _type = type;
@@ -76,7 +74,7 @@ namespace Leto.OpenSsl11
             _ctx.Free();
             if (_keyStore != null)
             {
-                _bufferPool.Return(_keyStore);
+                _keyStore.Dispose();
                 _keyStore = null;
             }
             GC.SuppressFinalize(this);

@@ -45,20 +45,28 @@ namespace Leto.Internal
             {
                 ExceptionHelper.MemeoryBadPageSize();
             }
-            
+
             for (var i = 0; i < _totalAllocated; i += bufferSize)
             {
-                var mem = new EphemeralMemory(IntPtr.Add(_memory, i), bufferSize);
+                var mem = new EphemeralMemory(IntPtr.Add(_memory, i), bufferSize, this);
                 _buffers.Enqueue(mem);
             }
         }
 
         private sealed class EphemeralMemory : OwnedMemory<byte>
         {
-            public EphemeralMemory(IntPtr memory, int length) : base(null, 0, length, memory)
-            { }
+            private EphemeralBufferPoolUnix _pool;
+            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolUnix pool) : base(null, 0, length, memory)
+            {
+                _pool = pool;
+            }
             internal bool Rented;
             public new IntPtr Pointer => base.Pointer;
+
+            protected override void Dispose(bool disposing)
+            {
+                _pool.Return(this);
+            }
         }
 
         public override OwnedMemory<byte> Rent(int minimumBufferSize)
@@ -75,7 +83,7 @@ namespace Leto.Internal
             return returnValue;
         }
 
-        public override void Return(OwnedMemory<byte> buffer)
+        private void Return(OwnedMemory<byte> buffer)
         {
             var emphemeralBuffer = buffer as EphemeralMemory;
             if (emphemeralBuffer == null)
