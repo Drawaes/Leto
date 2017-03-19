@@ -7,5 +7,7 @@ namespace Leto.Certificates
     public interface ICertificate
     {
         CertificateType CertificateType { get; }
+        byte[] CertificateData { get; }
+        byte[][] CertificateChain { get; }
     }
 }

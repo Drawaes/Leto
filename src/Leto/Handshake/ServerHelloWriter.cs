@@ -7,7 +7,7 @@ using static Leto.TlsConstants;
 
 namespace Leto.Handshake
 {
-    public static class ServerHelloWriter12
+    public static class ServerHelloWriter
     {
         public static WritableBuffer Write(WritableBuffer writer, Server12ConnectionState state)
         {

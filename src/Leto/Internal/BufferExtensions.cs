@@ -102,5 +102,34 @@ namespace Leto
             currentSize = buffer.BytesWritten - currentSize;
             bookmark.Span.Write24BitNumber(currentSize);
         }
+
+        public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, WritableBuffer> writeContent) where T : struct
+        {
+            var bookMark = buffer.Memory;
+            if (typeof(T) == typeof(ushort) || typeof(T) == typeof(short))
+            {
+                buffer.WriteBigEndian((ushort)0);
+            }
+            else if (typeof(T) == typeof(byte))
+            {
+                buffer.WriteBigEndian((byte)0);
+            }
+            else
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.internal_error, $"Unkown vector type {typeof(T).Name}");
+            }
+            var sizeofVector = buffer.BytesWritten;
+            buffer = writeContent(buffer);
+            sizeofVector = buffer.BytesWritten - sizeofVector;
+            if (typeof(T) == typeof(ushort) || typeof(T) == typeof(short))
+            {
+                bookMark.Span.WriteBigEndian((ushort)sizeofVector);
+            }
+            else
+            {
+                bookMark.Span.Write((byte)sizeofVector);
+            }
+        }
+
     }
 }

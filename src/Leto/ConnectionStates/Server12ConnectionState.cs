@@ -9,6 +9,7 @@ using Leto.Handshake.Extensions;
 using Leto.Keyshares;
 using Leto.Hashes;
 using System.Threading.Tasks;
+using Leto.Certificates;
 
 namespace Leto.ConnectionStates
 {
@@ -21,6 +22,8 @@ namespace Leto.ConnectionStates
         private IKeyshare _keyshare;
         private bool _secureRenegotiation;
         private IHash _handshakeHash;
+        private ICertificate _certificate;
+        private SignatureScheme _signatureScheme;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -32,7 +35,7 @@ namespace Leto.ConnectionStates
         internal bool SecureRenegotiationSupported => _secureRenegotiation;
         internal SecurePipeConnection SecureConnection => _secureConnection;
         public IHash HandshakeHash => _handshakeHash;
-        public ushort RecordVersion => (ushort) TlsVersion.Tls12;
+        public ushort RecordVersion => (ushort)TlsVersion.Tls12;
 
         private void ParseExtensions(ref ClientHelloParser clientHello)
         {
@@ -58,17 +61,17 @@ namespace Leto.ConnectionStates
             }
         }
 
-        public void HandleHandshakeRecord(ref ReadableBuffer record, ref WritableBuffer writer)
+        public Task HandleHandshakeRecord(ReadableBuffer record)
         {
             throw new NotImplementedException();
         }
 
-        public void HandleChangeCipherSpecRecord(ref ReadableBuffer record, ref WritableBuffer writer)
+        public Task HandleChangeCipherSpecRecord(ReadableBuffer record)
         {
             throw new NotImplementedException();
         }
-        
-        public void HandleClientHello(ref ClientHelloParser clientHello, ref WritableBuffer writer)
+
+        public async Task HandleClientHello(ClientHelloParser clientHello)
         {
             _clientRandom = clientHello.ClientRandom.ToArray();
             _cipherSuite = _secureConnection.Listener.CryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
@@ -78,27 +81,51 @@ namespace Leto.ConnectionStates
             {
                 _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
             }
-            writer = WriteServerHello(writer);
+            var writer = _secureConnection.HandshakePipe.Writer.Alloc();
+            WriteServerHello(ref writer);
+            WriteCertificates(ref writer);
+            if(_keyshare.RequiresServerKeyExchange)
+            {
+
+            }
+            WriteServerHelloDone(ref writer);
+            await writer.FlushAsync();
+            await _secureConnection.RecordHandler.WriteRecords(_secureConnection.HandshakePipe.Reader, RecordType.Handshake);
         }
 
-        private WritableBuffer WriteServerHello(WritableBuffer writer)
+        private void WriteServerHelloDone(ref WritableBuffer writer)
         {
             WriteHandshake(ref writer, (buffer) =>
             {
-                return ServerHelloWriter12.Write(buffer, this);
-            }, this, HandshakeType.server_hello);
-            return writer;
+                return buffer;
+            }, HandshakeType.server_hello_done);
         }
 
-        private void WriteHandshake(ref WritableBuffer writer, Func<WritableBuffer, WritableBuffer> contentWriter, IConnectionState state, HandshakeType handshakeType)
+        private void WriteCertificates(ref WritableBuffer writer)
+        {
+            WriteHandshake(ref writer, (buffer) =>
+            {
+                return CertificateWriter.WriteCertificates(buffer, _certificate);
+            }, HandshakeType.certificate);
+        }
+
+        private void WriteServerHello(ref WritableBuffer writer)
+        {
+            WriteHandshake(ref writer, (buffer) =>
+            {
+                return ServerHelloWriter.Write(buffer, this);
+            }, HandshakeType.server_hello);
+        }
+
+        private void WriteHandshake(ref WritableBuffer writer, Func<WritableBuffer, WritableBuffer> contentWriter, HandshakeType handshakeType)
         {
             var dataWritten = writer.BytesWritten;
             writer.WriteBigEndian(handshakeType);
             BufferExtensions.WriteVector24Bit(ref writer, contentWriter);
-            if (state.HandshakeHash != null)
+            if (HandshakeHash != null)
             {
                 var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
-                state.HandshakeHash.HashData(hashBuffer);
+                HandshakeHash.HashData(hashBuffer);
             }
         }
 

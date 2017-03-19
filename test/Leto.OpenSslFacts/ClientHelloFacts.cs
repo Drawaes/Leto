@@ -26,7 +26,7 @@ namespace Leto.OpenSslFacts
                 var pipeConnection = new LoopbackPipeline(factory);
                 var secureConnection = new SecurePipeConnection(factory, pipeConnection.ClientPipeline, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
                 var state = new ServerUnknownVersionState((connecter) => newState = connecter, secureConnection);
-                state.HandleHandshakeRecord(ref buffer, ref writer);
+                await state.HandleHandshakeRecord(buffer);
                 Assert.IsType(typeof(Server12ConnectionState), newState);
             }
         }
@@ -46,7 +46,7 @@ namespace Leto.OpenSslFacts
                 var pipeConnection = new LoopbackPipeline(factory);
                 var secureConnection = new SecurePipeConnection(factory, pipeConnection.ClientPipeline, new OpenSslSecurePipeListener(Data.Certificates.RSACertificate));
                 var state = new ServerUnknownVersionState((connecter) => newState = connecter, secureConnection);
-                Assert.Throws<Alerts.AlertException>(() => state.HandleHandshakeRecord(ref buffer, ref writer));
+                await Assert.ThrowsAsync<Alerts.AlertException>(async () => await state.HandleHandshakeRecord(buffer));
             }
         }
     }

@@ -8,6 +8,7 @@ using Leto.CipherSuites;
 using Leto.RecordLayer;
 using Leto.Handshake.Extensions;
 using Leto.Hashes;
+using System.Threading.Tasks;
 
 namespace Leto.ConnectionStates
 {
@@ -25,7 +26,7 @@ namespace Leto.ConnectionStates
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
         public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IHash HandshakeHash => throw new NotImplementedException();
-        public ushort RecordVersion => throw new NotImplementedException();
+        public ushort RecordVersion => (ushort)TlsVersion.Tls1;
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {
@@ -77,7 +78,7 @@ namespace Leto.ConnectionStates
             return tlsVersion;
         }
 
-        public void HandleHandshakeRecord(ref ReadableBuffer record, ref WritableBuffer writer)
+        public Task HandleHandshakeRecord(ReadableBuffer record)
         {
             var header = record.ReadLittleEndian<HandshakePrefix>();
             if (header.MessageType != HandshakeType.client_hello)
@@ -97,26 +98,22 @@ namespace Leto.ConnectionStates
                 default:
                     throw new NotImplementedException();
             }
-            connectionState.HandleClientHello(ref helloParser, ref writer);
             _replaceConnectionState(connectionState);
+            return connectionState.HandleClientHello(helloParser);
         }
 
-        public void HandleChangeCipherSpecRecord(ref ReadableBuffer record, ref WritableBuffer writer)
+        public Task HandleChangeCipherSpecRecord(ReadableBuffer record)
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
+            return null;
         }
-
-        public void HandleApplicationRecord(ref ReadableBuffer record, ref WritableBuffer writer)
+        
+        public void HandAlertRecord(ReadableBuffer record)
         {
-            Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.Application);
+            Alerts.AlertException.ThrowUnexpectedMessage(RecordType.Alert);
         }
 
-        public void HandAlertRecord(ref ReadableBuffer record, ref WritableBuffer writer)
-        {
-            Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.Alert);
-        }
-
-        public void HandleClientHello(ref ClientHelloParser clientHelloParser, ref WritableBuffer writer)
+        public Task HandleClientHello(ClientHelloParser clientHelloParser)
         {
             throw new NotImplementedException();
         }
