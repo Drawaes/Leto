@@ -37,6 +37,7 @@ namespace Leto.RecordLayer
                 var header = buffer.Slice(0, _minimumMessageSize).ToSpan().Read<RecordHeader>();
                 buffer = buffer.Slice(_minimumMessageSize);
                 _currentRecordType = header.RecordType;
+                _currentWaitingMessageSize = header.RecordLength;
                 //TODO: CHECK THE VERSION
             }
             if(buffer.Length < _currentWaitingMessageSize)

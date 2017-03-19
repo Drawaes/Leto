@@ -22,11 +22,11 @@ namespace Leto
         {
             _recordHandler = new RecordHandler(this);
             _listener = listener;
-            _state = new ServerUnknownVersionState((state) => _state = state, this);
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();
             _connection = connection;
             _handshakePipe = pipeFactory.Create();
+            _state = new ServerUnknownVersionState((state) => _state = state, this);
             var ignore = ReadingLoop();
         }
 
@@ -63,8 +63,10 @@ namespace Leto
                                     applicationWriter.Append(messageBuffer);
                                     await applicationWriter.FlushAsync();
                                     break;
-                                case RecordType.Alert:
                                 case RecordType.ChangeCipherSpec:
+                                    _state.ChangeCipherSpec();
+                                    break;
+                                case RecordType.Alert:
                                 default:
                                     throw new NotImplementedException();
                             }

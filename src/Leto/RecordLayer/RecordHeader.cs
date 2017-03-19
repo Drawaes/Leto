@@ -9,10 +9,9 @@ namespace Leto.RecordLayer
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct RecordHeader
     {
-        private ushort _recordLength;
-
         public RecordType RecordType;
         public ushort RecordVersion;
+        private ushort _recordLength;
 
         public ushort RecordLength { get => UnsafeUtilities.Reverse(_recordLength); set => _recordLength = UnsafeUtilities.Reverse(value); }
     }

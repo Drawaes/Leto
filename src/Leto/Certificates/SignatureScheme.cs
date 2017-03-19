@@ -6,6 +6,7 @@ namespace Leto.Certificates
 {
     public enum SignatureScheme : ushort
     {
+        none = 0,
         /* RSASSA-PKCS1-v1_5 algorithms */
         rsa_pkcs1_sha1 = 0x0201,
         rsa_pkcs1_sha256 = 0x0401,

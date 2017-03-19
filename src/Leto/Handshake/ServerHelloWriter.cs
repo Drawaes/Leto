@@ -4,19 +4,18 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using static Leto.BufferExtensions;
 using static Leto.TlsConstants;
-
 namespace Leto.Handshake
 {
     public static class ServerHelloWriter
     {
         public static WritableBuffer Write(WritableBuffer writer, Server12ConnectionState state)
         {
-            var fixedSize = Tls12.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort);
+            var fixedSize = RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort);
             writer.Ensure(fixedSize);
             var span = writer.Memory.Span;
             span = span.WriteBigEndian(TlsVersion.Tls12);
 
-            var randomBytes = Tls12.RandomLength - Tls12.EndOfRandomDowngradeProtection.Length;
+            var randomBytes = RandomLength - Tls12.EndOfRandomDowngradeProtection.Length;
             state.SecureConnection.Listener.CryptoProvider.FillWithRandom(span.Slice(0, randomBytes));
             span = span.Slice(randomBytes);
             Tls12.EndOfRandomDowngradeProtection.CopyTo(span);

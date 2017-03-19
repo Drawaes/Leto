@@ -8,13 +8,6 @@ namespace Leto.OpenSsl11
 {
     public sealed class OpenSslKeyshareProvider : IKeyshareProvider
     {
-        private ICertificate _certificate;
-
-        public OpenSslKeyshareProvider(ICertificate certificate)
-        {
-            _certificate = certificate;
-        }
-
         /// <summary>
         /// Tls 1.3 and onwards keyshare selection
         /// </summary>

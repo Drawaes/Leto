@@ -18,19 +18,16 @@ namespace Leto.OpenSsl11
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
         });
         private OpenSslKeyshareProvider _keyshareProvider;
-        private ICertificate _certificate;
         private IHashProvider _hashProvider;
 
-        public OpenSslCryptoProvider(ICertificate certificate)
+        public OpenSslCryptoProvider()
         {
-            _certificate = certificate;
             _hashProvider = new OpenSslHashProvider();
-            _keyshareProvider = new OpenSslKeyshareProvider(_certificate);
+            _keyshareProvider = new OpenSslKeyshareProvider();
         }
 
         public IKeyshareProvider KeyshareProvider => _keyshareProvider;
         public CipherSuiteProvider CipherSuites => _cipherSuites;
-        public ICertificate Certificate => _certificate;
         public IHashProvider HashProvider => _hashProvider;
 
         public void FillWithRandom(Span<byte> span) => RAND_bytes(span);

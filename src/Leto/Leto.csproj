@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="ConnectionStates\Server12ConnectionState.Flights.cs" />
     <None Include="TlsConstants\TlsConstants.Tls12.cs" />
   </ItemGroup>
 

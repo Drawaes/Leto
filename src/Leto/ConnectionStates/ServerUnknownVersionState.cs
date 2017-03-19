@@ -32,6 +32,51 @@ namespace Leto.ConnectionStates
         {
             _replaceConnectionState = replaceConnectionState;
             _securePipe = securePipe;
+            var ignore = ReadLoop();
+        }
+
+        private async Task ReadLoop()
+        {
+            while (true)
+            {
+                var reader = await _securePipe.HandshakePipe.Reader.ReadAsync();
+                var buffer = reader.Buffer;
+                var recordType = HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake);
+                if (recordType != HandshakeType.client_hello)
+                {
+                    _securePipe.HandshakePipe.Reader.Advance(buffer.Start, buffer.End);
+                    if(recordType == HandshakeType.none)
+                    {
+                        continue;
+                    }
+                    Alerts.AlertException.ThrowUnexpectedMessage(recordType);
+                }
+                IConnectionState connectionState;
+                ClientHelloParser helloParser;
+                try
+                {
+                    helloParser = new ClientHelloParser(ref handshake);
+                    var version = GetVersion(ref helloParser);
+                    switch (version)
+                    {
+                        case TlsVersion.Tls12:
+                            connectionState = new Server12ConnectionState(_securePipe);
+                            break;
+                        case TlsVersion.Tls13Draft18:
+                            throw new NotImplementedException();
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    _replaceConnectionState(connectionState);
+                }
+                finally
+                {
+                    _securePipe.HandshakePipe.Reader.Advance(buffer.Start, buffer.Start);
+                }
+                await connectionState.HandleClientHello(helloParser);
+                return;
+            }
+                
         }
 
         private TlsVersion GetVersion(ref ClientHelloParser helloParser)
@@ -77,35 +122,10 @@ namespace Leto.ConnectionStates
             }
             return tlsVersion;
         }
-
-        public Task HandleHandshakeRecord(ReadableBuffer record)
-        {
-            var header = record.ReadLittleEndian<HandshakePrefix>();
-            if (header.MessageType != HandshakeType.client_hello)
-            {
-                Alerts.AlertException.ThrowUnexpectedMessage(header.MessageType);
-            }
-            var helloParser = new ClientHelloParser(ref record);
-            var version = GetVersion(ref helloParser);
-            IConnectionState connectionState;
-            switch (version)
-            {
-                case TlsVersion.Tls12:
-                    connectionState = new Server12ConnectionState(_securePipe);
-                    break;
-                case TlsVersion.Tls13Draft18:
-                    throw new NotImplementedException();
-                default:
-                    throw new NotImplementedException();
-            }
-            _replaceConnectionState(connectionState);
-            return connectionState.HandleClientHello(helloParser);
-        }
-
-        public Task HandleChangeCipherSpecRecord(ReadableBuffer record)
+        
+        public void ChangeCipherSpec()
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
-            return null;
         }
         
         public void HandAlertRecord(ReadableBuffer record)

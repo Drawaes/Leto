@@ -1,4 +1,7 @@
 ﻿using Leto.Certificates;
+using Leto.ConnectionStates;
+using Leto.Hashes;
+using Leto.Keyshares;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -8,23 +11,21 @@ namespace Leto.Handshake
 {
     public static class CertificateWriter
     {
-        private static void WriteCertificateEntry(ref WritableBuffer writer, Span<byte> certificate)
-        {
-            writer.Ensure(3);
-            writer.Memory.Span.Write24BitNumber(certificate.Length);
-            writer.Advance(3);
-            writer.Write(certificate);
-        }
-
         public static WritableBuffer WriteCertificates(WritableBuffer buffer, ICertificate certificate)
         {
-            var startOfMessage = buffer.BytesWritten;
+            void WriteCertificate(ref WritableBuffer writer, Span<byte> certData)
+            {
+                writer.Ensure(3);
+                writer.Memory.Span.Write24BitNumber(certData.Length);
+                writer.Advance(3);
+                writer.Write(certData);
+            }
             BufferExtensions.WriteVector24Bit(ref buffer, (writer) =>
             {
-                WriteCertificateEntry(ref writer, certificate.CertificateData);
+                WriteCertificate(ref writer, certificate.CertificateData);
                 foreach (var b in certificate.CertificateChain)
                 {
-                    WriteCertificateEntry(ref writer, b);
+                    WriteCertificate(ref writer, b);
                 }
                 return writer;
             });

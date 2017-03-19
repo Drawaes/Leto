@@ -6,7 +6,7 @@ using System.Text;
 namespace Leto.Handshake
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct HandshakePrefix
+    public struct HandshakeHeader
     {
         public HandshakeType MessageType;
         private byte _firstByte;

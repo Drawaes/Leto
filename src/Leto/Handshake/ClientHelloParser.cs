@@ -20,7 +20,7 @@ namespace Leto.Handshake
         {
             var span = buffer.ToSpan();
             _originalMessage = span;
-            span = span.Slice(Marshal.SizeOf<HandshakePrefix>());
+            span = span.Slice(Marshal.SizeOf<HandshakeHeader>());
             _tlsVersion = (TlsVersion)ReadBigEndian<ushort>(ref span);
             _clientRandom = ReadFixedVector(ref span, TlsConstants.RandomLength);
             _sessionId = ReadVector8(ref span);

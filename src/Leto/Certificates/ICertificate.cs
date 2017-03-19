@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Leto.Hashes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,5 +10,8 @@ namespace Leto.Certificates
         CertificateType CertificateType { get; }
         byte[] CertificateData { get; }
         byte[][] CertificateChain { get; }
+        int SignatureSize { get; }
+        SignatureScheme SelectAlgorithm(Span<byte> buffer);
+        int SignHash(IHashProvider provider, SignatureScheme scheme, Span<byte> message, Span<byte> output);
     }
 }

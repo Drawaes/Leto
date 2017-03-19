@@ -10,5 +10,6 @@ namespace Leto
         ICryptoProvider CryptoProvider { get; }
         ApplicationLayerProtocolProvider AlpnProvider { get; }
         SecureRenegotiationProvider SecureRenegotiationProvider { get; }
+        Certificates.CertificateList CertificateList { get; }
     }
 }
