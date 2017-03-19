@@ -14,11 +14,17 @@ namespace Leto.Handshake
 
         public uint Length
         {
-            get => (uint)((_secondBytes << 8 & 0x00FF) + (_secondBytes >> 8) + _firstByte);
+            get
+            {
+                uint returnValue =(uint)( ((_secondBytes & 0xFF00) >> 8)
+                    | ((_secondBytes & 0x00FF) << 8)
+                    | (_firstByte << 16));
+                return returnValue;
+            }
             set
             {
-                _firstByte = (byte)(value << 16);
-                _secondBytes = (ushort)((value & 0x00FFFF00) >> 8);
+                _firstByte = (byte)(value >> 16);
+                _secondBytes = (ushort)(((value & 0x0000FF00) >> 8) | ((value & 0x000000FF) << 8));
             }
         }
     }

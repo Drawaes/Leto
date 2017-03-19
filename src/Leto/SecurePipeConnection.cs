@@ -12,7 +12,8 @@ namespace Leto
     {
         private IPipe _inputPipe;
         private IPipe _outputPipe;
-        private IPipe _handshakePipe;
+        private IPipe _handshakeInput;
+        private IPipe _handshakeOutput;
         private IPipeConnection _connection;
         private IConnectionState _state;
         private ISecurePipeListener _listener;
@@ -25,14 +26,16 @@ namespace Leto
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();
             _connection = connection;
-            _handshakePipe = pipeFactory.Create();
+            _handshakeInput = pipeFactory.Create();
+            _handshakeOutput = pipeFactory.Create();
             _state = new ServerUnknownVersionState((state) => _state = state, this);
             var ignore = ReadingLoop();
         }
 
         internal ISecurePipeListener Listener => _listener;
         internal IPipeConnection Connection => _connection;
-        internal IPipe HandshakePipe => _handshakePipe;
+        internal IPipe HandshakeInput => _handshakeInput;
+        internal IPipe HandshakeOutput => _handshakeOutput;
         public IPipeReader Input => _outputPipe.Reader;
         public IPipeWriter Output => _inputPipe.Writer;
         internal IConnectionState State => _state;
@@ -53,13 +56,13 @@ namespace Leto
                             switch(_recordHandler.CurrentRecordType)
                             {
                                 case RecordType.Handshake:
-                                    var handshakeWriter = _handshakePipe.Writer.Alloc();
+                                    var handshakeWriter = _handshakeInput.Writer.Alloc();
                                     handshakeWriter.Append(messageBuffer);
                                     await handshakeWriter.FlushAsync();
                                     break;
                                 case RecordType.Application:
                                     //TODO: Check that it is a valid time to accept application data
-                                    var applicationWriter = _handshakePipe.Writer.Alloc();
+                                    var applicationWriter = _handshakeInput.Writer.Alloc();
                                     applicationWriter.Append(messageBuffer);
                                     await applicationWriter.FlushAsync();
                                     break;

@@ -24,6 +24,7 @@ namespace Leto.ConnectionStates
         private IHash _handshakeHash;
         private ICertificate _certificate;
         private SignatureScheme _signatureScheme;
+        private HandshakeState _state;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -37,9 +38,7 @@ namespace Leto.ConnectionStates
         public IHash HandshakeHash => _handshakeHash;
         public ushort RecordVersion => (ushort)TlsVersion.Tls12;
         public SignatureScheme SignatureScheme => _signatureScheme;
-        public IKeyshare Keyshare => _keyshare;
-        public ICertificate Certificate => _certificate;
-        
+
         public Task HandleHandshakeRecord(ReadableBuffer record)
         {
             throw new NotImplementedException();
@@ -47,7 +46,11 @@ namespace Leto.ConnectionStates
 
         public void ChangeCipherSpec()
         {
-            throw new NotImplementedException();
+            if(_state != HandshakeState.WaitingForChangeCipherSpec)
+            {
+                Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
+            }
+            
         }
 
         public async Task HandleClientHello(ClientHelloParser clientHello)
@@ -61,12 +64,45 @@ namespace Leto.ConnectionStates
             {
                 _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
             }
-            var writer = _secureConnection.HandshakePipe.Writer.Alloc();
+            var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
             SendFirstFlight(ref writer);
             await writer.FlushAsync();
-            await _secureConnection.RecordHandler.WriteRecords(_secureConnection.HandshakePipe.Reader, RecordType.Handshake);
+            _state = HandshakeState.WaitingForClientKeyExchange;
+            var ignore = ReadingLoop();
+            await _secureConnection.RecordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
-        
+
+        private async Task ReadingLoop()
+        {
+            while (true)
+            {
+                var reader = await _secureConnection.HandshakeInput.Reader.ReadAsync();
+                var buffer = reader.Buffer;
+                try
+                {
+                    while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
+                    {
+                        switch (messageType)
+                        {
+                            case HandshakeType.client_key_exchange when _state == HandshakeState.WaitingForClientKeyExchange:
+                                var span = messageBuffer.ToSpan();
+                                _handshakeHash.HashData(span);
+                                span = span.Slice(HandshakeFraming.HeaderSize);
+                                _keyshare.SetPeerKey(span, _certificate, _signatureScheme);
+                                _state = HandshakeState.WaitingForChangeCipherSpec;
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
+                    }
+                }
+                finally
+                {
+                    _secureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
+                }
+            }
+        }
+
         private void ParseExtensions(ref ClientHelloParser clientHello)
         {
             foreach (var (extensionType, buffer) in clientHello.Extensions)
@@ -93,7 +129,7 @@ namespace Leto.ConnectionStates
                 }
             }
         }
-        
+
         public void Dispose()
         {
             _handshakeHash?.Dispose();

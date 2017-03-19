@@ -39,12 +39,12 @@ namespace Leto.ConnectionStates
         {
             while (true)
             {
-                var reader = await _securePipe.HandshakePipe.Reader.ReadAsync();
+                var reader = await _securePipe.HandshakeInput.Reader.ReadAsync();
                 var buffer = reader.Buffer;
-                var recordType = HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake);
+                HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake, out HandshakeType recordType);
                 if (recordType != HandshakeType.client_hello)
                 {
-                    _securePipe.HandshakePipe.Reader.Advance(buffer.Start, buffer.End);
+                    _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
                     if(recordType == HandshakeType.none)
                     {
                         continue;
@@ -71,7 +71,7 @@ namespace Leto.ConnectionStates
                 }
                 finally
                 {
-                    _securePipe.HandshakePipe.Reader.Advance(buffer.Start, buffer.Start);
+                    _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.Start);
                 }
                 await connectionState.HandleClientHello(helloParser);
                 return;

@@ -9,24 +9,27 @@ namespace Leto.Handshake
 {
     public static class HandshakeFraming
     {
-        private static readonly int HeaderSize = Marshal.SizeOf<HandshakeHeader>();
+        public static readonly int HeaderSize = Marshal.SizeOf<HandshakeHeader>();
 
-        public static HandshakeType ReadHandshakeFrame(ref ReadableBuffer buffer, out ReadableBuffer handshakeMessage)
+        public static bool ReadHandshakeFrame(ref ReadableBuffer buffer, out ReadableBuffer handshakeMessage, out HandshakeType handshakeType)
         {
             if(buffer.Length < HeaderSize)
             {
                 handshakeMessage = default(ReadableBuffer);
-                return HandshakeType.none;
+                handshakeType = HandshakeType.none;
+                return false;
             }
             var header = buffer.Slice(0, HeaderSize).ToSpan().Read<HandshakeHeader>();
             if(buffer.Length < (header.Length + HeaderSize))
             {
                 handshakeMessage = default(ReadableBuffer);
-                return HandshakeType.none;
+                handshakeType = HandshakeType.none;
+                return false;
             }
             handshakeMessage = buffer.Slice(0, HeaderSize + (int)header.Length);
             buffer = buffer.Slice((int)header.Length + HeaderSize);
-            return header.MessageType;
+            handshakeType = header.MessageType;
+            return true;
         }
 
         public static void WriteHandshakeFrame(ref WritableBuffer writer, IHash handshakeHash,

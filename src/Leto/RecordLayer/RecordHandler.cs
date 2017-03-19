@@ -72,7 +72,9 @@ namespace Leto.RecordLayer
                         RecordVersion = _connection.State.RecordVersion
                     };
                     var output = _connection.Connection.Output.Alloc();
-                    output.WriteLittleEndian(recordHeader);
+                    output.Ensure(_minimumMessageSize);
+                    output.Memory.Span.Write(recordHeader);
+                    output.Advance(_minimumMessageSize);
                     output.Append(append);
                     await output.FlushAsync();
                 }

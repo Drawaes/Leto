@@ -1,4 +1,5 @@
-﻿using Leto.Hashes;
+﻿using Leto.Certificates;
+using Leto.Hashes;
 using System;
 
 namespace Leto.Keyshares
@@ -7,7 +8,7 @@ namespace Leto.Keyshares
     {
         bool HasPeerKey { get; }
         bool RequiresServerKeyExchange { get; }
-        void SetPeerKey(ReadOnlySpan<byte> peerKey);
+        void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme);
         int KeyExchangeSize { get; }
         int WritePublicKey(Span<byte> keyBuffer);
         NamedGroup NamedGroup { get; }

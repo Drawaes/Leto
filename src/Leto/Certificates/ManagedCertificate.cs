@@ -54,6 +54,19 @@ namespace Leto.Certificates
         public byte[][] CertificateChain => _certificateChain;
         public int SignatureSize => _signatureSize;
 
+        public int Decrypt(SignatureScheme scheme, Span<byte> encryptedData, Span<byte> output)
+        {
+            if (_certificateType == CertificateType.rsa)
+            {
+                RSAEncryptionPadding padding = RSAEncryptionPadding.Pkcs1;
+
+                var result = _rsaPrivateKey.Decrypt(encryptedData.ToArray(), padding);
+                result.CopyTo(output);
+                return result.Length;
+            }
+            throw new NotImplementedException();
+        }
+
         public SignatureScheme SelectAlgorithm(Span<byte> buffer)
         {
             buffer = ReadVector16(ref buffer);

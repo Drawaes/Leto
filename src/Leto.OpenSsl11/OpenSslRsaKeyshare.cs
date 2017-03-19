@@ -3,11 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Leto.Hashes;
+using Leto.Certificates;
 
 namespace Leto.OpenSsl11
 {
     public class OpenSslRsaKeyshare : IKeyshare
     {
+        private byte[] _premasterSecret;
+
         public bool HasPeerKey => false;
         public bool RequiresServerKeyExchange => false;
         public int KeyExchangeSize => 0;
@@ -24,10 +27,15 @@ namespace Leto.OpenSsl11
 
         public void Dispose()
         {
+            //Nothing to cleanup in the case of a basic key exchange
         }
 
-        public void SetPeerKey(ReadOnlySpan<byte> peerKey)
+        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
         {
+            peerKey = BufferExtensions.ReadVector16(ref peerKey);
+            var decryptedLength = certificate.Decrypt(scheme, peerKey, peerKey );
+            peerKey = peerKey.Slice(0, decryptedLength);
+            _premasterSecret = peerKey.Slice(2).ToArray();
         }
 
         public int WritePublicKey(Span<byte> keyBuffer)

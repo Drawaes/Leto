@@ -2,6 +2,7 @@
 using System;
 using Leto.Hashes;
 using static Leto.OpenSsl11.Interop.LibCrypto;
+using Leto.Certificates;
 
 namespace Leto.OpenSsl11
 {
@@ -57,7 +58,7 @@ namespace Leto.OpenSsl11
             hashProvider.HmacData(hashType, salt, secretSpan, output);
         }
 
-        public void SetPeerKey(ReadOnlySpan<byte> peerKey)
+        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
         {
             GenerateKeyPair();
             //Get0 methods mean that we do not own the object, and therefore should not free

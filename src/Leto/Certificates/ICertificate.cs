@@ -13,5 +13,6 @@ namespace Leto.Certificates
         int SignatureSize { get; }
         SignatureScheme SelectAlgorithm(Span<byte> buffer);
         int SignHash(IHashProvider provider, SignatureScheme scheme, Span<byte> message, Span<byte> output);
+        int Decrypt(SignatureScheme scheme, Span<byte> encryptedData, Span<byte> output);
     }
 }

@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Leto.Handshake
 {
-    public class HandshakeState
+    public enum HandshakeState
     {
-        
+        WaitingForClientKeyExchange,
+        WaitingForChangeCipherSpec
     }
 }
