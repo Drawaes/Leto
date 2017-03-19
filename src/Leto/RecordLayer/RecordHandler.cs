@@ -40,7 +40,7 @@ namespace Leto.RecordLayer
                 _currentWaitingMessageSize = header.RecordLength;
                 //TODO: CHECK THE VERSION
             }
-            if(buffer.Length < _currentWaitingMessageSize)
+            if (buffer.Length < _currentWaitingMessageSize)
             {
                 messageBuffer = default(ReadableBuffer);
                 return RecordState.Incomplete;
@@ -61,7 +61,7 @@ namespace Leto.RecordLayer
             try
             {
                 ReadableBuffer append;
-                while(buffer.Length > 0)
+                while (buffer.Length > 0)
                 {
                     append = buffer.Slice(0, Math.Min(_maxMessageSize, buffer.Length));
                     buffer = buffer.Slice(append.End);

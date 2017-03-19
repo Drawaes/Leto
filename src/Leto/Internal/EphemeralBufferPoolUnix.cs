@@ -61,10 +61,9 @@ namespace Leto.Internal
                 _pool = pool;
             }
             internal bool Rented;
-            public new IntPtr Pointer => base.Pointer;
-
             protected override void Dispose(bool disposing)
             {
+                MemSet(Pointer, 0, (UIntPtr)Length);
                 _pool.Return(this);
             }
         }
@@ -96,7 +95,6 @@ namespace Leto.Internal
                 return;
             }
             emphemeralBuffer.Rented = false;
-            MemSet(emphemeralBuffer.Pointer, 0, (UIntPtr)emphemeralBuffer.Length);
             _buffers.Enqueue(emphemeralBuffer);
         }
 

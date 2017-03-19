@@ -1,7 +1,4 @@
 ﻿using Leto.Handshake.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Leto
 {
@@ -11,5 +8,6 @@ namespace Leto
         ApplicationLayerProtocolProvider AlpnProvider { get; }
         SecureRenegotiationProvider SecureRenegotiationProvider { get; }
         Certificates.CertificateList CertificateList { get; }
+        ConnectionStates.SecretSchedules.SecretSchedulePool SecretSchedulePool { get; }
     }
 }

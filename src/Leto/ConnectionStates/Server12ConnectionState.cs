@@ -15,26 +15,27 @@ namespace Leto.ConnectionStates
 {
     public sealed partial class Server12ConnectionState : IConnectionState
     {
-        private byte[] _clientRandom;
         private CipherSuite _cipherSuite;
         private SecurePipeConnection _secureConnection;
         private ApplicationLayerProtocolType _negotiatedAlpn;
-        private IKeyshare _keyshare;
         private bool _secureRenegotiation;
         private IHash _handshakeHash;
         private ICertificate _certificate;
         private SignatureScheme _signatureScheme;
         private HandshakeState _state;
+        private SecretSchedules.SecretSchedule12 _secretSchedule;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
             _secureConnection = secureConnection;
+            _secretSchedule = new SecretSchedules.SecretSchedule12(this);
         }
 
         public CipherSuite CipherSuite => _cipherSuite;
         public ApplicationLayerProtocolType NegotiatedAlpn => _negotiatedAlpn;
         internal bool SecureRenegotiationSupported => _secureRenegotiation;
         internal SecurePipeConnection SecureConnection => _secureConnection;
+        internal IKeyshare Keyshare { get; set; }
         public IHash HandshakeHash => _handshakeHash;
         public ushort RecordVersion => (ushort)TlsVersion.Tls12;
         public SignatureScheme SignatureScheme => _signatureScheme;
@@ -46,23 +47,22 @@ namespace Leto.ConnectionStates
 
         public void ChangeCipherSpec()
         {
-            if(_state != HandshakeState.WaitingForChangeCipherSpec)
+            if (_state != HandshakeState.WaitingForChangeCipherSpec)
             {
                 Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
             }
-            
         }
 
         public async Task HandleClientHello(ClientHelloParser clientHello)
         {
-            _clientRandom = clientHello.ClientRandom.ToArray();
+            _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             _cipherSuite = _secureConnection.Listener.CryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
             _certificate = _secureConnection.Listener.CertificateList.GetCertificate(null, _cipherSuite.CertificateType.Value);
             _handshakeHash = _secureConnection.Listener.CryptoProvider.HashProvider.GetHash(_cipherSuite.HashType);
             ParseExtensions(ref clientHello);
-            if (_keyshare == null)
+            if (Keyshare == null)
             {
-                _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
+                Keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, default(Span<byte>));
             }
             var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
             SendFirstFlight(ref writer);
@@ -88,7 +88,8 @@ namespace Leto.ConnectionStates
                                 var span = messageBuffer.ToSpan();
                                 _handshakeHash.HashData(span);
                                 span = span.Slice(HandshakeFraming.HeaderSize);
-                                _keyshare.SetPeerKey(span, _certificate, _signatureScheme);
+                                Keyshare.SetPeerKey(span, _certificate, _signatureScheme);
+                                _secretSchedule.GenerateMasterSecret();
                                 _state = HandshakeState.WaitingForChangeCipherSpec;
                                 break;
                             default:
@@ -113,7 +114,7 @@ namespace Leto.ConnectionStates
                         _negotiatedAlpn = _secureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
                         break;
                     case ExtensionType.supported_groups:
-                        _keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, buffer);
+                        Keyshare = _secureConnection.Listener.CryptoProvider.KeyshareProvider.GetKeyshare(_cipherSuite.KeyExchange, buffer);
                         break;
                     case ExtensionType.signature_algorithms:
                         _signatureScheme = _certificate.SelectAlgorithm(buffer);
@@ -134,8 +135,8 @@ namespace Leto.ConnectionStates
         {
             _handshakeHash?.Dispose();
             _handshakeHash = null;
-            _keyshare?.Dispose();
-            _keyshare = null;
+            Keyshare?.Dispose();
+            Keyshare = null;
         }
 
         ~Server12ConnectionState()

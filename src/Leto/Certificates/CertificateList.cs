@@ -16,16 +16,16 @@ namespace Leto.Certificates
 
         public ICertificate GetCertificate(string host, CertificateType certificateType)
         {
-            for(var i = 0; i < _certificates.Count;i++)
+            for (var i = 0; i < _certificates.Count; i++)
             {
-                if(host != null)
+                if (host != null)
                 {
                     //Need to implement certificates for a specific host
                     throw new NotImplementedException();
                 }
                 else
                 {
-                    if(_certificates[i].CertificateType == certificateType)
+                    if (_certificates[i].CertificateType == certificateType)
                     {
                         return _certificates[i];
                     }
@@ -37,20 +37,7 @@ namespace Leto.Certificates
 
         public ICertificate GetCertificate(string host, SignatureScheme type)
         {
-            for (int i = 0; i < _certificates.Count; i++)
-            {
-                //if (_certificates[i].HostName != host && host != null)
-                //{
-                //    continue;
-                //}
-                var cert = _certificates[i];
-                //if (!cert.SupportsSignatureScheme(type))
-                //{
-                //    continue;
-                //}
-                return _certificates[i];
-            }
-            return null;
+            return _certificates[0];
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Leto.Handshake
             buffer.Advance(keysWritten);
 
             buffer.WriteBigEndian(signatureScheme);
-            throw new NotImplementedException();
+
             BufferExtensions.WriteVector<ushort>(ref buffer, (writer) =>
             {
                 var tempBuffer = new byte[TlsConstants.RandomLength * 2 + messageLength];
@@ -35,8 +35,7 @@ namespace Leto.Handshake
             //        connectionState.SignatureScheme, ref writer, tempBuffer, connectionState.ClientRandom.Length * 2 + messageLength);
                 return writer;
             });
-
-            return buffer;
+            throw new NotImplementedException();
         }
     }
 }

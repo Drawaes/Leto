@@ -45,7 +45,7 @@ namespace Leto.ConnectionStates
                 if (recordType != HandshakeType.client_hello)
                 {
                     _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
-                    if(recordType == HandshakeType.none)
+                    if (recordType == HandshakeType.none)
                     {
                         continue;
                     }
@@ -76,7 +76,6 @@ namespace Leto.ConnectionStates
                 await connectionState.HandleClientHello(helloParser);
                 return;
             }
-                
         }
 
         private TlsVersion GetVersion(ref ClientHelloParser helloParser)
@@ -122,12 +121,12 @@ namespace Leto.ConnectionStates
             }
             return tlsVersion;
         }
-        
+
         public void ChangeCipherSpec()
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
-        
+
         public void HandAlertRecord(ReadableBuffer record)
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.Alert);

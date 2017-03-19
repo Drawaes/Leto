@@ -21,20 +21,23 @@ namespace Leto.OpenSslFacts
         public async Task EncryptClientMessage()
         {
             var provider = new OpenSslBulkKeyProvider();
-            var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM);
-            SetIVAndKey(cipher);
-            using (var pipeFactory = new PipeFactory())
+            using (var memory = new System.Buffers.OwnedPinnedArray<byte>(new byte[48]))
             {
-                var pipe = pipeFactory.Create();
-                var writer = pipe.Writer.Alloc();
-                writer.Write(s_frameHeader);
-                cipher.WriteNonce(ref writer);
-                writer.Write(s_clientFinishedDecrypted);
-                cipher.EncryptWithAuthData(ref writer, RecordType.Handshake, 0x0303, s_clientFinishedDecrypted.Length);
-                await writer.FlushAsync();
-                var reader = await pipe.Reader.ReadAsync();
-                var buffer = reader.Buffer;
-                Assert.Equal(s_clientFinishedEncrypted, buffer.ToArray());
+                var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM, memory.Memory);
+                SetIVAndKey(cipher);
+                using (var pipeFactory = new PipeFactory())
+                {
+                    var pipe = pipeFactory.Create();
+                    var writer = pipe.Writer.Alloc();
+                    writer.Write(s_frameHeader);
+                    cipher.WriteNonce(ref writer);
+                    writer.Write(s_clientFinishedDecrypted);
+                    cipher.EncryptWithAuthData(ref writer, RecordType.Handshake, 0x0303, s_clientFinishedDecrypted.Length);
+                    await writer.FlushAsync();
+                    var reader = await pipe.Reader.ReadAsync();
+                    var buffer = reader.Buffer;
+                    Assert.Equal(s_clientFinishedEncrypted, buffer.ToArray());
+                }
             }
         }
 
@@ -50,20 +53,23 @@ namespace Leto.OpenSslFacts
         public async Task DecryptClientMessage()
         {
             var provider = new OpenSslBulkKeyProvider();
-            var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM);
-            SetIVAndKey(cipher);            
-
-            using (var pipeFactory = new PipeFactory())
+            using (var memory = new System.Buffers.OwnedPinnedArray<byte>(new byte[48]))
             {
-                var pipe = pipeFactory.Create();
-                var writer = pipe.Writer.Alloc();
-                writer.Write(s_clientFinishedEncrypted);
-                await writer.FlushAsync();
-                var reader = await pipe.Reader.ReadAsync();
-                var buffer = reader.Buffer;
-                cipher.Decrypt(ref buffer, true);
-                var readerSpan = buffer.ToSpan();
-                Assert.Equal(s_clientFinishedDecrypted, readerSpan.ToArray());
+                var cipher = provider.GetCipher(BulkCipherType.AES_128_GCM, memory.Memory);
+                SetIVAndKey(cipher);
+
+                using (var pipeFactory = new PipeFactory())
+                {
+                    var pipe = pipeFactory.Create();
+                    var writer = pipe.Writer.Alloc();
+                    writer.Write(s_clientFinishedEncrypted);
+                    await writer.FlushAsync();
+                    var reader = await pipe.Reader.ReadAsync();
+                    var buffer = reader.Buffer;
+                    cipher.Decrypt(ref buffer, true);
+                    var readerSpan = buffer.ToSpan();
+                    Assert.Equal(s_clientFinishedDecrypted, readerSpan.ToArray());
+                }
             }
         }
 

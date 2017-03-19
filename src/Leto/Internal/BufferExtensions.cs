@@ -26,7 +26,7 @@ namespace Leto
         {
             uint value = ReadBigEndian<ushort>(ref span);
             value = (value << 8) + ReadBigEndian<byte>(ref span);
-            return (int) value;
+            return (int)value;
         }
 
         public static Span<byte> ReadFixedVector(ref Span<byte> span, int size)
@@ -90,7 +90,7 @@ namespace Leto
             span[0] = ((byte)(((numberToWrite & 0xFF0000) >> 16)));
             span[1] = ((byte)(((numberToWrite & 0x00ff00) >> 8)));
             span[2] = ((byte)(numberToWrite & 0x0000ff));
-         }
+        }
 
         public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, WritableBuffer> contentWriter)
         {
@@ -131,5 +131,11 @@ namespace Leto
             }
         }
 
+        public static Memory<byte> SliceAndConsume(ref Memory<byte> buffer, int size)
+        {
+            var returnBuffer = buffer.Slice(0, size);
+            buffer = buffer.Slice(size);
+            return returnBuffer;
+        }
     }
 }

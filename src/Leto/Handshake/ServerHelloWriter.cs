@@ -19,7 +19,7 @@ namespace Leto.Handshake
             state.SecureConnection.Listener.CryptoProvider.FillWithRandom(span.Slice(0, randomBytes));
             span = span.Slice(randomBytes);
             Tls12.EndOfRandomDowngradeProtection.CopyTo(span);
-            
+
             //https://tlswg.github.io/tls13-spec/#rfc.section.4.1.3
             //Last 8 bytes of random are a special value to protect against downgrade attacks
             span = span.Slice(Tls12.EndOfRandomDowngradeProtection.Length);
@@ -37,11 +37,11 @@ namespace Leto.Handshake
 
         public static void WriteExtensions(ref WritableBuffer writer, Server12ConnectionState state)
         {
-            if(state.SecureRenegotiationSupported)
+            if (state.SecureRenegotiationSupported)
             {
                 state.SecureConnection.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
             }
-            if(state.NegotiatedAlpn != Extensions.ApplicationLayerProtocolType.None)
+            if (state.NegotiatedAlpn != Extensions.ApplicationLayerProtocolType.None)
             {
                 state.SecureConnection.Listener.AlpnProvider.WriteExtension(ref writer, state.NegotiatedAlpn);
             }

@@ -10,18 +10,18 @@ namespace Leto.OpenSsl11
     public sealed class OpenSslBulkCipherKey : IBulkCipherKey
     {
         private EVP_CIPHER_CTX _ctx;
-        private readonly Memory<byte> _key;
-        private readonly Memory<byte> _iv;
+        private Memory<byte> _key;
+        private Memory<byte> _iv;
         private readonly EVP_BulkCipher_Type _type;
         private readonly int _tagSize;
-        private OwnedMemory<byte> _keyStore;
+        private Memory<byte> _keyStore;
 
-        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, OwnedMemory<byte> keyStore, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, Memory<byte> keyStore, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _keyStore = keyStore;
-            _key = _keyStore.Memory.Slice(0, keySize);
-            _iv = _keyStore.Memory.Slice(keySize, ivSize);
+            _key = _keyStore.Slice(0, keySize);
+            _iv = _keyStore.Slice(keySize, ivSize);
             _type = type;
             _ctx = EVP_CIPHER_CTX_new();
         }
@@ -72,11 +72,9 @@ namespace Leto.OpenSsl11
         public void Dispose()
         {
             _ctx.Free();
-            if (_keyStore != null)
-            {
-                _keyStore.Dispose();
-                _keyStore = null;
-            }
+            _keyStore = null;
+            _key = null;
+            _iv = null;
             GC.SuppressFinalize(this);
         }
 

@@ -30,10 +30,10 @@ namespace Leto.ConnectionStates
 
         private void WriteServerKeyExchange(ref WritableBuffer writer)
         {
-            if (_keyshare.RequiresServerKeyExchange)
+            if (Keyshare.RequiresServerKeyExchange)
             {
                 HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash,
-                    (buffer) => KeyExchangeWriter.SendKeyExchange(buffer, _keyshare, _signatureScheme),
+                    (buffer) => KeyExchangeWriter.SendKeyExchange(buffer, Keyshare, _signatureScheme),
                     HandshakeType.server_key_exchange);
             }
         }

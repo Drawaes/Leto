@@ -68,6 +68,18 @@ namespace Leto.Handshake.Extensions
             {
                 return ApplicationLayerProtocolType.None;
             }
+            if (_serverListTakesPriority)
+            {
+                return ProcessExtensionServerOrder(span);
+            }
+            else
+            {
+                return ProcessExtensionClientOrder(span);
+            }
+        }
+
+        private ApplicationLayerProtocolType ProcessExtensionServerOrder(Span<byte> span)
+        {
             span = ReadVector16(ref span);
             foreach (var (alpn, buffer) in _supportedProtocols)
             {
@@ -75,6 +87,24 @@ namespace Leto.Handshake.Extensions
                 while (loopSpan.Length > 0)
                 {
                     var protocol = ReadVector8(ref loopSpan);
+                    if (protocol.SequenceEqual(buffer))
+                    {
+                        return alpn;
+                    }
+                }
+            }
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Unable to negotiate a protocol");
+            return ApplicationLayerProtocolType.None;
+        }
+
+        private ApplicationLayerProtocolType ProcessExtensionClientOrder(Span<byte> span)
+        {
+            span = ReadVector16(ref span);
+            while (span.Length > 0)
+            {
+                foreach (var (alpn, buffer) in _supportedProtocols)
+                {
+                    var protocol = ReadVector8(ref span);
                     if (protocol.SequenceEqual(buffer))
                     {
                         return alpn;
