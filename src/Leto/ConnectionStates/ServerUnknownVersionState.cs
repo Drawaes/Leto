@@ -59,7 +59,7 @@ namespace Leto.ConnectionStates
                 ClientHelloParser helloParser;
                 try
                 {
-                    helloParser = new ClientHelloParser(ref handshake);
+                    helloParser = new ClientHelloParser(handshake);
                     var version = GetVersion(ref helloParser);
                     switch (version)
                     {

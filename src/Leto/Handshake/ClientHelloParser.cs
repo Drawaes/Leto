@@ -16,7 +16,7 @@ namespace Leto.Handshake
         private List<(ExtensionType, Span<byte>)> _extensions;
         private Span<byte> _originalMessage;
 
-        public ClientHelloParser(ref ReadableBuffer buffer)
+        public ClientHelloParser(ReadableBuffer buffer)
         {
             var span = buffer.ToSpan();
             _originalMessage = span;

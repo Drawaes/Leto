@@ -50,6 +50,7 @@ namespace Leto.BulkCiphers
                 _key.Update(b.Span);
             }
             _key.Finish();
+            _sequenceNumber++;
             IncrementSequence();
         }
 

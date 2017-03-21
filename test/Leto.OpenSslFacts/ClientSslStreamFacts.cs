@@ -45,6 +45,8 @@ namespace Leto.OpenSslFacts
                     var pipe = new SecurePipeConnection(factory, conn, secureListener);
                     await pipe.HandshakeAwaiter;
                     Console.WriteLine("Handshake Done");
+                    var reader = await pipe.Input.ReadAsync();
+                    System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
                 Console.ReadLine();
