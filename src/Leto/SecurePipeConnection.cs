@@ -80,6 +80,7 @@ namespace Leto
                                     _state.ChangeCipherSpec();
                                     break;
                                 case RecordType.Alert:
+                                    throw new NotImplementedException();
                                 default:
                                     throw new NotImplementedException();
                             }
