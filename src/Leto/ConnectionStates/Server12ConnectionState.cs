@@ -11,6 +11,7 @@ using Leto.Hashes;
 using System.Threading.Tasks;
 using Leto.Certificates;
 using Leto.BulkCiphers;
+using Leto.ConnectionStates.SecretSchedules;
 
 namespace Leto.ConnectionStates
 {
@@ -24,34 +25,29 @@ namespace Leto.ConnectionStates
         private ICertificate _certificate;
         private SignatureScheme _signatureScheme;
         private HandshakeState _state;
-        private SecretSchedules.SecretSchedule12 _secretSchedule;
+        private SecretSchedule12 _secretSchedule;
         private AeadBulkCipher _readKey;
         private AeadBulkCipher _writeKey;
         private AeadBulkCipher _storedWriteKey;
         private RecordHandler _recordHandler;
         private ICryptoProvider _cryptoProvider;
-        private bool _handshakeDone;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
             _secureConnection = secureConnection;
-            _secretSchedule = new SecretSchedules.SecretSchedule12(this);
+            _secretSchedule = new SecretSchedule12(this);
             _recordHandler = _secureConnection.RecordHandler;
             _cryptoProvider = _secureConnection.Listener.CryptoProvider;
         }
 
         public CipherSuite CipherSuite => _cipherSuite;
-        public ApplicationLayerProtocolType NegotiatedAlpn => _negotiatedAlpn;
-        internal bool SecureRenegotiationSupported => _secureRenegotiation;
         internal SecurePipeConnection SecureConnection => _secureConnection;
         internal IKeyshare Keyshare { get; set; }
-        internal SecretSchedules.SecretSchedule12 SecretSchedule => _secretSchedule;
         public IHash HandshakeHash => _handshakeHash;
         public ushort RecordVersion => (ushort)TlsVersion.Tls12;
-        public SignatureScheme SignatureScheme => _signatureScheme;
         public AeadBulkCipher ReadKey => _readKey;
         public AeadBulkCipher WriteKey => _writeKey;
-        public bool HandshakeDone => _handshakeDone;
+        public bool HandshakeComplete => _state == HandshakeState.HandshakeCompleted;
 
         public void ChangeCipherSpec()
         {
@@ -108,7 +104,7 @@ namespace Leto.ConnectionStates
                                 span = messageBuffer.ToSpan();
                                 if (_secretSchedule.GenerateAndCompareClientVerify(span))
                                 {
-                                    _handshakeDone = true;
+                                    _state = HandshakeState.HandshakeCompleted;
                                 }
                                 var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                 writer.WriteBigEndian<byte>(1);

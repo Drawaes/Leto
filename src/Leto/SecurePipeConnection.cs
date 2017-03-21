@@ -61,14 +61,14 @@ namespace Leto
                                     var handshakeWriter = _handshakeInput.Writer.Alloc();
                                     handshakeWriter.Append(messageBuffer);
                                     await handshakeWriter.FlushAsync();
-                                    if(_state.HandshakeDone)
+                                    if(_state.HandshakeComplete)
                                     {
                                         var ignore = ReadingApplicationDataLoop();
                                         _handshakeComplete.TrySetResult(0);
                                     }
                                     break;
                                 case RecordType.Application:
-                                    if (!_state.HandshakeDone)
+                                    if (!_state.HandshakeComplete)
                                     {
                                         Alerts.AlertException.ThrowUnexpectedMessage(RecordType.Application);
                                     }

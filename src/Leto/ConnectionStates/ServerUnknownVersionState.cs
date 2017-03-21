@@ -30,7 +30,7 @@ namespace Leto.ConnectionStates
         public ushort RecordVersion => (ushort)TlsVersion.Tls1;
         public AeadBulkCipher ReadKey => null;
         public AeadBulkCipher WriteKey => null;
-        public bool HandshakeDone => throw new NotImplementedException();
+        public bool HandshakeComplete => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {

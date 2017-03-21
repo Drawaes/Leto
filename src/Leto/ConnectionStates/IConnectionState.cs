@@ -19,6 +19,6 @@ namespace Leto.ConnectionStates
         ushort RecordVersion { get; }
         AeadBulkCipher ReadKey { get; }
         AeadBulkCipher WriteKey { get; }
-        bool HandshakeDone { get; }
+        bool HandshakeComplete { get; }
     }
 }

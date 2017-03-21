@@ -8,6 +8,7 @@ namespace Leto.Handshake
     {
         WaitingForClientKeyExchange,
         WaitingForChangeCipherSpec,
-        WaitingForClientFinished
+        WaitingForClientFinished,
+        HandshakeCompleted
     }
 }

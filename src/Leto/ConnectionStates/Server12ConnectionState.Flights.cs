@@ -42,8 +42,42 @@ namespace Leto.ConnectionStates
         {
             HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash, (buffer) =>
             {
-                return ServerHelloWriter.Write(buffer, this);
+                return WriteServerHello(buffer, this);
             }, HandshakeType.server_hello);
+        }
+
+        public WritableBuffer WriteServerHello(WritableBuffer writer, Server12ConnectionState state)
+        {
+            var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort);
+            writer.Ensure(fixedSize);
+            var span = writer.Buffer.Span;
+            span = span.WriteBigEndian(TlsVersion.Tls12);
+            _secretSchedule.ServerRandom.CopyTo(span);
+            span = span.Slice(_secretSchedule.ServerRandom.Length);
+
+            //We don't support session id's instead resumption is supported through tickets
+            span = span.WriteBigEndian<byte>(0);
+
+            span = span.WriteBigEndian(state.CipherSuite.Code);
+            //We don't support compression at the TLS level as it is prone to attacks
+            span = span.WriteBigEndian<byte>(0);
+
+            writer.Advance(fixedSize);
+            //Completed the fixed section now we write the extensions
+            WriteExtensions(ref writer);
+            return writer;
+        }
+
+        public void WriteExtensions(ref WritableBuffer writer)
+        {
+            if (_secureRenegotiation)
+            {
+                _secureConnection.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
+            }
+            if (_negotiatedAlpn != Handshake.Extensions.ApplicationLayerProtocolType.None)
+            {
+                _secureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
+            }
         }
     }
 }
