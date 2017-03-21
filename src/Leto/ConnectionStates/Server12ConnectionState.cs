@@ -69,6 +69,7 @@ namespace Leto.ConnectionStates
             _cipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
             _certificate = _secureConnection.Listener.CertificateList.GetCertificate(null, _cipherSuite.CertificateType.Value);
             _handshakeHash = _cryptoProvider.HashProvider.GetHash(_cipherSuite.HashType);
+            _handshakeHash.HashData(clientHello.OriginalMessage);
             ParseExtensions(ref clientHello);
             if (Keyshare == null)
             {

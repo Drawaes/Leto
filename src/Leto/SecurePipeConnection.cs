@@ -103,7 +103,7 @@ namespace Leto
             {
                 while (true)
                 {
-                    await RecordHandler.WriteRecords(_connection.Input, RecordType.Application);
+                    await RecordHandler.WriteRecords(_inputPipe.Reader, RecordType.Application);
                 }
             }
             finally

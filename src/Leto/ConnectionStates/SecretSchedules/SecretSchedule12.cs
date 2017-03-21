@@ -103,8 +103,8 @@ namespace Leto.ConnectionStates.SecretSchedules
             _serverRandom.CopyTo((Span<byte>)seed);
             _clientRandom.CopyTo(seed.Slice(_serverRandom.Length));
             _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span, Tls12.Label_KeyExpansion, seed, material);
-            _serverKey = _clientKey.Slice(keySize + 4, keySize + 4);
-            _clientKey = _clientKey.Slice(0, keySize + 4);
+            _serverKey = _clientKey.Slice(keySize + ivSize, keySize + ivSize);
+            _clientKey = _clientKey.Slice(0, keySize + ivSize);
 
             material.Slice(0, keySize).CopyTo(_clientKey.Span);
             material.Slice(keySize * 2, 4).CopyTo(_clientKey.Span.Slice(keySize));
