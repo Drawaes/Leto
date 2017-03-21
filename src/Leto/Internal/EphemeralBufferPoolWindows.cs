@@ -36,7 +36,7 @@ namespace Leto.Internal
             }
         }
 
-        public override OwnedMemory<byte> Rent(int minimumBufferSize)
+        public override OwnedBuffer<byte> Rent(int minimumBufferSize)
         {
             if (minimumBufferSize > _bufferSize)
             {
@@ -50,13 +50,8 @@ namespace Leto.Internal
             return returnValue;
         }
 
-        private void Return(OwnedMemory<byte> buffer)
+        private void Return(EphemeralMemory ephemeralBuffer)
         {
-            var ephemeralBuffer = buffer as EphemeralMemory;
-            if (ephemeralBuffer == null)
-            {
-                ExceptionHelper.MemoryBufferNotEphemeral();
-            }
             if (!ephemeralBuffer.Rented)
             {
                 Debug.Fail("Returning a buffer that isn't rented!");
@@ -66,7 +61,7 @@ namespace Leto.Internal
             _buffers.Enqueue(ephemeralBuffer);
         }
 
-        sealed class EphemeralMemory : OwnedMemory<byte>
+        sealed class EphemeralMemory : OwnedBuffer<byte>
         {
             private EphemeralBufferPoolWindows _pool;
             public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolWindows pool) : base(null, 0, length, memory)
@@ -78,6 +73,7 @@ namespace Leto.Internal
             {
                 RtlZeroMemory(Pointer, (UIntPtr)Length);
                 _pool.Return(this);
+                base.Dispose(disposing);
             }
         }
 

@@ -13,10 +13,12 @@ namespace Leto.CipherSuites
         private TlsVersion[] _supportedVersions;
         private KeyExchangeType? _keyExchange;
         private HashType _hashType;
+        private BulkCipherType _bulkCipherType;
         private CertificateType? _certificateType;
 
-        public CipherSuite(ushort code, string name, HashType hashType, KeyExchangeType? keyExchange, CertificateType? certificateType, params TlsVersion[] supportedVersions)
+        public CipherSuite(ushort code, string name,BulkCipherType cipherType, HashType hashType, KeyExchangeType? keyExchange, CertificateType? certificateType, params TlsVersion[] supportedVersions)
         {
+            _bulkCipherType = cipherType;
             _certificateType = certificateType;
             _code = code;
             _name = name;
@@ -30,6 +32,8 @@ namespace Leto.CipherSuites
         public KeyExchangeType KeyExchange =>
             _keyExchange ?? throw new InvalidOperationException($"Key exchange is not supported by this cipher suite {_name}");
         public HashType HashType => _hashType;
+        public BulkCipherType BulkCipherType => _bulkCipherType;
+
         public bool SupportsVersion(TlsVersion version) => _supportedVersions.Contains(version);
         public override string ToString() => _name;
     }

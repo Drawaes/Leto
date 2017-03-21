@@ -2,7 +2,6 @@
 using Leto.Internal;
 using System;
 using System.Buffers;
-using System.Buffers.Pools;
 using static Leto.OpenSsl11.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
@@ -10,13 +9,13 @@ namespace Leto.OpenSsl11
     public sealed class OpenSslBulkCipherKey : IBulkCipherKey
     {
         private EVP_CIPHER_CTX _ctx;
-        private Memory<byte> _key;
-        private Memory<byte> _iv;
+        private Buffer<byte> _key;
+        private Buffer<byte> _iv;
         private readonly EVP_BulkCipher_Type _type;
         private readonly int _tagSize;
-        private Memory<byte> _keyStore;
+        private Buffer<byte> _keyStore;
 
-        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, Memory<byte> keyStore, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _keyStore = keyStore;
@@ -26,8 +25,8 @@ namespace Leto.OpenSsl11
             _ctx = EVP_CIPHER_CTX_new();
         }
 
-        public Memory<byte> Key => _key;
-        public Memory<byte> IV => _iv;
+        public Buffer<byte> Key => _key;
+        public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
 
         public void Init(KeyMode mode)

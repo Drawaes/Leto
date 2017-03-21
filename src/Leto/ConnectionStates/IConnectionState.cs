@@ -1,4 +1,5 @@
-﻿using Leto.Certificates;
+﻿using Leto.BulkCiphers;
+using Leto.Certificates;
 using Leto.CipherSuites;
 using Leto.Handshake;
 using Leto.Hashes;
@@ -16,5 +17,8 @@ namespace Leto.ConnectionStates
         Task HandleClientHello(ClientHelloParser clientHelloParser);
         IHash HandshakeHash { get; }
         ushort RecordVersion { get; }
+        AeadBulkCipher ReadKey { get; }
+        AeadBulkCipher WriteKey { get; }
+        bool HandshakeDone { get; }
     }
 }

@@ -14,20 +14,24 @@ namespace Leto.ConnectionStates.SecretSchedules
         const int MaxKeySize = 32 + 12;
         const int Session_MaxHashBlocks = 6;
         const int Session_MaxKeys = 2;
-        const int MaxSessions = 10000;
-        const int Session_Size = (Session_MaxKeys * MaxKeySize) + (MaxHashSize * Session_MaxHashBlocks);
+        const int MaxInflightSessions = 10000;
+        const int MaxInflightConnections = 50000;
+        const int Session_Size = MaxHashSize * Session_MaxHashBlocks;
 
-        private BufferPool _ephemeralPool;
+        private BufferPool _ephemeralSessionPool;
+        private BufferPool _ephemeralKeysPool;
 
         public SecretSchedulePool()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                _ephemeralPool = new EphemeralBufferPoolUnix(Session_Size, MaxSessions);
+                _ephemeralSessionPool = new EphemeralBufferPoolUnix(Session_Size, MaxInflightSessions);
+                _ephemeralKeysPool = new EphemeralBufferPoolUnix(MaxKeySize, MaxInflightConnections);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _ephemeralPool = new EphemeralBufferPoolWindows(Session_Size, MaxSessions);
+                _ephemeralSessionPool = new EphemeralBufferPoolWindows(Session_Size, MaxInflightSessions);
+                _ephemeralKeysPool = new EphemeralBufferPoolWindows(MaxKeySize, MaxInflightConnections);
             }
             else
             {
@@ -35,9 +39,11 @@ namespace Leto.ConnectionStates.SecretSchedules
             }
         }
 
-        public OwnedMemory<byte> GetSecretBuffer()
+        public (OwnedBuffer<byte> session, OwnedBuffer<byte> keys) GetSecretBuffer()
         {
-            return _ephemeralPool.Rent(Session_Size);
+            var session = _ephemeralSessionPool.Rent(Session_Size);
+            var keys = _ephemeralKeysPool.Rent(MaxKeySize);
+            return (session, keys);
         }
     }
 }

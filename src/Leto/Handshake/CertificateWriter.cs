@@ -16,7 +16,7 @@ namespace Leto.Handshake
             void WriteCertificate(ref WritableBuffer writer, Span<byte> certData)
             {
                 writer.Ensure(3);
-                writer.Memory.Span.Write24BitNumber(certData.Length);
+                writer.Buffer.Span.Write24BitNumber(certData.Length);
                 writer.Advance(3);
                 writer.Write(certData);
             }

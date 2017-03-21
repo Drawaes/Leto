@@ -14,14 +14,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170317-1" />
-    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170317-1" />
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170317-1" />
-    <PackageReference Include="System.IO.Pipelines.Extensions" Version="0.1.0-e170317-1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0-beta-25118-01" />
+    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170320-2" />
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170320-2" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170320-2" />
+    <PackageReference Include="System.IO.Pipelines.Extensions" Version="0.1.0-e170320-2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0-beta-25118-01" />
+    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

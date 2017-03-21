@@ -23,8 +23,6 @@ namespace Leto.BulkCiphers
         public int KeySize => _key.Key.Length;
         public int IVSize => _key.IV.Length;
 
-        public void SetKey(Span<byte> key) => key.CopyTo(_key.Key.Span);
-        public void SetIV(Span<byte> iv) => iv.CopyTo(_key.IV.Span);
         public void WriteNonce(ref WritableBuffer buffer) => buffer.Write(_key.IV.Span.Slice(4));
 
         public void Decrypt(ref ReadableBuffer messageBuffer, bool requiresAdditionalInfo)
@@ -127,7 +125,7 @@ namespace Leto.BulkCiphers
         private void WriteTag(ref WritableBuffer buffer)
         {
             buffer.Ensure(_key.TagSize);
-            _key.ReadTag(buffer.Memory.Span.Slice(0, _key.TagSize));
+            _key.ReadTag(buffer.Buffer.Span.Slice(0, _key.TagSize));
             buffer.Advance(_key.TagSize);
         }
 

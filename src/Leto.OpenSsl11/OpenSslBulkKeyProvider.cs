@@ -1,43 +1,43 @@
 ﻿using Leto.BulkCiphers;
-using Leto.Internal;
-using Leto.Interop;
-using Leto.OpenSsl11.Interop;
 using System;
-using System.Buffers.Pools;
-using System.Runtime.InteropServices;
+using System.Buffers;
+using static Leto.OpenSsl11.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {
     public sealed class OpenSslBulkKeyProvider : IBulkCipherKeyProvider
     {
-        public OpenSslBulkKeyProvider()
+        private (int keySize, int ivSize, EVP_BulkCipher_Type bulkCipher) GetCipher(BulkCipherType cipherType)
         {
-        }
-
-        public AeadBulkCipher GetCipher(BulkCipherType cipherType, Memory<byte> keyStorage)
-        {
-            OpenSslBulkCipherKey key;
             switch (cipherType)
             {
                 case BulkCipherType.AES_128_GCM:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_128_gcm, keyStorage, 16, 12, 16);
-                    break;
+                    return (16, 12, EVP_aes_128_gcm);
                 case BulkCipherType.AES_256_GCM:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_aes_256_gcm, keyStorage, 32, 12, 16);
-                    break;
+                    return (32, 12, EVP_aes_256_gcm);
                 case BulkCipherType.CHACHA20_POLY1305:
-                    key = new OpenSslBulkCipherKey(LibCrypto.EVP_chacha20_poly1305, keyStorage, 32, 12, 16);
-                    break;
+                    return (32, 12, EVP_chacha20_poly1305);
                 default:
-                    ExceptionHelper.ThrowException(new NotImplementedException());
-                    return null;
+                    throw new NotImplementedException();
             }
+        }
+
+        public AeadBulkCipher GetCipher(BulkCipherType cipherType, Buffer<byte> keyStorage)
+        {
+            var (keySize, ivSize, bulkCipher) = GetCipher(cipherType);
+            var key = new OpenSslBulkCipherKey(bulkCipher, keyStorage, keySize, ivSize, 16);
             return new AeadBulkCipher(key);
         }
 
         public void Dispose()
         {
             //Nothing managed to dispose
+        }
+
+        public (int keySize, int ivSize) GetCipherSize(BulkCipherType cipherType)
+        {
+            var (keySize, ivSize, cipher) = GetCipher(cipherType);
+            return (keySize, ivSize);
         }
     }
 }

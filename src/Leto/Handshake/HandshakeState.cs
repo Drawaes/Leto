@@ -7,6 +7,7 @@ namespace Leto.Handshake
     public enum HandshakeState
     {
         WaitingForClientKeyExchange,
-        WaitingForChangeCipherSpec
+        WaitingForChangeCipherSpec,
+        WaitingForClientFinished
     }
 }

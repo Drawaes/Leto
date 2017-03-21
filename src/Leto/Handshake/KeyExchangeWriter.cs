@@ -13,11 +13,11 @@ namespace Leto.Handshake
         {
             var messageLength = 4 + keyshare.KeyExchangeSize;
             buffer.Ensure(messageLength);
-            var bookMark = buffer.Memory;
+            var bookMark = buffer.Buffer;
             buffer.WriteBigEndian(ECCurveType.named_curve);
             buffer.WriteBigEndian(keyshare.NamedGroup);
             buffer.WriteBigEndian((byte)keyshare.KeyExchangeSize);
-            var keysWritten = keyshare.WritePublicKey(buffer.Memory.Span);
+            var keysWritten = keyshare.WritePublicKey(buffer.Buffer.Span);
             buffer.Advance(keysWritten);
 
             buffer.WriteBigEndian(signatureScheme);

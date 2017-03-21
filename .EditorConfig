@@ -61,8 +61,8 @@ csharp_style_var_elsewhere = true:error
 
 # C# 7: Prefer using pattern matching over "if(x is T) { var t = (T)x; }" and "var t = x as T; if(t != null) { ... }"
 # REVIEW: Since this is a new C# 7 feature that replaces an existing pattern, I'm making it a suggestion
-csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
-csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
 
 # C# 7: Prefer using 'out var' where possible
 # REVIEW: Since this is a new C# 7 feature that replaces an existing pattern, I'm making it a suggestion
@@ -85,11 +85,10 @@ csharp_new_line_before_finally = true
 csharp_new_line_before_members_in_object_initializers = true
 csharp_new_line_before_members_in_anonymous_types = true
 
-# NOT entering these into our style either way right now:
 # Prefer expression-bodied methods, constructors, operators, etc.
-# csharp_style_expression_bodied_methods = true:suggestion
-# csharp_style_expression_bodied_constructors = true:suggestion
-# csharp_style_expression_bodied_operators = true:suggestion
-# csharp_style_expression_bodied_properties = true:suggestion
-# csharp_style_expression_bodied_indexers = true:suggestion
-# csharp_style_expression_bodied_accessors = true:suggestion
+csharp_style_expression_bodied_methods = true:suggestion
+csharp_style_expression_bodied_constructors = true:suggestion
+csharp_style_expression_bodied_operators = true:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_indexers = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion

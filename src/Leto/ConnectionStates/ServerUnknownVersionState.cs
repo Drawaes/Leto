@@ -9,6 +9,7 @@ using Leto.RecordLayer;
 using Leto.Handshake.Extensions;
 using Leto.Hashes;
 using System.Threading.Tasks;
+using Leto.BulkCiphers;
 
 namespace Leto.ConnectionStates
 {
@@ -27,6 +28,9 @@ namespace Leto.ConnectionStates
         public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IHash HandshakeHash => throw new NotImplementedException();
         public ushort RecordVersion => (ushort)TlsVersion.Tls1;
+        public AeadBulkCipher ReadKey => null;
+        public AeadBulkCipher WriteKey => null;
+        public bool HandshakeDone => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {

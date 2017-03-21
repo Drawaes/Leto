@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Runtime;
 using System.Runtime.CompilerServices;
@@ -80,7 +81,7 @@ namespace Leto
         public static void Write24BitNumber(ref WritableBuffer buffer, int numberToWrite)
         {
             buffer.Ensure(3);
-            var span = buffer.Memory.Span;
+            var span = buffer.Buffer.Span;
             Write24BitNumber(span, numberToWrite);
             buffer.Advance(3);
         }
@@ -95,7 +96,7 @@ namespace Leto
         public static void WriteVector24Bit(ref WritableBuffer buffer, Func<WritableBuffer, WritableBuffer> contentWriter)
         {
             buffer.Ensure(3);
-            var bookmark = buffer.Memory;
+            var bookmark = buffer.Buffer;
             buffer.Advance(3);
             int currentSize = buffer.BytesWritten;
             buffer = contentWriter(buffer);
@@ -105,7 +106,7 @@ namespace Leto
 
         public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, Func<WritableBuffer, WritableBuffer> writeContent) where T : struct
         {
-            var bookMark = buffer.Memory;
+            var bookMark = buffer.Buffer;
             if (typeof(T) == typeof(ushort) || typeof(T) == typeof(short))
             {
                 buffer.WriteBigEndian((ushort)0);
@@ -131,7 +132,7 @@ namespace Leto
             }
         }
 
-        public static Memory<byte> SliceAndConsume(ref Memory<byte> buffer, int size)
+        public static Buffer<byte> SliceAndConsume(ref Buffer<byte> buffer, int size)
         {
             var returnBuffer = buffer.Slice(0, size);
             buffer = buffer.Slice(size);

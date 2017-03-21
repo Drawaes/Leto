@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Buffers;
 
 namespace Leto.BulkCiphers
 {
     public interface IBulkCipherKey : IDisposable
     {
-        Memory<byte> Key { get; }
-        Memory<byte> IV { get; }
+        Buffer<byte> Key { get; }
+        Buffer<byte> IV { get; }
         int TagSize { get; }
         void Init(KeyMode mode);
         int Update(Span<byte> input, Span<byte> output);
