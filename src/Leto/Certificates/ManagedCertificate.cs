@@ -10,6 +10,7 @@ namespace Leto.Certificates
     {
         private RSA _rsaPrivateKey;
         private ECDsa _ecdsaPrivateKey;
+        private SignatureScheme _ecDsaSignatureScheme;
         private CertificateType _certificateType;
         private byte[] _certificateData;
         private byte[][] _certificateChain;
@@ -43,6 +44,20 @@ namespace Leto.Certificates
                 _certificateType = CertificateType.ecdsa;
                 _certificateData = certificate.RawData;
                 _signatureSize = _ecdsaPrivateKey.KeySize / 8;
+                switch(_ecdsaPrivateKey.KeySize)
+                {
+                    case 256:
+                        _ecDsaSignatureScheme = SignatureScheme.ecdsa_secp256r1_sha256;
+                        break;
+                    case 384:
+                        _ecDsaSignatureScheme = SignatureScheme.ecdsa_secp384r1_sha384;
+                        break;
+                    case 521:
+                        _ecDsaSignatureScheme = SignatureScheme.ecdsa_secp521r1_sha512;
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unsupported Ecdsa Keysize {_ecdsaPrivateKey.KeySize}");
+                }
                 return;
             }
             throw new CryptographicException("Unable to get a private key from the certificate");
@@ -67,6 +82,10 @@ namespace Leto.Certificates
 
         public SignatureScheme SelectAlgorithm(Span<byte> buffer)
         {
+            if(_certificateType == CertificateType.ecdsa)
+            {
+                return _ecDsaSignatureScheme;
+            }
             buffer = ReadVector16(ref buffer);
             while (buffer.Length > 0)
             {
@@ -83,8 +102,6 @@ namespace Leto.Certificates
                         {
                             return scheme;
                         }
-                        break;
-                    case CertificateType.ecdsa:
                         break;
                 }
             }
