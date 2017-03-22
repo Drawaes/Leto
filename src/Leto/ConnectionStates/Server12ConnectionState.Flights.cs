@@ -1,4 +1,5 @@
 ﻿using Leto.Handshake;
+using Leto.Keyshares;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -33,8 +34,7 @@ namespace Leto.ConnectionStates
             if (Keyshare.RequiresServerKeyExchange)
             {
                 HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash,
-                    (buffer) => KeyExchangeWriter.SendKeyExchange(buffer, Keyshare, _signatureScheme),
-                    HandshakeType.server_key_exchange);
+                    (buffer) => SendKeyExchange(buffer), HandshakeType.server_key_exchange);
             }
         }
 
@@ -78,6 +78,38 @@ namespace Leto.ConnectionStates
             {
                 _secureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
             }
+        }
+
+        private WritableBuffer SendKeyExchange(WritableBuffer writer)
+        {
+            var keyshare = Keyshare;
+            var messageLength = 4 + keyshare.KeyExchangeSize;
+            writer.Ensure(messageLength);
+            var bookMark = writer.Buffer;
+            writer.WriteBigEndian(ECCurveType.named_curve);
+            writer.WriteBigEndian(keyshare.NamedGroup);
+            writer.WriteBigEndian((byte)keyshare.KeyExchangeSize);
+            var keysWritten = keyshare.WritePublicKey(writer.Buffer.Span);
+            writer.Advance(keysWritten);
+            writer.WriteBigEndian(_signatureScheme);
+            BufferExtensions.WriteVector<ushort>(ref writer, (w) =>
+            {
+                WriteKeySignature(ref w, bookMark.Span.Slice(0, messageLength));
+                return w;
+            });
+            return writer;
+        }
+
+        private void WriteKeySignature(ref WritableBuffer writer, Span<byte> message)
+        {
+            var tempBuffer = new byte[TlsConstants.RandomLength * 2 + message.Length];
+            _secretSchedule.ClientRandom.CopyTo(tempBuffer);
+            _secretSchedule.ServerRandom.CopyTo(tempBuffer.Slice(TlsConstants.RandomLength));
+            message.CopyTo(tempBuffer.Slice(TlsConstants.RandomLength * 2));
+            writer.Ensure(_certificate.SignatureSize);
+            var bytesWritten = _certificate.SignHash(_secureConnection.Listener.CryptoProvider.HashProvider,
+                _signatureScheme, tempBuffer, writer.Buffer.Span);
+            writer.Advance(bytesWritten);
         }
     }
 }

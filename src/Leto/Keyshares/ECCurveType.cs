@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Keyshares
+﻿namespace Leto.Keyshares
 {
     //http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
     public enum ECCurveType : byte

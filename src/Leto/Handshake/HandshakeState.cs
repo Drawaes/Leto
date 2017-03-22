@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Handshake
+﻿namespace Leto.Handshake
 {
     public enum HandshakeState
     {

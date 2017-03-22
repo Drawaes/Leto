@@ -37,7 +37,8 @@ namespace Leto.ConnectionStates.SecretSchedules
             _clientKey = _keyStore.Buffer;
         }
 
-        internal Span<byte> ServerRandom => _serverRandom.Span;
+        internal ReadOnlySpan<byte> ClientRandom => _clientRandom.Span;
+        internal ReadOnlySpan<byte> ServerRandom => _serverRandom.Span;
 
         public void SetClientRandom(Span<byte> random)
         {

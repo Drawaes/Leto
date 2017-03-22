@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Certificates
+﻿namespace Leto.Certificates
 {
     //https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-16
     //TLS SignatureAlgorithm Registry

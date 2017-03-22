@@ -1,11 +1,6 @@
 ﻿using Leto.Certificates;
-using Leto.ConnectionStates;
-using Leto.Hashes;
-using Leto.Keyshares;
 using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Text;
 
 namespace Leto.Handshake
 {

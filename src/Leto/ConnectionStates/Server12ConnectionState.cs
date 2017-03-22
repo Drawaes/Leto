@@ -42,7 +42,7 @@ namespace Leto.ConnectionStates
 
         public CipherSuite CipherSuite => _cipherSuite;
         internal SecurePipeConnection SecureConnection => _secureConnection;
-        internal IKeyshare Keyshare { get; set; }
+        public IKeyshare Keyshare { get; internal set; }
         public IHash HandshakeHash => _handshakeHash;
         public ushort RecordVersion => (ushort)TlsVersion.Tls12;
         public AeadBulkCipher ReadKey => _readKey;
@@ -55,7 +55,7 @@ namespace Leto.ConnectionStates
             {
                 Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
             }
-            (_readKey,_storedWriteKey) = _secretSchedule.GenerateKeys();
+            (_readKey, _storedWriteKey) = _secretSchedule.GenerateKeys();
             _state = HandshakeState.WaitingForClientFinished;
         }
 

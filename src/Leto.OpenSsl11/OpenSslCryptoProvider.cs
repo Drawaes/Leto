@@ -15,6 +15,8 @@ namespace Leto.OpenSsl11
     {
         private CipherSuiteProvider _cipherSuites = new CipherSuiteProvider(new CipherSuite[]
         {
+            PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             PredefinedCipherSuites.RSA_AES_128_GCM_SHA256,
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
         });

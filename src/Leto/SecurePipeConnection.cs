@@ -80,6 +80,11 @@ namespace Leto
                                     _state.ChangeCipherSpec();
                                     break;
                                 case RecordType.Alert:
+                                    var alertSpan = messageBuffer.ToSpan();
+                                    if(alertSpan[1] == 0)
+                                    {
+                                        return;
+                                    }
                                     throw new NotImplementedException();
                                 default:
                                     throw new NotImplementedException();

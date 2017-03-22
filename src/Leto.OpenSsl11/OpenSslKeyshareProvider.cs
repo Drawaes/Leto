@@ -43,10 +43,35 @@ namespace Leto.OpenSsl11
             {
                 case KeyExchangeType.Rsa:
                     return new OpenSslRsaKeyshare();
+                case KeyExchangeType.Ecdhe:
+                    //need to check the supported groups to check if we are going to use
+                    //a named curve function or a named curve
+                    return EcdheKeyshare(supportedGroups);
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
                     return null;
             }
+        }
+
+        private IKeyshare EcdheKeyshare(Span<byte> supportedGroups)
+        {
+            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            while(supportedGroups.Length >0)
+            {
+                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                switch(namedGroup)
+                {
+                    case NamedGroup.secp256r1:
+                    case NamedGroup.secp384r1:
+                    case NamedGroup.secp521r1:
+                        return new OpenSslECCurveKeyshare(namedGroup);
+                    case NamedGroup.x25519:
+                    case NamedGroup.x448:
+                        return new OpenSslECFunctionKeyshare(namedGroup);
+                }
+            }
+            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
+            return null;
         }
 
         public void Dispose()

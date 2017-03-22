@@ -87,7 +87,7 @@ namespace Leto.BulkCiphers
                 }
                 i -= 1;
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Failed to increment sequence on Aead Cipher");
+            Alerts.AlertException.ThrowDecode("Failed to increment sequence on Aead Cipher");
         }
 
         private void WriteAdditionalInfo(RecordType recordType, ushort tlsVersion, int plaintextLength)
@@ -102,9 +102,9 @@ namespace Leto.BulkCiphers
             _key.AddAdditionalInfo(additionalInfo);
         }
 
-        private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer messageBuffer)
+        private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer reader)
         {
-            var headerSpan = messageBuffer.Slice(0, AdditionalInfoHeaderSize).ToSpan();
+            var headerSpan = reader.Slice(0, AdditionalInfoHeaderSize).ToSpan();
 
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
             (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
@@ -116,18 +116,18 @@ namespace Leto.BulkCiphers
             return additionalInfo;
         }
 
-        private void ReadTag(ref ReadableBuffer messageBuffer)
+        private void ReadTag(ref ReadableBuffer reader)
         {
-            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
+            var tagBuffer = reader.Slice(reader.Length - _key.TagSize);
             var tagSpan = tagBuffer.ToSpan();
             _key.WriteTag(tagSpan);
         }
 
-        private void WriteTag(ref WritableBuffer buffer)
+        private void WriteTag(ref WritableBuffer writer)
         {
-            buffer.Ensure(_key.TagSize);
-            _key.ReadTag(buffer.Buffer.Span.Slice(0, _key.TagSize));
-            buffer.Advance(_key.TagSize);
+            writer.Ensure(_key.TagSize);
+            _key.ReadTag(writer.Buffer.Span.Slice(0, _key.TagSize));
+            writer.Advance(_key.TagSize);
         }
 
         public void Dispose()

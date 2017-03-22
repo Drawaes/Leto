@@ -10,6 +10,8 @@ using Leto.Handshake.Extensions;
 using Leto.Hashes;
 using System.Threading.Tasks;
 using Leto.BulkCiphers;
+using Leto.Certificates;
+using Leto.Keyshares;
 
 namespace Leto.ConnectionStates
 {
@@ -25,12 +27,14 @@ namespace Leto.ConnectionStates
         };
 
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
-        public ApplicationLayerProtocolType Alpn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IHash HandshakeHash => throw new NotImplementedException();
         public ushort RecordVersion => (ushort)TlsVersion.Tls1;
         public AeadBulkCipher ReadKey => null;
         public AeadBulkCipher WriteKey => null;
         public bool HandshakeComplete => throw new NotImplementedException();
+        public ICertificate Certificate => throw new NotImplementedException();
+        public IKeyshare Keyshare => throw new NotImplementedException();
+        public SignatureScheme SignatureScheme => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {
@@ -129,11 +133,6 @@ namespace Leto.ConnectionStates
         public void ChangeCipherSpec()
         {
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
-        }
-
-        public void HandAlertRecord(ReadableBuffer record)
-        {
-            Alerts.AlertException.ThrowUnexpectedMessage(RecordType.Alert);
         }
 
         public Task HandleClientHello(ClientHelloParser clientHelloParser)

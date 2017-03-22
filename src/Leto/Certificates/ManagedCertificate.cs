@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Leto.Hashes;
@@ -59,12 +58,11 @@ namespace Leto.Certificates
             if (_certificateType == CertificateType.rsa)
             {
                 RSAEncryptionPadding padding = RSAEncryptionPadding.Pkcs1;
-
                 var result = _rsaPrivateKey.Decrypt(encryptedData.ToArray(), padding);
                 result.CopyTo(output);
                 return result.Length;
             }
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"The {scheme} certificate type cannot be used to decrypt");
         }
 
         public SignatureScheme SelectAlgorithm(Span<byte> buffer)
@@ -73,10 +71,10 @@ namespace Leto.Certificates
             while (buffer.Length > 0)
             {
                 var scheme = ReadBigEndian<SignatureScheme>(ref buffer);
+                var lastByte = 0x00FF & (ushort)scheme;
                 switch (_certificateType)
                 {
                     case CertificateType.rsa:
-                        var lastByte = 0x00FF & (ushort)scheme;
                         if (lastByte == 1)
                         {
                             return scheme;
@@ -85,6 +83,8 @@ namespace Leto.Certificates
                         {
                             return scheme;
                         }
+                        break;
+                    case CertificateType.ecdsa:
                         break;
                 }
             }

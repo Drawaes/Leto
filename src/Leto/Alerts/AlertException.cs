@@ -40,5 +40,10 @@ namespace Leto.Alerts
         {
             ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, $"Invalid vector length expected {expected} actual {actual}");
         }
+
+        public static void ThrowDecode(string message)
+        {
+            ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, message);
+        }
     }
 }

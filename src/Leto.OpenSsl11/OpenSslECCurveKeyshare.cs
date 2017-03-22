@@ -44,15 +44,15 @@ namespace Leto.OpenSsl11
 
         public void DeriveMasterSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
         {
-            var tempBuffer = new byte[_keyExchangeSize];
+            var tempBuffer = new byte[(_keyExchangeSize - 1) / 2];
             var secretSize = EVP_PKEY_derive(_keyPair, _peerKey, tempBuffer);
             var secretSpan = tempBuffer.Slice(0, secretSize);
-            hashProvider.Tls12Prf(hashType, secretSpan, TlsConstants.Tls12.Label_KeyExpansion, seed, output);
+            hashProvider.Tls12Prf(hashType, secretSpan, TlsConstants.Tls12.Label_MasterSecret, seed, output);
         }
 
         public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
         {
-            var tempBuffer = new byte[_keyExchangeSize];
+            var tempBuffer = new byte[(_keyExchangeSize - 1) / 2];
             var secretSize = EVP_PKEY_derive(_keyPair, _peerKey, tempBuffer);
             var secretSpan = tempBuffer.Slice(0, secretSize);
             hashProvider.HmacData(hashType, salt, secretSpan, output);
@@ -60,6 +60,11 @@ namespace Leto.OpenSsl11
 
         public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
         {
+            peerKey = BufferExtensions.ReadVector8(ref peerKey);
+            if (peerKey.Length != _keyExchangeSize)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
+            }
             GenerateKeyPair();
             //Get0 methods mean that we do not own the object, and therefore should not free
             //as they belong to another structure so we only need to free the point

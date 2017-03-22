@@ -3,7 +3,6 @@ using System.Buffers;
 using System.IO.Pipelines;
 using System.Runtime;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Leto
 {
