@@ -22,7 +22,8 @@ namespace Leto.Windows
 
         public IHash GetHash(HashType hashType)
         {
-            throw new NotImplementedException();
+            var (handle, size) = GetHashType(hashType);
+            return new WindowsHash(handle, size, hashType);
         }
 
         public int HashSize(HashType hashType) => GetHashType(hashType).size;
@@ -32,7 +33,7 @@ namespace Leto.Windows
             var handle = GetHashType(hashType).handle;
             BCryptHash(handle, key, message, result);
         }
-        
+
         private (SafeBCryptAlgorithmHandle handle, int size) GetHashType(HashType hashType)
         {
             switch (hashType)

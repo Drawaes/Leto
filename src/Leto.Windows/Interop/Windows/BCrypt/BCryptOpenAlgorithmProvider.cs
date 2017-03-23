@@ -18,6 +18,13 @@ namespace Leto.Windows.Interop
             return outHandle;
         }
 
+        internal static SafeBCryptAlgorithmHandle BCryptOpenECCurveAlgorithmProvider(string curveName)
+        {
+            var handle = BCryptOpenAlgorithmProvider("ECDH");
+            BCryptSetEccCurve(handle, curveName);
+            return handle;
+        }
+
         [Flags]
         private enum BCryptOpenAlgorithmProviderFlags : int
         {
