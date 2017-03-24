@@ -43,7 +43,7 @@ namespace Leto.OpenSsl11
             switch(keyExchange)
             {
                 case KeyExchangeType.Rsa:
-                    return new OpenSslRsaKeyshare();
+                    return new RsaKeyshare();
                 case KeyExchangeType.Ecdhe:
                     //need to check the supported groups to check if we are going to use
                     //a named curve function or a named curve

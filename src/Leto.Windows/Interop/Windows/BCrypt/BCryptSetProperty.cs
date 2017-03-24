@@ -18,5 +18,11 @@ namespace Leto.Windows.Interop
             var result = BCryptSetProperty(handle, BCryptPropertyStrings.BCRYPT_ECC_CURVE_NAME, curveName, (curveName.Length + 1) * sizeof(char), 0);
             ThrowOnErrorReturnCode(result);
         }
+
+        internal static void SetBlockChainingMode(SafeBCryptHandle handle, string chainingMode)
+        {
+            var result = BCryptSetProperty(handle, BCryptPropertyStrings.BCRYPT_CHAINING_MODE, chainingMode, (chainingMode.Length + 1) * sizeof(char), 0);
+            ThrowOnErrorReturnCode(result);
+        }
     }
 }

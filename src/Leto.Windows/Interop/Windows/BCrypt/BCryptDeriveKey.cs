@@ -12,6 +12,24 @@ namespace Leto.Windows.Interop
         [DllImport(Libraries.BCrypt, CharSet = CharSet.Unicode)]
         private static unsafe extern NTSTATUS BCryptDeriveKey(SafeBCryptSecretHandle hSharedSecret, string pwszKDF, void* pParameterList, void* pbDerivedKey, int cbDerivedKey, out int pcbResult, int dwFlags);
 
+        internal static unsafe void BCryptDeriveHmacKey(SafeBCryptSecretHandle handle, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
+        {
+            var buffDescription = new BCryptBufferDesc();
+            var bufferArray = stackalloc BCryptBuffer[2];
+            var algId = Encoding.Unicode.GetBytes(hashType.ToString() + "\0");
+            buffDescription.pBuffers = (IntPtr)bufferArray;
+            buffDescription.cBuffers = 2;
+            fixed (byte* algPtr = algId)
+            fixed (void* outputPtr = &output.DangerousGetPinnableReference())
+            fixed (void* seedPtr = &seed.DangerousGetPinnableReference())
+            {
+                bufferArray[0] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HASH_ALGORITHM, cbBuffer = algId.Length, pvBuffer = algPtr };
+                bufferArray[1] = new BCryptBuffer() { BufferType = NCryptBufferDescriptors.KDF_HMAC_KEY, cbBuffer = seed.Length, pvBuffer = seedPtr };
+                var result = BCryptDeriveKey(handle, BCRYPT_KDF_HMAC, &buffDescription, outputPtr, output.Length, out int sizeOfResult, 0);
+                ThrowOnErrorReturnCode(result);
+            }
+        }
+
         internal static unsafe void BCryptDeriveKey(SafeBCryptSecretHandle handle, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
         {
             uint version = 0x0303;

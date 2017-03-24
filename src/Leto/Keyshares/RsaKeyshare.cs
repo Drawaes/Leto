@@ -1,13 +1,12 @@
-﻿using Leto.Keyshares;
+﻿using Leto.Certificates;
+using Leto.Hashes;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Leto.Hashes;
-using Leto.Certificates;
 
-namespace Leto.OpenSsl11
+namespace Leto.Keyshares
 {
-    public class OpenSslRsaKeyshare : IKeyshare
+    public class RsaKeyshare : IKeyshare
     {
         private byte[] _premasterSecret;
 
@@ -35,7 +34,7 @@ namespace Leto.OpenSsl11
         public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
         {
             peerKey = BufferExtensions.ReadVector16(ref peerKey);
-            var decryptedLength = certificate.Decrypt(scheme, peerKey, peerKey );
+            var decryptedLength = certificate.Decrypt(scheme, peerKey, peerKey);
             peerKey = peerKey.Slice(0, decryptedLength);
             _premasterSecret = peerKey.ToArray();
         }

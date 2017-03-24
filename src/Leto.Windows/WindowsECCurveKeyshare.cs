@@ -55,7 +55,13 @@ namespace Leto.Windows
 
         public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
         {
-            throw new NotImplementedException();
+            using (var secret = BCryptSecretAgreement(_keyPair, _peerKey))
+            {
+
+                BCryptDeriveKey(secret, hashType, salt, output);
+            }
+            Dispose();
+
         }
 
         private void GenerateKeyPair()
