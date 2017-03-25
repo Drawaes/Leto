@@ -2,18 +2,12 @@
   <!--<Import Project="..\..\common.props" />-->
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
-    <TargetFrameworkVersion>1.6.1</TargetFrameworkVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="ConnectionStates\Server12ConnectionState.Flights.cs" />
-    <None Include="TlsConstants\TlsConstants.Tls12.cs" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="System.Binary" Version="0.1.0-e170325-4" />
     <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170325-4" />

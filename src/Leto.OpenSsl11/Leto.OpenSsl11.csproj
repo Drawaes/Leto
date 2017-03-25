@@ -1,18 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
-    <TargetFrameworkVersion>1.6.1</TargetFrameworkVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="Interop\Unix\LibCrypto\EVP_PKEY\EVP_PKEY_keygen_init.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Binary" Version="0.1.0-e170325-4" />
     <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170325-4" />
@@ -22,9 +15,6 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Leto\Leto.csproj" />
   </ItemGroup>
 </Project>
