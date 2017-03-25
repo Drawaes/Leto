@@ -33,7 +33,7 @@ namespace Leto.OpenSslFacts
             return true;
         }
 
-        [Fact]
+        [Fact(Skip = "Test test")]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

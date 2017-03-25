@@ -55,19 +55,16 @@ namespace Leto.OpenSsl11
             {
                 ExceptionHelper.ThrowException(new ArgumentOutOfRangeException());
             }
+            EVP_CipherFinal_ex(_ctx);
             EVP_CIPHER_CTX_GetTag(_ctx, span);
         }
 
         public void WriteTag(ReadOnlySpan<byte> tagSpan)
         {
             EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
-        }
-
-        public void Finish()
-        {
             EVP_CipherFinal_ex(_ctx);
         }
-
+        
         public void Dispose()
         {
             _ctx.Free();

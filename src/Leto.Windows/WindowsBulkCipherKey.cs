@@ -16,7 +16,10 @@ namespace Leto.Windows
         private SafeBCryptAlgorithmHandle _type;
         private SafeBCryptKeyHandle _keyHandle;
         private int _blockLength;
-        private AdditionalInfo _additionalInfo;
+        private BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO _context;
+        private BufferHandle _ivHandle;
+        private BufferHandle _contextHandle;
+        private KeyMode _keyMode;
 
         internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode)
         {
@@ -27,49 +30,90 @@ namespace Leto.Windows
             _keyHandle = BCryptImportKey(_type, _key.Span);
             SetBlockChainingMode(_keyHandle, chainingMode);
             _blockLength = GetBlockLength(_keyHandle);
+            _contextHandle = _key.Pin();
+            _ivHandle = _iv.Pin();
         }
 
         public Buffer<byte> Key => _key;
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
+        private unsafe void* AuthPointer => ((byte*)_contextHandle.PinnedPointer) + _blockLength;
+        private unsafe Span<byte> AuthSpan => new Span<byte>(AuthPointer, sizeof(AdditionalInfo));
 
-        public void AddAdditionalInfo(AdditionalInfo addInfo)
+        public unsafe void AddAdditionalInfo(AdditionalInfo addInfo)
         {
-            _additionalInfo = addInfo;
+            AuthSpan.Write(addInfo);
+            _context.pbAuthData = AuthPointer;
+            _context.cbAuthData = AuthSpan.Length;
         }
 
-        public void Finish()
+        public unsafe void Init(KeyMode mode)
         {
-            throw new NotImplementedException();
-        }
-
-        public void Init(KeyMode mode)
-        {
-            _additionalInfo = default(AdditionalInfo);
+            _keyMode = mode;
+            _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
+            {
+                dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,
+                cbMacContext = _blockLength,
+                pbMacContext = _contextHandle.PinnedPointer,
+                cbNonce = _iv.Length,
+                pbNonce = _ivHandle.PinnedPointer,
+                cbAuthData = 0,
+                pbAuthData = null,
+                cbTag = _tagSize
+            };
         }
 
         public void ReadTag(Span<byte> span)
         {
-            throw new NotImplementedException();
+            if (_keyMode == KeyMode.Encryption)
+            {
+                BCryptEncryptGetTag(_keyHandle, span, _context);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public int Update(Span<byte> input, Span<byte> output)
         {
-            throw new NotImplementedException();
+            var totalWritten = _context.cbData;
+            if (_keyMode == KeyMode.Encryption)
+            {
+                _context = BCryptEncrypt(_keyHandle, input, output, _context);
+            }
+            else
+            {
+                _context = BCryptDecrypt(_keyHandle, input, output, _context);
+            }
+            totalWritten = _context.cbData - totalWritten;
+            return (int)totalWritten;
         }
 
         public int Update(Span<byte> inputAndOutput)
         {
-            throw new NotImplementedException();
+            var totalWritten = _context.cbData;
+            if (_keyMode == KeyMode.Encryption)
+            {
+                _context = BCryptEncrypt(_keyHandle, inputAndOutput, _context);
+            }
+            else
+            {
+                _context = BCryptDecrypt(_keyHandle, inputAndOutput, _context);
+            }
+            totalWritten = _context.cbData - totalWritten;
+            return (int)totalWritten;
         }
 
         public void WriteTag(ReadOnlySpan<byte> tagSpan)
         {
-            throw new NotImplementedException();
+            BCryptDecryptSetTag(_keyHandle, tagSpan, _context);
         }
 
         public void Dispose()
         {
+            _contextHandle.Free();
+            _ivHandle.Free();
             _keyHandle?.Dispose();
             _keyHandle = null;
             GC.SuppressFinalize(this);

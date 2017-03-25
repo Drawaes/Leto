@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <Import Project="version.props" />
 
   <PropertyGroup>
@@ -15,6 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework' AND '$(OutputType)'=='library'">
-    <PackageReference Include="NETStandard.Library" Version="$(NetStandardImplicitPackageVersion)" />
+    <PackageReference Include="NETStandard.Library" Version="1.61" />
   </ItemGroup>
 </Project>

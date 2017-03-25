@@ -1,6 +1,7 @@
 ﻿using Leto.RecordLayer;
 using System.Runtime;
 using System.Runtime.InteropServices;
+using static Leto.BufferExtensions;
 
 namespace Leto.BulkCiphers
 {
@@ -12,10 +13,10 @@ namespace Leto.BulkCiphers
         private ushort _tlsVersion;
         private ushort _plainTextLength;
 
-        public ulong SequenceNumber { get => UnsafeUtilities.Reverse(_sequenceNumber); set => _sequenceNumber = UnsafeUtilities.Reverse(value); }
+        public ulong SequenceNumber { get => Reverse(_sequenceNumber); set => _sequenceNumber = Reverse(value); }
         public RecordType RecordType { get => _recordType; set => _recordType = value; }
-        public ushort TlsVersion { get => UnsafeUtilities.Reverse(_tlsVersion); set => _tlsVersion = UnsafeUtilities.Reverse(value); }
-        public ushort PlainTextLength { get => UnsafeUtilities.Reverse(_plainTextLength); set => _plainTextLength = UnsafeUtilities.Reverse(value); }
+        public ushort TlsVersion { get => Reverse(_tlsVersion); set => _tlsVersion = Reverse(value); }
+        public ushort PlainTextLength { get => Reverse(_plainTextLength); set => _plainTextLength = Reverse(value); }
         public ushort PlainTextLengthBigEndian { set => _plainTextLength = value; }
     }
 }

@@ -42,14 +42,15 @@ namespace Leto.BulkCiphers
                 plainTextSize = messageBuffer.Length - _key.TagSize;
                 plainTextStart = 0;
             }
-            ReadTag(ref messageBuffer);
+            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
             messageBuffer = messageBuffer.Slice(plainTextStart, plainTextSize);
             foreach (var b in messageBuffer)
             {
                 if (b.Length == 0) continue;
                 _key.Update(b.Span);
             }
-            _key.Finish();
+            var tagSpan = tagBuffer.ToSpan();
+            _key.WriteTag(tagSpan);
             _sequenceNumber++;
             IncrementSequence();
         }
@@ -66,7 +67,6 @@ namespace Leto.BulkCiphers
                 if (b.Length == 0) continue;
                 _key.Update(b.Span);
             }
-            _key.Finish();
             WriteTag(ref buffer);
             _sequenceNumber++;
             IncrementSequence();
@@ -114,13 +114,6 @@ namespace Leto.BulkCiphers
 
             headerSpan.CopyTo(_key.IV.Span.Slice(4));
             return additionalInfo;
-        }
-
-        private void ReadTag(ref ReadableBuffer reader)
-        {
-            var tagBuffer = reader.Slice(reader.Length - _key.TagSize);
-            var tagSpan = tagBuffer.ToSpan();
-            _key.WriteTag(tagSpan);
         }
 
         private void WriteTag(ref WritableBuffer writer)
