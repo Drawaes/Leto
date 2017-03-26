@@ -48,8 +48,6 @@ namespace Leto.Windows
                 case KeyExchangeType.Rsa:
                     return new RsaKeyExchange();
                 case KeyExchangeType.Ecdhe:
-                    //need to check the supported groups to check if we are going to use
-                    //a named curve function or a named curve
                     return EcdheKeyExchange(supportedGroups);
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");

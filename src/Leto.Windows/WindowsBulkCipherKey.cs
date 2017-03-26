@@ -37,7 +37,7 @@ namespace Leto.Windows
 
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
-        private unsafe byte* MacContextPointer => (byte*) _scratchPin.PinnedPointer;
+        private unsafe byte* MacContextPointer => (byte*)_scratchPin.PinnedPointer;
         private unsafe byte* TagPointer => MacContextPointer + _blockLength;
         private unsafe byte* TempIVPointer => TagPointer + _tagSize;
         private unsafe void* AdditionalInfoPointer => TempIVPointer + _iv.Length;

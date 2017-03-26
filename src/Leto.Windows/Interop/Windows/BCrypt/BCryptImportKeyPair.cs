@@ -15,7 +15,7 @@ namespace Leto.Windows.Interop
         internal static unsafe SafeBCryptKeyHandle BCryptImportECKey(SafeBCryptAlgorithmHandle algoHandle, Span<byte> keySpan)
         {
             int cbKey;
-            cbKey = keySpan.Length / 2;
+            cbKey = (keySpan.Length-1) / 2;
             int keyLength = keySpan.Length;
             //Now we have the point and can load the key
             var keyBuffer = new byte[keyLength + 8];
@@ -25,7 +25,7 @@ namespace Leto.Windows.Interop
                 cbKey = cbKey
             };
             ((Span<byte>)keyBuffer).Write(blobHeader);
-            keySpan.CopyTo(keyBuffer.Slice(Marshal.SizeOf<BCRYPT_ECCKEY_BLOB>()));
+            keySpan.Slice(1).CopyTo(keyBuffer.Slice(Marshal.SizeOf<BCRYPT_ECCKEY_BLOB>()));
             fixed (void* ptr = keyBuffer)
             {
                 var result = BCryptImportKeyPair(algoHandle, IntPtr.Zero, KeyBlobType.BCRYPT_ECCPUBLIC_BLOB, out SafeBCryptKeyHandle keyHandle, ptr, keyBuffer.Length, 0);
