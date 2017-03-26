@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime;
 using System.Runtime.InteropServices;
-using System.Text;
+using static Leto.BufferExtensions;
 
 namespace Leto.RecordLayer
 {
@@ -13,6 +13,6 @@ namespace Leto.RecordLayer
         public ushort RecordVersion;
         private ushort _recordLength;
 
-        public ushort RecordLength { get => UnsafeUtilities.Reverse(_recordLength); set => _recordLength = UnsafeUtilities.Reverse(value); }
+        public ushort RecordLength { get => Reverse(_recordLength); set => _recordLength = Reverse(value); }
     }
 }

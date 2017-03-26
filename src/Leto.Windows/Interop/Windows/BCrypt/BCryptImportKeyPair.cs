@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
+using System.Binary;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;

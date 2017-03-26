@@ -1,10 +1,11 @@
 ﻿using Leto.Handshake;
 using System;
+using System.Binary;
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
-namespace Leto.OpenSslFacts
+namespace Leto.ProtocolFacts
 {
     public class HeaderFacts
     {

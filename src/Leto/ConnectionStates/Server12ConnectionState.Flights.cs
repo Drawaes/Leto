@@ -1,5 +1,5 @@
 ﻿using Leto.Handshake;
-using Leto.Keyshares;
+using Leto.KeyExchanges;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -31,7 +31,7 @@ namespace Leto.ConnectionStates
 
         private void WriteServerKeyExchange(ref WritableBuffer writer)
         {
-            if (Keyshare.RequiresServerKeyExchange)
+            if (KeyExchange.RequiresServerKeyExchange)
             {
                 HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash,
                     (buffer) => SendKeyExchange(buffer), HandshakeType.server_key_exchange);
@@ -82,14 +82,14 @@ namespace Leto.ConnectionStates
 
         private WritableBuffer SendKeyExchange(WritableBuffer writer)
         {
-            var keyshare = Keyshare;
-            var messageLength = 4 + keyshare.KeyExchangeSize;
+            var keyExchange = KeyExchange;
+            var messageLength = 4 + KeyExchange.KeyExchangeSize;
             writer.Ensure(messageLength);
             var bookMark = writer.Buffer;
             writer.WriteBigEndian(ECCurveType.named_curve);
-            writer.WriteBigEndian(keyshare.NamedGroup);
-            writer.WriteBigEndian((byte)keyshare.KeyExchangeSize);
-            var keysWritten = keyshare.WritePublicKey(writer.Buffer.Span);
+            writer.WriteBigEndian(KeyExchange.NamedGroup);
+            writer.WriteBigEndian((byte)KeyExchange.KeyExchangeSize);
+            var keysWritten = KeyExchange.WritePublicKey(writer.Buffer.Span);
             writer.Advance(keysWritten);
             writer.WriteBigEndian(_signatureScheme);
             BufferExtensions.WriteVector<ushort>(ref writer, (w) =>

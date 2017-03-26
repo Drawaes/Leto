@@ -1,4 +1,4 @@
-﻿namespace Leto.Keyshares
+﻿namespace Leto.KeyExchanges
 {
     public enum KeyExchangeType
     {

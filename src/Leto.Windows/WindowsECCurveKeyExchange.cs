@@ -1,4 +1,4 @@
-﻿using Leto.Keyshares;
+﻿using Leto.KeyExchanges;
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using static Leto.Windows.Interop.BCrypt;
 
 namespace Leto.Windows
 {
-    public class WindowsECCurveKeyshare : IKeyshare
+    public class WindowsECCurveKeyExchange : IKeyExchange
     {
         private SafeBCryptAlgorithmHandle _handle;
         private NamedGroup _namedGroup;
@@ -18,7 +18,7 @@ namespace Leto.Windows
         private SafeBCryptKeyHandle _keyPair;
         private SafeBCryptKeyHandle _peerKey;
 
-        internal WindowsECCurveKeyshare(SafeBCryptAlgorithmHandle handle, NamedGroup namedGroup)
+        internal WindowsECCurveKeyExchange(SafeBCryptAlgorithmHandle handle, NamedGroup namedGroup)
         {
             _namedGroup = namedGroup;
             _handle = handle;

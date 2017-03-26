@@ -15,7 +15,7 @@ namespace Leto.ConnectionStates.SecretSchedules
         const int Session_MaxHashBlocks = 6;
         const int Session_MaxKeys = 2;
         const int MaxInflightSessions = 10000;
-        const int MaxInflightConnections = 50000;
+        public const int MaxInflightConnections = 50000;
         const int Session_Size = MaxHashSize * Session_MaxHashBlocks;
 
         private BufferPool _ephemeralSessionPool;

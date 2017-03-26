@@ -1,4 +1,4 @@
-﻿using Leto.Keyshares;
+﻿using Leto.KeyExchanges;
 using System;
 using Leto.Hashes;
 using static Leto.OpenSsl11.Interop.LibCrypto;
@@ -6,7 +6,7 @@ using Leto.Certificates;
 
 namespace Leto.OpenSsl11
 {
-    public sealed class OpenSslECCurveKeyshare : IKeyshare
+    public sealed class OpenSslECCurveKeyExchange : IKeyExchange
     {
         private int _curveNid;
         private int _keyExchangeSize;
@@ -14,7 +14,7 @@ namespace Leto.OpenSsl11
         private EVP_PKEY _peerKey;
         private EVP_PKEY _keyPair;
 
-        public OpenSslECCurveKeyshare(NamedGroup namedGroup)
+        public OpenSslECCurveKeyExchange(NamedGroup namedGroup)
         {
             _namedGroup = namedGroup;
             switch (NamedGroup)
@@ -128,7 +128,7 @@ namespace Leto.OpenSsl11
             GC.SuppressFinalize(this);
         }
 
-        ~OpenSslECCurveKeyshare()
+        ~OpenSslECCurveKeyExchange()
         {
             Dispose();
         }

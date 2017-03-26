@@ -12,37 +12,37 @@ namespace Leto.Windows.Interop
         private static unsafe extern NTSTATUS BCryptDecrypt(SafeBCryptKeyHandle hKey, void* pbInput, int cbInput, void* pPaddingInfo, void* pbIV, int cbIV, void* pbOutput, int cbOutput, out int pcbResult, uint dwFlags);
 
         internal static unsafe BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO BCryptDecrypt(SafeBCryptKeyHandle key, Span<byte> input,
-            Span<byte> output, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info)
+            Span<byte> output, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
         {
             fixed (void* inputPtr = &input.DangerousGetPinnableReference())
             fixed (void* outputPtr = &input.DangerousGetPinnableReference())
             {
-                var result = BCryptDecrypt(key, inputPtr, input.Length, &info, null, 0, outputPtr, output.Length, out int length, 0);
+                var result = BCryptDecrypt(key, inputPtr, input.Length, &info, ivBuffer, info.cbNonce, outputPtr, output.Length, out int length, 0);
                 ThrowOnErrorReturnCode(result);
                 return info;
             }
         }
 
         internal static unsafe BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO BCryptDecrypt(SafeBCryptKeyHandle key,
-            Span<byte> inputOutput, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info)
+            Span<byte> inputOutput, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
         {
             fixed (void* ioPtr = &inputOutput.DangerousGetPinnableReference())
-            {
-                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, &info, null, 0, ioPtr, inputOutput.Length, out int length, 0);
+            { 
+                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, &info, ivBuffer, info.cbNonce, ioPtr, inputOutput.Length, out int length, 0);
                 ThrowOnErrorReturnCode(result);
                 return info;
             }
         }
 
         internal static unsafe void BCryptDecryptSetTag(SafeBCryptKeyHandle key,
-            ReadOnlySpan<byte> tag, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO context)
+            ReadOnlySpan<byte> tag, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO context, void* ivBuffer)
         {
             fixed (void* tagPtr = &tag.DangerousGetPinnableReference())
             {
                 context.pbTag = tagPtr;
                 context.cbTag = tag.Length;
-                context.dwFlags = AuthenticatedCipherModeInfoFlags.None;
-                var result = BCryptEncrypt(key, null, 0, &context, null, 0, null, 0, out int size, 0);
+                context.dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
+                var result = BCryptEncrypt(key, null, 0, &context, ivBuffer, context.cbNonce, null, 0, out int size, 0);
                 ThrowOnErrorReturnCode(result);
             }
         }

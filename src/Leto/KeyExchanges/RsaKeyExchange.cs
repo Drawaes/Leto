@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Leto.Keyshares
+namespace Leto.KeyExchanges
 {
-    public class RsaKeyshare : IKeyshare
+    public class RsaKeyExchange : IKeyExchange
     {
         private byte[] _premasterSecret;
 

@@ -18,6 +18,15 @@ namespace Leto.Windows.Interop
             return outHandle;
         }
 
+        internal static (SafeBCryptAlgorithmHandle hash, SafeBCryptAlgorithmHandle hmac) BCryptOpenAlgorithmHashProvider(string algoId)
+        {
+            var result = Internal_BCryptOpenAlgorithmProvider(out SafeBCryptAlgorithmHandle outHandle, algoId, null, BCryptOpenAlgorithmProviderFlags.None);
+            ThrowOnErrorReturnCode(result);
+            result = Internal_BCryptOpenAlgorithmProvider(out SafeBCryptAlgorithmHandle hmacHandle, algoId, null, BCryptOpenAlgorithmProviderFlags.BCRYPT_ALG_HANDLE_HMAC_FLAG);
+            ThrowOnErrorReturnCode(result);
+            return (outHandle, hmacHandle);
+        }
+
         internal static SafeBCryptAlgorithmHandle BCryptOpenECCurveAlgorithmProvider(string curveName)
         {
             var handle = BCryptOpenAlgorithmProvider("ECDH");

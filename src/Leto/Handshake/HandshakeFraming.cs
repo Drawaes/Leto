@@ -1,5 +1,6 @@
 ﻿using Leto.Hashes;
 using System;
+using System.Binary;
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 

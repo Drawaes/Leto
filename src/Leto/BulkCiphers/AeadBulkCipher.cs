@@ -20,7 +20,6 @@ namespace Leto.BulkCiphers
 
         public byte PaddingSize { get => _paddingSize; set => _paddingSize = value; }
         public int Overhead => _key.TagSize + _paddingSize;
-        public int KeySize => _key.Key.Length;
         public int IVSize => _key.IV.Length;
 
         public void WriteNonce(ref WritableBuffer buffer) => buffer.Write(_key.IV.Span.Slice(4));

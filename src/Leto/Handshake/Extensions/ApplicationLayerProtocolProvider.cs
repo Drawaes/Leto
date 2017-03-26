@@ -28,7 +28,7 @@ namespace Leto.Handshake.Extensions
         private (ApplicationLayerProtocolType, byte[])[] _supportedProtocols;
         private bool _serverListTakesPriority = true;
 
-        public ApplicationLayerProtocolProvider(ApplicationLayerProtocolType[] supportedProtocols)
+        public ApplicationLayerProtocolProvider(params ApplicationLayerProtocolType[] supportedProtocols)
         {
             if (supportedProtocols?.Length > 0)
             {

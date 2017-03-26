@@ -1,13 +1,15 @@
 ﻿using Leto.BulkCiphers;
-using Leto.OpenSsl11;
 using Leto.RecordLayer;
+using Leto.Windows;
 using System;
+using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Leto.OpenSslFacts
+namespace Leto.WindowsFacts
 {
     public class BulkCipherFacts
     {
@@ -16,13 +18,21 @@ namespace Leto.OpenSslFacts
         private static readonly byte[] s_key = StringToByteArray("C6  1A  42  06  56  A1  47  7D  BF  CC  45  B9  7B  96  DD  7E");
         private static readonly byte[] s_iv = StringToByteArray("31  8B  18  E9");
         private static readonly byte[] s_frameHeader = StringToByteArray("16  03  03  00  28");
-        
+
+        public static byte[] StringToByteArray(String hex)
+        {
+            hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c)));
+            int NumberChars = hex.Length;
+            byte[] bytes = new byte[NumberChars / 2];
+            for (int i = 0; i < NumberChars; i += 2)
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            return bytes;
+        }
+
         [Fact]
         public async Task EncryptClientMessage()
         {
-            var provider = new OpenSslBulkKeyProvider();
-            //using (var memory = new new byte[48]))
-            //{
+            var provider = new WindowsBulkKeyProvider();
             var cipher = SetIVAndKey(provider);
             using (var pipeFactory = new PipeFactory())
             {
@@ -37,7 +47,6 @@ namespace Leto.OpenSslFacts
                 var buffer = reader.Buffer;
                 Assert.Equal(s_clientFinishedEncrypted, buffer.ToArray());
             }
-            //}
         }
 
         private static AeadBulkCipher SetIVAndKey(IBulkCipherKeyProvider provider)
@@ -50,7 +59,7 @@ namespace Leto.OpenSslFacts
         [Fact]
         public async Task DecryptClientMessage()
         {
-            var provider = new OpenSslBulkKeyProvider();
+            var provider = new WindowsBulkKeyProvider();
             var cipher = SetIVAndKey(provider);
 
             using (var pipeFactory = new PipeFactory())
@@ -65,16 +74,6 @@ namespace Leto.OpenSslFacts
                 var readerSpan = buffer.ToSpan();
                 Assert.Equal(s_clientFinishedDecrypted, readerSpan.ToArray());
             }
-        }
-
-        public static byte[] StringToByteArray(String hex)
-        {
-            hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c)));
-            int NumberChars = hex.Length;
-            byte[] bytes = new byte[NumberChars / 2];
-            for (int i = 0; i < NumberChars; i += 2)
-                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-            return bytes;
         }
     }
 }

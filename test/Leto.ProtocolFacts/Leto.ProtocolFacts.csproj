@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
-    <AssemblyName>Let.OpenSslFacts</AssemblyName>
-    <PackageId>Let.OpenSslFacts</PackageId>
+    <AssemblyName>Let.ProtocolFacts</AssemblyName>
+    <PackageId>Let.ProtocolFacts</PackageId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>False</Optimize>

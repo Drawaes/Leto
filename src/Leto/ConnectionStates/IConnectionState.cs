@@ -3,7 +3,7 @@ using Leto.Certificates;
 using Leto.CipherSuites;
 using Leto.Handshake;
 using Leto.Hashes;
-using Leto.Keyshares;
+using Leto.KeyExchanges;
 using System;
 using System.IO.Pipelines;
 using System.Threading.Tasks;

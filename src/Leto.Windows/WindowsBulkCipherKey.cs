@@ -5,46 +5,48 @@ using System.Text;
 using System.Buffers;
 using Microsoft.Win32.SafeHandles;
 using static Leto.Windows.Interop.BCrypt;
+using System.Binary;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace Leto.Windows
 {
     public class WindowsBulkCipherKey : IBulkCipherKey
     {
-        private Buffer<byte> _key;
         private Buffer<byte> _iv;
         private int _tagSize;
-        private SafeBCryptAlgorithmHandle _type;
         private SafeBCryptKeyHandle _keyHandle;
         private int _blockLength;
         private BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO _context;
         private BufferHandle _ivHandle;
-        private BufferHandle _contextHandle;
         private KeyMode _keyMode;
+        private OwnedBuffer<byte> _scratchSpace;
+        private BufferHandle _scratchPin;
 
-        internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode)
+        internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
+            _scratchSpace = scratchSpace;
+            _scratchPin = _scratchSpace.Buffer.Pin();
             _tagSize = tagSize;
-            _key = keyStore.Slice(0, keySize);
             _iv = keyStore.Slice(keySize, ivSize);
-            _type = type;
-            _keyHandle = BCryptImportKey(_type, _key.Span);
+            _ivHandle = _iv.Pin();
+            _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
             SetBlockChainingMode(_keyHandle, chainingMode);
             _blockLength = GetBlockLength(_keyHandle);
-            _contextHandle = _key.Pin();
-            _ivHandle = _iv.Pin();
         }
 
-        public Buffer<byte> Key => _key;
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
-        private unsafe void* AuthPointer => ((byte*)_contextHandle.PinnedPointer) + _blockLength;
-        private unsafe Span<byte> AuthSpan => new Span<byte>(AuthPointer, sizeof(AdditionalInfo));
+        private unsafe byte* MacContextPointer => (byte*) _scratchPin.PinnedPointer;
+        private unsafe byte* TagPointer => MacContextPointer + _blockLength;
+        private unsafe byte* TempIVPointer => TagPointer + _tagSize;
+        private unsafe void* AdditionalInfoPointer => TempIVPointer + _iv.Length;
 
         public unsafe void AddAdditionalInfo(AdditionalInfo addInfo)
         {
-            AuthSpan.Write(addInfo);
-            _context.pbAuthData = AuthPointer;
-            _context.cbAuthData = AuthSpan.Length;
+            Unsafe.Write(AdditionalInfoPointer, addInfo);
+            _context.pbAuthData = AdditionalInfoPointer;
+            _context.cbAuthData = sizeof(AdditionalInfo);
         }
 
         public unsafe void Init(KeyMode mode)
@@ -54,20 +56,25 @@ namespace Leto.Windows
             {
                 dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,
                 cbMacContext = _blockLength,
-                pbMacContext = _contextHandle.PinnedPointer,
+                pbMacContext = MacContextPointer,
                 cbNonce = _iv.Length,
                 pbNonce = _ivHandle.PinnedPointer,
                 cbAuthData = 0,
                 pbAuthData = null,
-                cbTag = _tagSize
+                cbTag = _tagSize,
+                cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO),
+                pbTag = TagPointer,
+                dwInfoVersion = 1,
             };
         }
 
-        public void ReadTag(Span<byte> span)
+        public unsafe void ReadTag(Span<byte> span)
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                BCryptEncryptGetTag(_keyHandle, span, _context);
+                BCryptEncryptGetTag(_keyHandle, _context, TempIVPointer);
+                var tagSpan = new Span<byte>(TagPointer, _tagSize);
+                tagSpan.CopyTo(span);
             }
             else
             {
@@ -75,44 +82,46 @@ namespace Leto.Windows
             }
         }
 
-        public int Update(Span<byte> input, Span<byte> output)
+        public unsafe int Update(Span<byte> input, Span<byte> output)
         {
             var totalWritten = _context.cbData;
             if (_keyMode == KeyMode.Encryption)
             {
-                _context = BCryptEncrypt(_keyHandle, input, output, _context);
+                _context = BCryptEncrypt(_keyHandle, input, output, _context, TempIVPointer);
             }
             else
             {
-                _context = BCryptDecrypt(_keyHandle, input, output, _context);
+                _context = BCryptDecrypt(_keyHandle, input, output, _context, TempIVPointer);
             }
             totalWritten = _context.cbData - totalWritten;
             return (int)totalWritten;
         }
 
-        public int Update(Span<byte> inputAndOutput)
+        public unsafe int Update(Span<byte> inputAndOutput)
         {
             var totalWritten = _context.cbData;
             if (_keyMode == KeyMode.Encryption)
             {
-                _context = BCryptEncrypt(_keyHandle, inputAndOutput, _context);
+                _context = BCryptEncrypt(_keyHandle, inputAndOutput, _context, TempIVPointer);
             }
             else
             {
-                _context = BCryptDecrypt(_keyHandle, inputAndOutput, _context);
+                _context = BCryptDecrypt(_keyHandle, inputAndOutput, _context, TempIVPointer);
             }
             totalWritten = _context.cbData - totalWritten;
             return (int)totalWritten;
         }
 
-        public void WriteTag(ReadOnlySpan<byte> tagSpan)
+        public unsafe void WriteTag(ReadOnlySpan<byte> tagSpan)
         {
-            BCryptDecryptSetTag(_keyHandle, tagSpan, _context);
+            BCryptDecryptSetTag(_keyHandle, tagSpan, _context, TempIVPointer);
         }
 
         public void Dispose()
         {
-            _contextHandle.Free();
+            _scratchPin.Free();
+            _scratchSpace?.Dispose();
+            _scratchSpace = null;
             _ivHandle.Free();
             _keyHandle?.Dispose();
             _keyHandle = null;

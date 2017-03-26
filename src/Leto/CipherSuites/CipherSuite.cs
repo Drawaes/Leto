@@ -1,6 +1,6 @@
 ﻿using Leto.Certificates;
 using Leto.Hashes;
-using Leto.Keyshares;
+using Leto.KeyExchanges;
 using System;
 using System.Linq;
 

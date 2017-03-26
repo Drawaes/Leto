@@ -1,4 +1,4 @@
-﻿using Leto.Keyshares;
+﻿using Leto.KeyExchanges;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,18 +20,18 @@ namespace Leto.OpenSsl11
             PredefinedCipherSuites.RSA_AES_128_GCM_SHA256,
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
         });
-        private OpenSslKeyshareProvider _keyshareProvider;
+        private OpenSslKeyExchangeProvider _keyExchangeProvider;
         private IHashProvider _hashProvider;
         private IBulkCipherKeyProvider _bulkCipherProvider;
 
         public OpenSslCryptoProvider()
         {
             _hashProvider = new OpenSslHashProvider();
-            _keyshareProvider = new OpenSslKeyshareProvider();
+            _keyExchangeProvider = new OpenSslKeyExchangeProvider();
             _bulkCipherProvider = new OpenSslBulkKeyProvider();
         }
 
-        public IKeyshareProvider KeyshareProvider => _keyshareProvider;
+        public IKeyExchangeProvider KeyExchangeProvider => _keyExchangeProvider;
         public CipherSuiteProvider CipherSuites => _cipherSuites;
         public IHashProvider HashProvider => _hashProvider;
         public IBulkCipherKeyProvider BulkCipherProvider => _bulkCipherProvider;

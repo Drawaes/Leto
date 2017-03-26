@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Binary;
 
 namespace Leto.Hashes
 {
@@ -21,7 +22,7 @@ namespace Leto.Hashes
             var a1 = new byte[aLength];
             label.CopyTo(a1.Slice(hashSize));
             seed.CopyTo(a1.Slice(hashSize + label.Length));
-            hashProvider.HmacData(hashType, secret, a1.Slice(hashSize), a1);
+            hashProvider.HmacData(hashType, secret, a1.Slice(hashSize), a1.Slice(0,hashSize));
 
             var currentKeyData = new byte[hashSize];
             while (keyMaterial.Length > 0)
@@ -33,7 +34,7 @@ namespace Leto.Hashes
                 currentKeyData.Slice(0, amountToCopy).CopyTo(keyMaterial);
                 keyMaterial = keyMaterial.Slice(amountToCopy);
                 //A(n) = HMAC_hash(secret, A(n-1))
-                hashProvider.HmacData(hashType, secret, a1.Slice(0, hashSize), a1);
+                hashProvider.HmacData(hashType, secret, a1.Slice(0, hashSize), a1.Slice(0,hashSize));
             }
         }
 

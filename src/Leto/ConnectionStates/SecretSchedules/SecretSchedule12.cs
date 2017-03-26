@@ -62,9 +62,9 @@ namespace Leto.ConnectionStates.SecretSchedules
             var seed = new byte[RandomLength * 2];
             _clientRandom.Span.CopyTo(seed);
             _serverRandom.Span.CopyTo(seed.Slice(RandomLength));
-            _state.Keyshare.DeriveMasterSecret(_cryptoProvider.HashProvider, _state.CipherSuite.HashType, seed, _masterSecret.Span);
-            _state.Keyshare.Dispose();
-            _state.Keyshare = null;
+            _state.KeyExchange.DeriveMasterSecret(_cryptoProvider.HashProvider, _state.CipherSuite.HashType, seed, _masterSecret.Span);
+            _state.KeyExchange.Dispose();
+            _state.KeyExchange = null;
         }
 
         public bool GenerateAndCompareClientVerify(Span<byte> clientVerify)

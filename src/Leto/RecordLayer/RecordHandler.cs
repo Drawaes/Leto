@@ -1,5 +1,6 @@
 ﻿using Leto.BulkCiphers;
 using System;
+using System.Binary;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;

@@ -3,12 +3,8 @@
   <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
-    <AssemblyName>Let.OpenSslFacts</AssemblyName>
-    <PackageId>Let.OpenSslFacts</PackageId>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Optimize>False</Optimize>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AssemblyName>Leto.WindowsFacts</AssemblyName>
+    <PackageId>Leto.WindowsFacts</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Leto.OpenSsl11\Leto.OpenSsl11.csproj" />
+    <ProjectReference Include="..\..\src\Leto.Windows\Leto.Windows.csproj" />
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
   </ItemGroup>
 

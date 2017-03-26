@@ -5,7 +5,6 @@ namespace Leto.BulkCiphers
 {
     public interface IBulkCipherKey : IDisposable
     {
-        Buffer<byte> Key { get; }
         Buffer<byte> IV { get; }
         int TagSize { get; }
         void Init(KeyMode mode);

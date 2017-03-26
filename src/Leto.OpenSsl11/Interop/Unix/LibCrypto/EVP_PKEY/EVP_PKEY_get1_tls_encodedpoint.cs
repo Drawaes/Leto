@@ -24,7 +24,7 @@ namespace Leto.OpenSsl11.Interop
             }
             finally
             {   
-                CRYPTO_clear_free(ptr, (UIntPtr)buffSize, $"{nameof(OpenSslECFunctionKeyshare)}.cs", 97);
+                CRYPTO_clear_free(ptr, (UIntPtr)buffSize, $"{nameof(OpenSslECFunctionKeyExchange)}.cs", 97);
             }
             return buffSize;
         }

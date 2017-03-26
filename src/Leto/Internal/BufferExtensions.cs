@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Binary;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Runtime;
@@ -67,14 +68,14 @@ namespace Leto
 
         public static Span<byte> WriteBigEndian<T>(this Span<byte> span, T value) where T : struct
         {
-            value = UnsafeUtilities.Reverse(value);
+            value = Reverse(value);
             span.Write(value);
             return span.Slice(Unsafe.SizeOf<T>());
         }
 
         public static Span<byte> WriteBigEndian<T>(this byte[] span, T value) where T : struct
         {
-            value = UnsafeUtilities.Reverse(value);
+            value = Reverse(value);
             ((Span<byte>)span).Write(value);
             return span.Slice(Unsafe.SizeOf<T>());
         }

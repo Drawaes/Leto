@@ -11,7 +11,7 @@ using Leto.Hashes;
 using System.Threading.Tasks;
 using Leto.BulkCiphers;
 using Leto.Certificates;
-using Leto.Keyshares;
+using Leto.KeyExchanges;
 
 namespace Leto.ConnectionStates
 {
@@ -33,7 +33,7 @@ namespace Leto.ConnectionStates
         public AeadBulkCipher WriteKey => null;
         public bool HandshakeComplete => throw new NotImplementedException();
         public ICertificate Certificate => throw new NotImplementedException();
-        public IKeyshare Keyshare => throw new NotImplementedException();
+        public IKeyExchange KeyExchange => throw new NotImplementedException();
         public SignatureScheme SignatureScheme => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)

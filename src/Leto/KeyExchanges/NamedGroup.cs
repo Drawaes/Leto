@@ -1,4 +1,4 @@
-﻿namespace Leto.Keyshares
+﻿namespace Leto.KeyExchanges
 {
     //http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
     //

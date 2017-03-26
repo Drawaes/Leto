@@ -2,9 +2,9 @@
 using Leto.Hashes;
 using System;
 
-namespace Leto.Keyshares
+namespace Leto.KeyExchanges
 {
-    public interface IKeyshare : IDisposable
+    public interface IKeyExchange : IDisposable
     {
         bool HasPeerKey { get; }
         bool RequiresServerKeyExchange { get; }

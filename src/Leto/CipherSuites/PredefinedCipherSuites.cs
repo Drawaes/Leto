@@ -1,5 +1,5 @@
 ﻿using Leto.Certificates;
-using Leto.Keyshares;
+using Leto.KeyExchanges;
 using System;
 using System.Collections.Generic;
 using Leto.Hashes;
