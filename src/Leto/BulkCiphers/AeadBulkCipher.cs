@@ -54,7 +54,7 @@ namespace Leto.BulkCiphers
             IncrementSequence();
         }
 
-        public void EncryptWithAuthData(ref WritableBuffer buffer, RecordType recordType, ushort tlsVersion, int plaintextLength)
+        public void EncryptWithAuthData(ref WritableBuffer buffer, RecordType recordType, TlsVersion tlsVersion, int plaintextLength)
         {
             var plainText = buffer.AsReadableBuffer();
             plainText = plainText.Slice(plainText.Length - plaintextLength);
@@ -89,7 +89,7 @@ namespace Leto.BulkCiphers
             Alerts.AlertException.ThrowDecode("Failed to increment sequence on Aead Cipher");
         }
 
-        private void WriteAdditionalInfo(RecordType recordType, ushort tlsVersion, int plaintextLength)
+        private void WriteAdditionalInfo(RecordType recordType, TlsVersion tlsVersion, int plaintextLength)
         {
             var additionalInfo = new AdditionalInfo()
             {
@@ -107,7 +107,7 @@ namespace Leto.BulkCiphers
 
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
             (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
-            (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<ushort>();
+            (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<TlsVersion>();
             (additionalInfo.PlainTextLengthBigEndian, headerSpan) = headerSpan.Consume<ushort>();
             additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
 

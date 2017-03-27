@@ -29,7 +29,7 @@ namespace Leto.RecordLayer
                 return RecordState.Incomplete;
             }
             var header = buffer.Slice(0, _minimumMessageSize).ToSpan().Read<RecordHeader>();
-            if (buffer.Length < header.RecordLength + _minimumMessageSize)
+            if (buffer.Length < header.Length + _minimumMessageSize)
             {
                 messageBuffer = default(ReadableBuffer);
                 return RecordState.Incomplete;
@@ -38,12 +38,12 @@ namespace Leto.RecordLayer
             //TODO: CHECK THE VERSION
             if (_connection.State.ReadKey == null)
             {
-                messageBuffer = buffer.Slice(_minimumMessageSize, header.RecordLength);
+                messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
             }
             else
             {
-                messageBuffer = buffer.Slice(0, _minimumMessageSize + header.RecordLength);
+                messageBuffer = buffer.Slice(0, _minimumMessageSize + header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
                 _connection.State.ReadKey.Decrypt(ref messageBuffer, true);
             }
@@ -67,14 +67,14 @@ namespace Leto.RecordLayer
                     var recordHeader = new RecordHeader()
                     {
                         RecordType = recordType,
-                        RecordLength = (ushort)append.Length,
-                        RecordVersion = _connection.State.RecordVersion
+                        Length = (ushort)append.Length,
+                        Version = _connection.State.RecordVersion
                     };
                     var output = _connection.Connection.Output.Alloc();
                     output.Ensure(_minimumMessageSize);
                     if(_connection.State.WriteKey != null)
                     {
-                        recordHeader.RecordLength += (ushort)(8 + _connection.State.WriteKey.Overhead);
+                        recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
                     }
                     output.Buffer.Span.Write(recordHeader);
                     output.Advance(_minimumMessageSize);

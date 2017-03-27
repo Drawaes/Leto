@@ -9,7 +9,7 @@ using Leto.Windows.Interop;
 
 namespace Leto.Windows
 {
-    public class WindowsCryptoProvider : ICryptoProvider
+    public class WindowsCryptoProvider : ICryptoProvider, IDisposable
     {
         private CipherSuiteProvider _cipherSuites = new CipherSuiteProvider(new CipherSuite[]
         {
@@ -19,8 +19,8 @@ namespace Leto.Windows
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
         });
         private WindowsKeyExchangeProvider _keyExchangeProvider;
-        private IHashProvider _hashProvider;
-        private IBulkCipherKeyProvider _bulkCipherProvider;
+        private WindowsHashProvider _hashProvider;
+        private WindowsBulkKeyProvider _bulkCipherProvider;
 
         public WindowsCryptoProvider()
         {
@@ -33,6 +33,24 @@ namespace Leto.Windows
         public CipherSuiteProvider CipherSuites => _cipherSuites;
         public IHashProvider HashProvider => _hashProvider;
         public IBulkCipherKeyProvider BulkCipherProvider => _bulkCipherProvider;
+
         public void FillWithRandom(Span<byte> span) => BCrypt.BCryptGenRandom(span);
+
+        public void Dispose()
+        {
+            _keyExchangeProvider?.Dispose();
+            _keyExchangeProvider = null;
+            _hashProvider?.Dispose();
+            _hashProvider = null;
+            _bulkCipherProvider?.Dispose();
+            _bulkCipherProvider = null;
+
+            GC.SuppressFinalize(this);
+        }
+
+        ~WindowsCryptoProvider()
+        {
+            Dispose();
+        }
     }
 }

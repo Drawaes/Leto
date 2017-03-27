@@ -17,10 +17,11 @@ namespace Leto.WindowsFacts
         public async Task HandshakeCompletes()
         {
             using (var factory = new PipeFactory())
+            using (var listener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
                 var loopback = new LoopbackPipeline(factory);
                 var stream = loopback.ClientPipeline.GetStream();
-                var secureConnection = new SecurePipeConnection(factory, loopback.ServerPipeline, new WindowsSecurePipeListener(Data.Certificates.RSACertificate));
+                var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
                 using (var sslStream = new SslStream(stream, false, CertVal))
                 {
                     await sslStream.AuthenticateAsClientAsync("localhost");
@@ -38,12 +39,11 @@ namespace Leto.WindowsFacts
         {
             using (var factory = new PipeFactory())
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
+            using (var secureListener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate))
             {
-                var secureListener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate);
                 listener.OnConnection(async (conn) =>
                 {
-                    var pipe = new SecurePipeConnection(factory, conn, secureListener);
-                    await pipe.HandshakeAwaiter;
+                    var pipe = await secureListener.CreateConnection(conn);
                     Console.WriteLine("Handshake Done");
                     var reader = await pipe.Input.ReadAsync();
                     System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));

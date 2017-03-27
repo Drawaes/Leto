@@ -7,7 +7,7 @@ using static Leto.Windows.Interop.BCrypt;
 
 namespace Leto.Windows
 {
-    public class WindowsHashProvider : IHashProvider
+    public class WindowsHashProvider : IHashProvider, IDisposable
     {
         private (SafeBCryptAlgorithmHandle hash, SafeBCryptAlgorithmHandle hmac) _sha256;
         private (SafeBCryptAlgorithmHandle hash, SafeBCryptAlgorithmHandle hmac) _sha384;
@@ -48,6 +48,22 @@ namespace Leto.Windows
                     ExceptionHelper.ThrowException(new InvalidOperationException());
                     return (null, null, default(int));
             }
+        }
+        
+        public void Dispose()
+        {
+            _sha256.hash.Dispose();
+            _sha256.hmac.Dispose();
+            _sha384.hash.Dispose();
+            _sha384.hmac.Dispose();
+            _sha512.hash.Dispose();
+            _sha512.hmac.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        ~WindowsHashProvider()
+        {
+            Dispose();
         }
     }
 }

@@ -20,6 +20,7 @@ namespace Leto.Handshake
         certificate_authorities = 47,
         oid_filters = 48,
         application_layer_protocol_negotiation = 16,
+        SessionTicket = 35,
         renegotiation_info = 65281,
     }
 }

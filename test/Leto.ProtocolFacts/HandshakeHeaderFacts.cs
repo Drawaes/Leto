@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Leto.ProtocolFacts
 {
-    public class HeaderFacts
+    public class HandshakeHeaderFacts
     {
         [Theory]
         [InlineData(255U, 0x00, 0x00, 0xFF)]

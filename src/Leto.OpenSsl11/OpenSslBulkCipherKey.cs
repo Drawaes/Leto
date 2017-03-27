@@ -68,9 +68,6 @@ namespace Leto.OpenSsl11
         public void Dispose()
         {
             _ctx.Free();
-            _keyStore = null;
-            _key = null;
-            _iv = null;
             GC.SuppressFinalize(this);
         }
 

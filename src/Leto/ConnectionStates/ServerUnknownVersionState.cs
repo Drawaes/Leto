@@ -28,7 +28,7 @@ namespace Leto.ConnectionStates
 
         public CipherSuite CipherSuite => throw new InvalidOperationException("Version selecting state does not have a cipher suite");
         public IHash HandshakeHash => throw new NotImplementedException();
-        public ushort RecordVersion => (ushort)TlsVersion.Tls1;
+        public TlsVersion RecordVersion => TlsVersion.Tls1;
         public AeadBulkCipher ReadKey => null;
         public AeadBulkCipher WriteKey => null;
         public bool HandshakeComplete => throw new NotImplementedException();

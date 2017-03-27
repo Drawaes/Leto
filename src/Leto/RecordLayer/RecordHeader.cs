@@ -10,9 +10,10 @@ namespace Leto.RecordLayer
     public struct RecordHeader
     {
         public RecordType RecordType;
-        public ushort RecordVersion;
-        private ushort _recordLength;
+        private TlsVersion _version;
+        private ushort _length;
 
-        public ushort RecordLength { get => Reverse(_recordLength); set => _recordLength = Reverse(value); }
+        public TlsVersion Version { get => Reverse(_version); set => _version = Reverse(value); }
+        public ushort Length { get => Reverse(_length); set => _length = Reverse(value); }
     }
 }

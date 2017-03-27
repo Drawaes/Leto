@@ -4,30 +4,29 @@ using System.Text;
 using Leto.Certificates;
 using Leto.ConnectionStates.SecretSchedules;
 using Leto.Handshake.Extensions;
+using System.Threading.Tasks;
+using System.IO.Pipelines;
+using Leto.Sessions;
 
 namespace Leto.Windows
 {
-    public class WindowsSecurePipeListener : ISecurePipeListener
+    public sealed class WindowsSecurePipeListener : SecurePipeListener
     {
-        private ICryptoProvider _cryptoProvider;
-        private ApplicationLayerProtocolProvider _alpnProvider;
-        private SecureRenegotiationProvider _secureRenegotiationProvider;
-        private CertificateList _certificateList = new CertificateList();
-        private SecretSchedulePool _secretPool;
+        private WindowsCryptoProvider _cryptoProvider;
 
-        public WindowsSecurePipeListener(ICertificate certificate)
+        public WindowsSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
+            :base(certificate, pipeFactory)
         {
-            _secretPool = new SecretSchedulePool();
-            _certificateList.AddCertificate(certificate);
             _cryptoProvider = new WindowsCryptoProvider();
-            _alpnProvider = new ApplicationLayerProtocolProvider();
-            _secureRenegotiationProvider = new SecureRenegotiationProvider();
         }
 
-        public ICryptoProvider CryptoProvider => _cryptoProvider;
-        public ApplicationLayerProtocolProvider AlpnProvider => _alpnProvider;
-        public SecureRenegotiationProvider SecureRenegotiationProvider => _secureRenegotiationProvider;
-        public CertificateList CertificateList => _certificateList;
-        public SecretSchedulePool SecretSchedulePool => _secretPool;
+        public override ICryptoProvider CryptoProvider => _cryptoProvider;
+        public override ISessionProvider SessionProvider => null;
+
+        protected override void Dispose(bool disposing)
+        {
+            _cryptoProvider.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

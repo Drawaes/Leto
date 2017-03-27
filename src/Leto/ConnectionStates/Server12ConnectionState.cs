@@ -31,6 +31,7 @@ namespace Leto.ConnectionStates
         private AeadBulkCipher _storedWriteKey;
         private RecordHandler _recordHandler;
         private ICryptoProvider _cryptoProvider;
+        private bool _requiresTicket;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -44,7 +45,7 @@ namespace Leto.ConnectionStates
         internal SecurePipeConnection SecureConnection => _secureConnection;
         public IKeyExchange KeyExchange { get; internal set; }
         public IHash HandshakeHash => _handshakeHash;
-        public ushort RecordVersion => (ushort)TlsVersion.Tls12;
+        public TlsVersion RecordVersion => TlsVersion.Tls12;
         public AeadBulkCipher ReadKey => _readKey;
         public AeadBulkCipher WriteKey => _writeKey;
         public bool HandshakeComplete => _state == HandshakeState.HandshakeCompleted;
@@ -147,11 +148,23 @@ namespace Leto.ConnectionStates
                         _secureConnection.Listener.SecureRenegotiationProvider.ProcessExtension(buffer);
                         _secureRenegotiation = true;
                         break;
+                    case ExtensionType.SessionTicket:
+                        ProcessSessionTicket(buffer);
+                        break;
                     case ExtensionType.server_name:
                         break;
                     default:
                         throw new NotImplementedException();
                 }
+            }
+        }
+
+        private void ProcessSessionTicket(Span<byte> buffer)
+        {
+            if(buffer.Length == 0)
+            {
+                _requiresTicket = true;
+                return;
             }
         }
 

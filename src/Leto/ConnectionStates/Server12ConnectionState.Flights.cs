@@ -78,6 +78,11 @@ namespace Leto.ConnectionStates
             {
                 _secureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
             }
+            if(_requiresTicket)
+            {
+                writer.WriteBigEndian(ExtensionType.SessionTicket);
+                writer.WriteBigEndian((byte)0);
+            }
         }
 
         private WritableBuffer SendKeyExchange(WritableBuffer writer)

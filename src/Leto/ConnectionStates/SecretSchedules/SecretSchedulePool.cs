@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Leto.ConnectionStates.SecretSchedules
 {
-    public class SecretSchedulePool
+    public class SecretSchedulePool : IDisposable
     {
         const int MaxHashSize = 64;
         const int MaxKeySize = 32 + 12;
@@ -44,6 +44,20 @@ namespace Leto.ConnectionStates.SecretSchedules
             var session = _ephemeralSessionPool.Rent(Session_Size);
             var keys = _ephemeralKeysPool.Rent(MaxKeySize * 2);
             return (session, keys);
+        }
+
+        public void Dispose()
+        {
+            _ephemeralKeysPool?.Dispose();
+            _ephemeralKeysPool = null;
+            _ephemeralSessionPool?.Dispose();
+            _ephemeralSessionPool = null;
+            GC.SuppressFinalize(this);
+        }
+
+        ~SecretSchedulePool()
+        {
+            Dispose();
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Leto.WindowsFacts
                 writer.Write(s_frameHeader);
                 cipher.WriteNonce(ref writer);
                 writer.Write(s_clientFinishedDecrypted);
-                cipher.EncryptWithAuthData(ref writer, RecordType.Handshake, 0x0303, s_clientFinishedDecrypted.Length);
+                cipher.EncryptWithAuthData(ref writer, RecordType.Handshake, TlsVersion.Tls12, s_clientFinishedDecrypted.Length);
                 await writer.FlushAsync();
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;

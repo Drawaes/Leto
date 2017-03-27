@@ -16,11 +16,11 @@ namespace Leto
         private IPipe _handshakeOutput;
         private IPipeConnection _connection;
         private IConnectionState _state;
-        private ISecurePipeListener _listener;
+        private SecurePipeListener _listener;
         private readonly RecordHandler _recordHandler;
-        private TaskCompletionSource<int> _handshakeComplete = new TaskCompletionSource<int>();
+        private TaskCompletionSource<SecurePipeConnection> _handshakeComplete = new TaskCompletionSource<SecurePipeConnection>();
 
-        public SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, ISecurePipeListener listener)
+        internal SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, SecurePipeListener listener)
         {
             _recordHandler = new RecordHandler(this);
             _listener = listener;
@@ -33,13 +33,13 @@ namespace Leto
             var ignore = ReadingLoop();
         }
 
-        internal ISecurePipeListener Listener => _listener;
+        public IPipeReader Input => _outputPipe.Reader;
+        public IPipeWriter Output => _inputPipe.Writer;
+        public Task<SecurePipeConnection> HandshakeAwaiter => _handshakeComplete.Task;
+        internal SecurePipeListener Listener => _listener;
         internal IPipeConnection Connection => _connection;
         internal IPipe HandshakeInput => _handshakeInput;
         internal IPipe HandshakeOutput => _handshakeOutput;
-        public IPipeReader Input => _outputPipe.Reader;
-        public IPipeWriter Output => _inputPipe.Writer;
-        public Task HandshakeAwaiter => _handshakeComplete.Task;
         internal IConnectionState State => _state;
         internal RecordHandler RecordHandler => _recordHandler;
 
@@ -64,7 +64,7 @@ namespace Leto
                                     if(_state.HandshakeComplete)
                                     {
                                         var ignore = ReadingApplicationDataLoop();
-                                        _handshakeComplete.TrySetResult(0);
+                                        _handshakeComplete.TrySetResult(this);
                                     }
                                     break;
                                 case RecordType.Application:
