@@ -10,7 +10,7 @@ namespace Leto.ConnectionStates
     {
         private void SendFirstFlight(ref WritableBuffer writer)
         {
-            WriteServerHelloTls12(ref writer);
+            WriteServerHello(ref writer, new Span<byte>());
             WriteCertificates(ref writer);
             WriteServerKeyExchange(ref writer);
             WriteServerHelloDone(ref writer);
@@ -38,17 +38,17 @@ namespace Leto.ConnectionStates
             }
         }
 
-        private void WriteServerHelloTls12(ref WritableBuffer writer)
+        private void WriteServerHello(ref WritableBuffer writer, Span<byte> sessionId)
         {
             HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash, (buffer) =>
             {
-                return WriteServerHello(buffer, this);
+                return WriteServerContent(buffer, this, sessionId);
             }, HandshakeType.server_hello);
         }
 
-        public WritableBuffer WriteServerHello(WritableBuffer writer, Server12ConnectionState state)
+        private WritableBuffer WriteServerContent(WritableBuffer writer, Server12ConnectionState state, Span<byte> sessionId)
         {
-            var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort);
+            var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + sessionId.Length;
             writer.Ensure(fixedSize);
             var span = writer.Buffer.Span;
             span = span.WriteBigEndian(TlsVersion.Tls12);
@@ -56,7 +56,10 @@ namespace Leto.ConnectionStates
             span = span.Slice(_secretSchedule.ServerRandom.Length);
 
             //We don't support session id's instead resumption is supported through tickets
-            span = span.WriteBigEndian<byte>(0);
+            //If we are using a ticket the client will want us to respond with the same id
+            span = span.WriteBigEndian((byte)sessionId.Length);
+            sessionId.CopyTo(span);
+            span = span.Slice(sessionId.Length);
 
             span = span.WriteBigEndian(state.CipherSuite.Code);
             //We don't support compression at the TLS level as it is prone to attacks
@@ -64,7 +67,11 @@ namespace Leto.ConnectionStates
 
             writer.Advance(fixedSize);
             //Completed the fixed section now we write the extensions
-            WriteExtensions(ref writer);
+            BufferExtensions.WriteVector<ushort>(ref writer, w =>
+            {
+                WriteExtensions(ref w);
+                return w;
+            });
             return writer;
         }
 
@@ -78,10 +85,10 @@ namespace Leto.ConnectionStates
             {
                 _secureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
             }
-            if(_requiresTicket)
+            if (_requiresTicket)
             {
                 writer.WriteBigEndian(ExtensionType.SessionTicket);
-                writer.WriteBigEndian((byte)0);
+                writer.WriteBigEndian((ushort)0);
             }
         }
 

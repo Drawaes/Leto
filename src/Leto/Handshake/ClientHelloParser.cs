@@ -58,5 +58,6 @@ namespace Leto.Handshake
         public List<(ExtensionType, Span<byte>)> Extensions => _extensions;
         public Span<byte> CipherSuites => _cipherSuite;
         public Span<byte> OriginalMessage => _originalMessage;
+        public Span<byte> SessionId => _sessionId;
     }
 }

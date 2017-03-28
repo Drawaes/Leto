@@ -13,6 +13,18 @@ namespace Leto.CipherSuites
             _cipherSuites = cipherSuites;
         }
 
+        public CipherSuite GetCipherSuite(ushort cipherSuite)
+        {
+            for(int i = 0; i < _cipherSuites.Length; i++)
+            {
+                if(_cipherSuites[i].Code == cipherSuite)
+                {
+                    return _cipherSuites[i];
+                }
+            }
+            return null;
+        }
+
         public CipherSuite GetCipherSuite(TlsVersion tlsVersion, Span<byte> cipherSuites)
         {
             for (var x = 0; x < _cipherSuites.Length; x++)

@@ -13,15 +13,17 @@ namespace Leto.Windows
     public sealed class WindowsSecurePipeListener : SecurePipeListener
     {
         private WindowsCryptoProvider _cryptoProvider;
+        private SessionProvider _sessionProvider;
 
         public WindowsSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
             :base(certificate, pipeFactory)
         {
+            _sessionProvider = new Sessions.SessionProvider();
             _cryptoProvider = new WindowsCryptoProvider();
         }
 
         public override ICryptoProvider CryptoProvider => _cryptoProvider;
-        public override ISessionProvider SessionProvider => null;
+        public override ISessionProvider SessionProvider => _sessionProvider;
 
         protected override void Dispose(bool disposing)
         {

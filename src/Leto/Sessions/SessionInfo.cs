@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Leto.Sessions
 {
-    internal unsafe struct SessionInfo
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct SessionInfo
     {
         public TlsVersion Version;
         public ushort CipherSuite;
-        public uint Timestamp;
+        public long Timestamp;
     }
 }

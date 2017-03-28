@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Text;
 using Leto.Handshake;
 using Leto.RecordLayer;
 using Leto.CipherSuites;
@@ -12,12 +10,12 @@ using System.Threading.Tasks;
 using Leto.Certificates;
 using Leto.BulkCiphers;
 using Leto.ConnectionStates.SecretSchedules;
+using System.Binary;
 
 namespace Leto.ConnectionStates
 {
     public sealed partial class Server12ConnectionState : IConnectionState
     {
-        private CipherSuite _cipherSuite;
         private SecurePipeConnection _secureConnection;
         private ApplicationLayerProtocolType _negotiatedAlpn;
         private bool _secureRenegotiation;
@@ -32,6 +30,7 @@ namespace Leto.ConnectionStates
         private RecordHandler _recordHandler;
         private ICryptoProvider _cryptoProvider;
         private bool _requiresTicket;
+        private bool _abbreviatedHandshake;
 
         public Server12ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -41,7 +40,7 @@ namespace Leto.ConnectionStates
             _cryptoProvider = _secureConnection.Listener.CryptoProvider;
         }
 
-        public CipherSuite CipherSuite => _cipherSuite;
+        public CipherSuite CipherSuite { get; set; }
         internal SecurePipeConnection SecureConnection => _secureConnection;
         public IKeyExchange KeyExchange { get; internal set; }
         public IHash HandshakeHash => _handshakeHash;
@@ -63,21 +62,39 @@ namespace Leto.ConnectionStates
         public async Task HandleClientHello(ClientHelloParser clientHello)
         {
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
-            _cipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
-            _certificate = _secureConnection.Listener.CertificateList.GetCertificate(null, _cipherSuite.CertificateType.Value);
-            _handshakeHash = _cryptoProvider.HashProvider.GetHash(_cipherSuite.HashType);
+            CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
+            _certificate = _secureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
+            _handshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
             _handshakeHash.HashData(clientHello.OriginalMessage);
             ParseExtensions(ref clientHello);
-            if (KeyExchange == null)
+            if (_abbreviatedHandshake)
             {
-                KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(_cipherSuite.KeyExchange, default(Span<byte>));
+                var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+                WriteServerHello(ref writer, clientHello.SessionId);
+                _secretSchedule.WriteSessionTicket(ref writer);
+                await writer.FlushAsync();
+                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
+                await WriteChangeCipherSpec();
+                _writeKey = _storedWriteKey;
+                writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+                _secretSchedule.GenerateAndWriteServerVerify(ref writer);
+                await writer.FlushAsync();
+                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                _state = HandshakeState.WaitingForClientFinishedAbbreviated;
             }
-            var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
-            SendFirstFlight(ref writer);
-            await writer.FlushAsync();
-            _state = HandshakeState.WaitingForClientKeyExchange;
+            else
+            {
+                if (KeyExchange == null)
+                {
+                    KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(Span<byte>));
+                }
+                var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+                SendFirstFlight(ref writer);
+                await writer.FlushAsync();
+                _state = HandshakeState.WaitingForClientKeyExchange;
+                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+            }
             var ignore = ReadingLoop();
-            await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         private async Task ReadingLoop()
@@ -86,6 +103,7 @@ namespace Leto.ConnectionStates
             {
                 var reader = await _secureConnection.HandshakeInput.Reader.ReadAsync();
                 var buffer = reader.Buffer;
+                WritableBuffer writer;
                 try
                 {
                     while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
@@ -107,15 +125,22 @@ namespace Leto.ConnectionStates
                                 {
                                     _state = HandshakeState.HandshakeCompleted;
                                 }
-                                var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
-                                writer.WriteBigEndian<byte>(1);
-                                await writer.FlushAsync();
-                                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
+                                if (_requiresTicket)
+                                {
+                                    writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+                                    _secretSchedule.WriteSessionTicket(ref writer);
+                                    await writer.FlushAsync();
+                                    await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
+                                }
+                                await WriteChangeCipherSpec();
                                 _writeKey = _storedWriteKey;
                                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
                                 await writer.FlushAsync();
-                                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                                break;
+
+                            case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinishedAbbreviated:
                                 break;
                             default:
                                 throw new NotImplementedException();
@@ -129,6 +154,14 @@ namespace Leto.ConnectionStates
             }
         }
 
+        private async Task WriteChangeCipherSpec()
+        {
+            var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+            writer.WriteBigEndian<byte>(1);
+            await writer.FlushAsync();
+            await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec, false);
+        }
+
         private void ParseExtensions(ref ClientHelloParser clientHello)
         {
             foreach (var (extensionType, buffer) in clientHello.Extensions)
@@ -139,7 +172,7 @@ namespace Leto.ConnectionStates
                         _negotiatedAlpn = _secureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
                         break;
                     case ExtensionType.supported_groups:
-                        KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(_cipherSuite.KeyExchange, buffer);
+                        KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, buffer);
                         break;
                     case ExtensionType.signature_algorithms:
                         _signatureScheme = _certificate.SelectAlgorithm(buffer);
@@ -161,11 +194,12 @@ namespace Leto.ConnectionStates
 
         private void ProcessSessionTicket(Span<byte> buffer)
         {
-            if(buffer.Length == 0)
+            _requiresTicket = true;
+            if (buffer.Length == 0 || !_secretSchedule.ReadSessionTicket(buffer))
             {
-                _requiresTicket = true;
                 return;
             }
+            _abbreviatedHandshake = true;
         }
 
         public void Dispose()

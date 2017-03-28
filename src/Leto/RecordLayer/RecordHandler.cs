@@ -18,7 +18,7 @@ namespace Leto.RecordLayer
         private SecurePipeConnection _connection;
 
         public RecordHandler(SecurePipeConnection secureConnection) => _connection = secureConnection;
-        
+
         public RecordType CurrentRecordType => _currentRecordType;
 
         public RecordState ReadRecord(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer)
@@ -50,7 +50,7 @@ namespace Leto.RecordLayer
             return RecordState.Record;
         }
 
-        public async Task WriteRecords(IPipeReader pipeReader, RecordType recordType)
+        public async Task WriteRecords(IPipeReader pipeReader, RecordType recordType, bool flush)
         {
             //We assume there is data waiting to be flushed this will be a single pass not a loop
             //We then can use this in a loop for app data or to flush a single set of data for the
@@ -60,6 +60,7 @@ namespace Leto.RecordLayer
             try
             {
                 ReadableBuffer append;
+                var output = _connection.Connection.Output.Alloc();
                 while (buffer.Length > 0)
                 {
                     append = buffer.Slice(0, Math.Min(_maxMessageSize, buffer.Length));
@@ -70,9 +71,8 @@ namespace Leto.RecordLayer
                         Length = (ushort)append.Length,
                         Version = _connection.State.RecordVersion
                     };
-                    var output = _connection.Connection.Output.Alloc();
                     output.Ensure(_minimumMessageSize);
-                    if(_connection.State.WriteKey != null)
+                    if (_connection.State.WriteKey != null)
                     {
                         recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
                     }
@@ -88,7 +88,14 @@ namespace Leto.RecordLayer
                     {
                         output.Append(append);
                     }
+                }
+                if (flush)
+                {
                     await output.FlushAsync();
+                }
+                else
+                {
+                    output.Commit();
                 }
             }
             finally

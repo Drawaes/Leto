@@ -26,6 +26,13 @@ namespace Leto.WindowsFacts
                 {
                     await sslStream.AuthenticateAsClientAsync("localhost");
                 }
+                var loopback2 = new LoopbackPipeline(factory);
+                var stream2 = loopback2.ClientPipeline.GetStream();
+                var secureConnection2 = listener.CreateConnection(loopback2.ServerPipeline);
+                using (var sslStream2 = new SslStream(stream2, false, CertVal))
+                {
+                    await sslStream2.AuthenticateAsClientAsync("localhost");
+                }
             }
         }
 
@@ -34,7 +41,7 @@ namespace Leto.WindowsFacts
             return true;
         }
 
-        //[Fact]
+        [Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

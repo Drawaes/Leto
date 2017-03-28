@@ -61,7 +61,7 @@ namespace Leto
                                     var handshakeWriter = _handshakeInput.Writer.Alloc();
                                     handshakeWriter.Append(messageBuffer);
                                     await handshakeWriter.FlushAsync();
-                                    if(_state.HandshakeComplete)
+                                    if (_state.HandshakeComplete)
                                     {
                                         var ignore = ReadingApplicationDataLoop();
                                         _handshakeComplete.TrySetResult(this);
@@ -81,7 +81,7 @@ namespace Leto
                                     break;
                                 case RecordType.Alert:
                                     var alertSpan = messageBuffer.ToSpan();
-                                    if(alertSpan[1] == 0)
+                                    if (alertSpan[1] == 0)
                                     {
                                         return;
                                     }
@@ -109,7 +109,7 @@ namespace Leto
             {
                 while (true)
                 {
-                    await RecordHandler.WriteRecords(_inputPipe.Reader, RecordType.Application);
+                    await RecordHandler.WriteRecords(_inputPipe.Reader, RecordType.Application, true);
                 }
             }
             finally

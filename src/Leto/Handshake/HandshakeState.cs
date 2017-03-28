@@ -5,6 +5,7 @@
         WaitingForClientKeyExchange,
         WaitingForChangeCipherSpec,
         WaitingForClientFinished,
-        HandshakeCompleted
+        HandshakeCompleted,
+        WaitingForClientFinishedAbbreviated
     }
 }

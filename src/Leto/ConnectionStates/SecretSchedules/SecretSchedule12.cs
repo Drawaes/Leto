@@ -6,6 +6,10 @@ using Leto.BulkCiphers;
 using static Leto.TlsConstants;
 using System.Runtime.InteropServices;
 using System.IO.Pipelines;
+using Leto.Sessions;
+using Leto.Handshake;
+using System.Binary;
+using System.Linq;
 
 namespace Leto.ConnectionStates.SecretSchedules
 {
@@ -39,6 +43,7 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         internal ReadOnlySpan<byte> ClientRandom => _clientRandom.Span;
         internal ReadOnlySpan<byte> ServerRandom => _serverRandom.Span;
+        private ISessionProvider Sessions => _state.SecureConnection.Listener.SessionProvider;
 
         public void SetClientRandom(Span<byte> random)
         {
@@ -67,6 +72,50 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.KeyExchange = null;
         }
 
+        public bool ReadSessionTicket(Span<byte> buffer)
+        {
+            var sessionKey = ReadBigEndian<Guid>(ref buffer);
+            var nounce = ReadBigEndian<long>(ref buffer);
+            buffer = Sessions.ProcessSessionTicket(buffer, sessionKey, nounce);
+            SessionInfo info;
+            (info, buffer) = buffer.Consume<SessionInfo>();
+            if(info.Version != _state.RecordVersion)
+            {
+                return false;
+            }
+            _state.CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(info.CipherSuite);
+            buffer.CopyTo(_masterSecret.Span);
+            return true;
+        }
+
+        public void WriteSessionTicket(ref WritableBuffer writer)
+        {
+            HandshakeFraming.WriteHandshakeFrame(ref writer, _state.HandshakeHash, w =>
+                {
+                    var ticketDetails = Sessions.GetNextNounce();
+                    w.WriteBigEndian((uint)(ticketDetails.ticketExpiry - DateTime.UtcNow).TotalSeconds);
+                    WriteVector<ushort>(ref w, n =>
+                    {
+                        n.WriteBigEndian(ticketDetails.keyId);
+                        n.WriteBigEndian(ticketDetails.nounce);
+                        var bytesWritten = n.BytesWritten;
+                        var info = new SessionInfo()
+                        {
+                            CipherSuite = _state.CipherSuite.Code,
+                            Timestamp = ticketDetails.ticketExpiry.Ticks,
+                            Version = _state.RecordVersion
+                        };
+                        n.Ensure(Marshal.SizeOf<SessionInfo>());
+                        n.Buffer.Span.Write(info);
+                        n.Advance(Marshal.SizeOf<SessionInfo>());
+                        n.Write(_masterSecret.Span);
+                        Sessions.EncryptSessionKey(ref n, bytesWritten, ticketDetails.nounce, ticketDetails.keyId);
+                        return n;
+                    });
+                    return w;
+                }, HandshakeType.new_session_ticket);
+        }
+
         public bool GenerateAndCompareClientVerify(Span<byte> clientVerify)
         {
             var hashResult = new byte[_state.HandshakeHash.HashSize];
@@ -83,7 +132,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.HandshakeHash.FinishHash(hashResult);
             _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span,
                 Tls12.Label_ServerFinished, hashResult, _serverVerify.Span);
-            Handshake.HandshakeFraming.WriteHandshakeFrame(ref writer, null, WriteServerVerify, Handshake.HandshakeType.finished);
+            HandshakeFraming.WriteHandshakeFrame(ref writer, null, WriteServerVerify, HandshakeType.finished);
             _secretStore.Dispose();
             _secretStore = null;
         }
