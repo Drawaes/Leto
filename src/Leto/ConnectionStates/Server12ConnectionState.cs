@@ -19,14 +19,13 @@ namespace Leto.ConnectionStates
         private SecurePipeConnection _secureConnection;
         private ApplicationLayerProtocolType _negotiatedAlpn;
         private bool _secureRenegotiation;
-        private IHash _handshakeHash;
         private ICertificate _certificate;
         private SignatureScheme _signatureScheme;
         private HandshakeState _state;
         private SecretSchedule12 _secretSchedule;
         private AeadBulkCipher _readKey;
         private AeadBulkCipher _writeKey;
-        private AeadBulkCipher _storedWriteKey;
+        private AeadBulkCipher _storedKey;
         private RecordHandler _recordHandler;
         private ICryptoProvider _cryptoProvider;
         private bool _requiresTicket;
@@ -43,7 +42,7 @@ namespace Leto.ConnectionStates
         public CipherSuite CipherSuite { get; set; }
         internal SecurePipeConnection SecureConnection => _secureConnection;
         public IKeyExchange KeyExchange { get; internal set; }
-        public IHash HandshakeHash => _handshakeHash;
+        public IHash HandshakeHash { get; set; }
         public TlsVersion RecordVersion => TlsVersion.Tls12;
         public AeadBulkCipher ReadKey => _readKey;
         public AeadBulkCipher WriteKey => _writeKey;
@@ -51,12 +50,18 @@ namespace Leto.ConnectionStates
 
         public void ChangeCipherSpec()
         {
-            if (_state != HandshakeState.WaitingForChangeCipherSpec)
+            if (_state == HandshakeState.WaitingForChangeCipherSpec)
             {
-                Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
+                (_readKey, _storedKey) = _secretSchedule.GenerateKeys();
+                _state = HandshakeState.WaitingForClientFinished;
+                return;
             }
-            (_readKey, _storedWriteKey) = _secretSchedule.GenerateKeys();
-            _state = HandshakeState.WaitingForClientFinished;
+            if (_state == HandshakeState.WaitingForClientFinishedAbbreviated)
+            {
+                _readKey = _storedKey;
+                return;
+            }
+            Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
         public async Task HandleClientHello(ClientHelloParser clientHello)
@@ -64,8 +69,8 @@ namespace Leto.ConnectionStates
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
             _certificate = _secureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
-            _handshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
-            _handshakeHash.HashData(clientHello.OriginalMessage);
+            HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
+            HandshakeHash.HashData(clientHello.OriginalMessage);
             ParseExtensions(ref clientHello);
             if (_abbreviatedHandshake)
             {
@@ -74,8 +79,9 @@ namespace Leto.ConnectionStates
                 _secretSchedule.WriteSessionTicket(ref writer);
                 await writer.FlushAsync();
                 await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
+                _requiresTicket = false;
                 await WriteChangeCipherSpec();
-                _writeKey = _storedWriteKey;
+                (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
                 await writer.FlushAsync();
@@ -113,7 +119,7 @@ namespace Leto.ConnectionStates
                         {
                             case HandshakeType.client_key_exchange when _state == HandshakeState.WaitingForClientKeyExchange:
                                 span = messageBuffer.ToSpan();
-                                _handshakeHash.HashData(span);
+                                HandshakeHash.HashData(span);
                                 span = span.Slice(HandshakeFraming.HeaderSize);
                                 KeyExchange.SetPeerKey(span, _certificate, _signatureScheme);
                                 _secretSchedule.GenerateMasterSecret();
@@ -133,14 +139,20 @@ namespace Leto.ConnectionStates
                                     await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
                                 }
                                 await WriteChangeCipherSpec();
-                                _writeKey = _storedWriteKey;
+                                _writeKey = _storedKey;
                                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
                                 await writer.FlushAsync();
                                 await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                                _secretSchedule.DisposeStore();
                                 break;
-
                             case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinishedAbbreviated:
+                                span = messageBuffer.ToSpan();
+                                if (_secretSchedule.GenerateAndCompareClientVerify(span))
+                                {
+                                }
+                                _state = HandshakeState.HandshakeCompleted;
+                                _secretSchedule.DisposeStore();
                                 break;
                             default:
                                 throw new NotImplementedException();
@@ -204,8 +216,8 @@ namespace Leto.ConnectionStates
 
         public void Dispose()
         {
-            _handshakeHash?.Dispose();
-            _handshakeHash = null;
+            HandshakeHash?.Dispose();
+            HandshakeHash = null;
             KeyExchange?.Dispose();
             KeyExchange = null;
         }

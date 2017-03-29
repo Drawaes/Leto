@@ -79,7 +79,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             buffer = Sessions.ProcessSessionTicket(buffer, sessionKey, nounce);
             SessionInfo info;
             (info, buffer) = buffer.Consume<SessionInfo>();
-            if(info.Version != _state.RecordVersion)
+            if (info.Version != _state.RecordVersion)
             {
                 return false;
             }
@@ -120,21 +120,17 @@ namespace Leto.ConnectionStates.SecretSchedules
         {
             var hashResult = new byte[_state.HandshakeHash.HashSize];
             _state.HandshakeHash.InterimHash(hashResult);
-            _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span,
-                Tls12.Label_ClientFinished, hashResult, _clientVerify.Span);
+            _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span, Tls12.Label_ClientFinished, hashResult, _clientVerify.Span);
             _state.HandshakeHash.HashData(clientVerify);
-            return Internal.CompareFunctions.ConstantTimeEquals(_clientVerify.Span, clientVerify.Slice(Marshal.SizeOf<Handshake.HandshakeHeader>()));
+            return Internal.CompareFunctions.ConstantTimeEquals(_clientVerify.Span, clientVerify.Slice(Marshal.SizeOf<HandshakeHeader>()));
         }
 
         public void GenerateAndWriteServerVerify(ref WritableBuffer writer)
         {
             var hashResult = new byte[_state.HandshakeHash.HashSize];
-            _state.HandshakeHash.FinishHash(hashResult);
-            _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span,
-                Tls12.Label_ServerFinished, hashResult, _serverVerify.Span);
+            _state.HandshakeHash.InterimHash(hashResult);
+            _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span, Tls12.Label_ServerFinished, hashResult, _serverVerify.Span);
             HandshakeFraming.WriteHandshakeFrame(ref writer, null, WriteServerVerify, HandshakeType.finished);
-            _secretStore.Dispose();
-            _secretStore = null;
         }
 
         private WritableBuffer WriteServerVerify(WritableBuffer writer)
@@ -163,6 +159,14 @@ namespace Leto.ConnectionStates.SecretSchedules
             var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher(_state.CipherSuite.BulkCipherType, _clientKey);
             var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher(_state.CipherSuite.BulkCipherType, _serverKey);
             return (clientKey, serverKey);
+        }
+
+        public void DisposeStore()
+        {
+            _secretStore.Dispose();
+            _secretStore = null;
+            _state.HandshakeHash.Dispose();
+            _state.HandshakeHash = null;
         }
 
         public void Dispose()

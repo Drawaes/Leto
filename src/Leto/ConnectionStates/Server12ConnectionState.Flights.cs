@@ -18,12 +18,12 @@ namespace Leto.ConnectionStates
 
         private void WriteServerHelloDone(ref WritableBuffer writer)
         {
-            HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash, (buffer) => buffer, HandshakeType.server_hello_done);
+            HandshakeFraming.WriteHandshakeFrame(ref writer, HandshakeHash, (buffer) => buffer, HandshakeType.server_hello_done);
         }
 
         private void WriteCertificates(ref WritableBuffer writer)
         {
-            HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash, (buffer) =>
+            HandshakeFraming.WriteHandshakeFrame(ref writer, HandshakeHash, (buffer) =>
             {
                 return CertificateWriter.WriteCertificates(buffer, _certificate);
             }, HandshakeType.certificate);
@@ -33,14 +33,14 @@ namespace Leto.ConnectionStates
         {
             if (KeyExchange.RequiresServerKeyExchange)
             {
-                HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash,
+                HandshakeFraming.WriteHandshakeFrame(ref writer, HandshakeHash,
                     (buffer) => SendKeyExchange(buffer), HandshakeType.server_key_exchange);
             }
         }
 
         private void WriteServerHello(ref WritableBuffer writer, Span<byte> sessionId)
         {
-            HandshakeFraming.WriteHandshakeFrame(ref writer, _handshakeHash, (buffer) =>
+            HandshakeFraming.WriteHandshakeFrame(ref writer, HandshakeHash, (buffer) =>
             {
                 return WriteServerContent(buffer, this, sessionId);
             }, HandshakeType.server_hello);
