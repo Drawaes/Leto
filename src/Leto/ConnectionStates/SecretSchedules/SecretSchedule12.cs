@@ -76,7 +76,7 @@ namespace Leto.ConnectionStates.SecretSchedules
         {
             var sessionKey = ReadBigEndian<Guid>(ref buffer);
             var nounce = ReadBigEndian<long>(ref buffer);
-            buffer = Sessions.ProcessSessionTicket(buffer, sessionKey, nounce);
+            buffer = Sessions.ProcessSessionTicket(buffer);
             SessionInfo info;
             (info, buffer) = buffer.Consume<SessionInfo>();
             if (info.Version != _state.RecordVersion)
@@ -92,26 +92,20 @@ namespace Leto.ConnectionStates.SecretSchedules
         {
             HandshakeFraming.WriteHandshakeFrame(ref writer, _state.HandshakeHash, w =>
                 {
-                    var ticketDetails = Sessions.GetNextNounce();
-                    w.WriteBigEndian((uint)(ticketDetails.ticketExpiry - DateTime.UtcNow).TotalSeconds);
-                    WriteVector<ushort>(ref w, n =>
+                    var currentExpiry = _state.SecureConnection.Listener.SessionProvider.GetCurrentExpiry();
+                    w.WriteBigEndian((uint)(DateTime.UtcNow - currentExpiry).TotalSeconds);
+                    var ticketBuffer = new byte[Marshal.SizeOf<SessionInfo>() + _masterSecret.Length];
+                    var ticketSpan = new Span<byte>(ticketBuffer);
+                    var info = new SessionInfo()
                     {
-                        n.WriteBigEndian(ticketDetails.keyId);
-                        n.WriteBigEndian(ticketDetails.nounce);
-                        var bytesWritten = n.BytesWritten;
-                        var info = new SessionInfo()
-                        {
-                            CipherSuite = _state.CipherSuite.Code,
-                            Timestamp = ticketDetails.ticketExpiry.Ticks,
-                            Version = _state.RecordVersion
-                        };
-                        n.Ensure(Marshal.SizeOf<SessionInfo>());
-                        n.Buffer.Span.Write(info);
-                        n.Advance(Marshal.SizeOf<SessionInfo>());
-                        n.Write(_masterSecret.Span);
-                        Sessions.EncryptSessionKey(ref n, bytesWritten, ticketDetails.nounce, ticketDetails.keyId);
-                        return n;
-                    });
+                        CipherSuite = _state.CipherSuite.Code,
+                        Timestamp = currentExpiry.Ticks,
+                        Version = _state.RecordVersion
+                    };
+                    ticketSpan = ticketSpan.WriteBigEndian(info);
+                    _masterSecret.CopyTo(ticketSpan);
+
+                    Sessions.EncryptSessionKey(ref w, ticketBuffer);
                     return w;
                 }, HandshakeType.new_session_ticket);
         }

@@ -7,8 +7,8 @@ namespace Leto.Sessions
 {
     public interface ISessionProvider
     {
-        Span<byte> ProcessSessionTicket(Span<byte> sessionTicket, Guid key, long nounce);
-        (long nounce, DateTime ticketExpiry, Guid keyId) GetNextNounce();
-        void EncryptSessionKey(ref WritableBuffer writer, int preambleLength, long nouce, Guid key);
+        Span<byte> ProcessSessionTicket(Span<byte> sessionTicket);
+        void EncryptSessionKey(ref WritableBuffer writer, Span<byte> ticketContent);
+        DateTime GetCurrentExpiry();
     }
 }

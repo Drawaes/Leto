@@ -42,5 +42,31 @@ namespace Leto.Windows.Interop
             var result = BCryptEncrypt(key, null, 0, &context, ivBuffer, context.cbNonce, null, 0, out int size, 0);
             ThrowOnErrorReturnCode(result);
         }
+
+        internal static unsafe void BCryptEncrypt(SafeBCryptKeyHandle key, Span<byte> iv, Span<byte> tag, Span<byte> input, Span<byte> output)
+        {
+            fixed (void* ivPtr = &iv.DangerousGetPinnableReference())
+            fixed (void* tagPtr = &tag.DangerousGetPinnableReference())
+            fixed (void* inputPtr = &input.DangerousGetPinnableReference())
+            fixed (void* outputPtr = &output.DangerousGetPinnableReference())
+            {
+                var encryptInfo = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
+                {
+                    cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(),
+                    cbAuthData = 0,
+                    cbMacContext = 0,
+                    cbNonce = 12,
+                    pbMacContext = null,
+                    pbAuthData = null,
+                    dwFlags = AuthenticatedCipherModeInfoFlags.None,
+                    dwInfoVersion = 1,
+                    pbNonce = ivPtr,
+                    cbTag = tag.Length,
+                    pbTag = tagPtr
+                };
+                var result = BCryptEncrypt(key, inputPtr, input.Length, &encryptInfo, null, 0, outputPtr, output.Length, out int bytesWritten, 0);
+                ThrowOnErrorReturnCode(result);
+            }
+        }
     }
 }

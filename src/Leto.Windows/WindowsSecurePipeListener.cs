@@ -13,12 +13,12 @@ namespace Leto.Windows
     public sealed class WindowsSecurePipeListener : SecurePipeListener
     {
         private WindowsCryptoProvider _cryptoProvider;
-        private SessionProvider _sessionProvider;
-
+        private ISessionProvider _sessionProvider;
+        
         public WindowsSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
             :base(certificate, pipeFactory)
         {
-            _sessionProvider = new Sessions.SessionProvider();
+            _sessionProvider = new Sessions.EphemeralSessionProvider();
             _cryptoProvider = new WindowsCryptoProvider();
         }
 
