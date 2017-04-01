@@ -109,7 +109,16 @@ namespace Leto
             {
                 while (true)
                 {
-                    await RecordHandler.WriteRecords(_inputPipe.Reader, RecordType.Application, true);
+                    var result = await _inputPipe.Reader.ReadAsync();
+                    var buffer = result.Buffer;
+                    try
+                    {
+                        await RecordHandler.WriteRecordsAndFlush(ref buffer, RecordType.Application);
+                    }
+                    finally
+                    {
+                        _inputPipe.Reader.Advance(buffer.Start, buffer.End);
+                    }
                 }
             }
             finally

@@ -78,14 +78,14 @@ namespace Leto.ConnectionStates
                 WriteServerHello(ref writer, clientHello.SessionId);
                 _secretSchedule.WriteSessionTicket(ref writer);
                 await writer.FlushAsync();
-                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
+                _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                 _requiresTicket = false;
                 await WriteChangeCipherSpec();
                 (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
                 await writer.FlushAsync();
-                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                await _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                 _state = HandshakeState.WaitingForClientFinishedAbbreviated;
             }
             else
@@ -98,7 +98,7 @@ namespace Leto.ConnectionStates
                 SendFirstFlight(ref writer);
                 await writer.FlushAsync();
                 _state = HandshakeState.WaitingForClientKeyExchange;
-                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                await _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             }
             var ignore = ReadingLoop();
         }
@@ -136,14 +136,14 @@ namespace Leto.ConnectionStates
                                     writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                     _secretSchedule.WriteSessionTicket(ref writer);
                                     await writer.FlushAsync();
-                                    await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, false);
+                                    _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                                 }
                                 await WriteChangeCipherSpec();
                                 _writeKey = _storedKey;
                                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
                                 await writer.FlushAsync();
-                                await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake, true);
+                                await _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                                 _secretSchedule.DisposeStore();
                                 break;
                             case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinishedAbbreviated:
@@ -171,7 +171,7 @@ namespace Leto.ConnectionStates
             var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian<byte>(1);
             await writer.FlushAsync();
-            await _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec, false);
+            _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
         }
 
         private void ParseExtensions(ref ClientHelloParser clientHello)

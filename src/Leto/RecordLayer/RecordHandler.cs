@@ -50,59 +50,82 @@ namespace Leto.RecordLayer
             return RecordState.Record;
         }
 
-        public async Task WriteRecords(IPipeReader pipeReader, RecordType recordType, bool flush)
+        public void WriteRecords(IPipeReader pipeReader, RecordType recordType)
         {
-            //We assume there is data waiting to be flushed this will be a single pass not a loop
-            //We then can use this in a loop for app data or to flush a single set of data for the
-            //handshakes
-            var reader = await pipeReader.ReadAsync();
+            var output = _connection.Connection.Output.Alloc();
+            if (!pipeReader.TryRead(out ReadResult reader))
+            {
+                return;
+            }
             var buffer = reader.Buffer;
             try
             {
-                ReadableBuffer append;
-                var output = _connection.Connection.Output.Alloc();
-                while (buffer.Length > 0)
-                {
-                    append = buffer.Slice(0, Math.Min(_maxMessageSize, buffer.Length));
-                    buffer = buffer.Slice(append.End);
-                    var recordHeader = new RecordHeader()
-                    {
-                        RecordType = recordType,
-                        Length = (ushort)append.Length,
-                        Version = _connection.State.RecordVersion
-                    };
-                    output.Ensure(_minimumMessageSize);
-                    if (_connection.State.WriteKey != null)
-                    {
-                        recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
-                    }
-                    output.Buffer.Span.Write(recordHeader);
-                    output.Advance(_minimumMessageSize);
-                    if (_connection.State.WriteKey != null)
-                    {
-                        _connection.State.WriteKey.WriteNonce(ref output);
-                        output.Append(append);
-                        _connection.State.WriteKey.EncryptWithAuthData(ref output, recordType, _connection.State.RecordVersion, append.Length);
-                    }
-                    else
-                    {
-                        output.Append(append);
-                    }
-                }
-                if (flush)
-                {
-                    await output.FlushAsync();
-                }
-                else
-                {
-                    output.Commit();
-                }
+                WriteRecords(ref buffer, ref output, recordType);
             }
             finally
             {
                 pipeReader.Advance(buffer.End);
             }
+            output.Commit();
+        }
 
+        public WritableBufferAwaitable WriteRecordsAndFlush(IPipeReader pipeReader, RecordType recordType)
+        {
+            var output = _connection.Connection.Output.Alloc();
+            if (!pipeReader.TryRead(out ReadResult reader))
+            {
+                return output.FlushAsync();
+            }
+            var buffer = reader.Buffer;
+            try
+            {
+                WriteRecords(ref buffer, ref output, recordType);
+            }
+            finally
+            {
+                pipeReader.Advance(buffer.End);
+            }
+            return output.FlushAsync();
+        }
+
+        public WritableBufferAwaitable WriteRecordsAndFlush(ref ReadableBuffer readableBuffer, RecordType recordType)
+        {
+            var output = _connection.Connection.Output.Alloc();
+            WriteRecords(ref readableBuffer, ref output, recordType);
+            return output.FlushAsync();
+        }
+
+        private void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType)
+        {
+            ReadableBuffer append;
+            while (buffer.Length > 0)
+            {
+                append = buffer.Slice(0, Math.Min(_maxMessageSize, buffer.Length));
+                buffer = buffer.Slice(append.End);
+                var recordHeader = new RecordHeader()
+                {
+                    RecordType = recordType,
+                    Length = (ushort)append.Length,
+                    Version = _connection.State.RecordVersion
+                };
+                writer.Ensure(_minimumMessageSize);
+                if (_connection.State.WriteKey != null)
+                {
+                    recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
+                }
+                writer.Buffer.Span.Write(recordHeader);
+                writer.Advance(_minimumMessageSize);
+                if (_connection.State.WriteKey != null)
+                {
+                    _connection.State.WriteKey.WriteNonce(ref writer);
+                    writer.Append(append);
+                    _connection.State.WriteKey.EncryptWithAuthData(ref writer, recordType, _connection.State.RecordVersion, append.Length);
+                }
+                else
+                {
+                    writer.Append(append);
+                }
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Leto.Hashes;
 using static Leto.OpenSsl11.Interop.LibCrypto;
 using Leto.Certificates;
+using System.Buffers;
 
 namespace Leto.OpenSsl11
 {

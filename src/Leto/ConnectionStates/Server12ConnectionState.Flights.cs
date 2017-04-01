@@ -1,6 +1,7 @@
 ﻿using Leto.Handshake;
 using Leto.KeyExchanges;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 
@@ -101,8 +102,8 @@ namespace Leto.ConnectionStates
             writer.WriteBigEndian(ECCurveType.named_curve);
             writer.WriteBigEndian(KeyExchange.NamedGroup);
             writer.WriteBigEndian((byte)KeyExchange.KeyExchangeSize);
-            var keysWritten = KeyExchange.WritePublicKey(writer.Buffer.Span);
-            writer.Advance(keysWritten);
+            var keybytesWritten = KeyExchange.WritePublicKey(writer.Buffer.Span);
+            writer.Advance(keybytesWritten);
             writer.WriteBigEndian(_signatureScheme);
             BufferExtensions.WriteVector<ushort>(ref writer, (w) =>
             {
