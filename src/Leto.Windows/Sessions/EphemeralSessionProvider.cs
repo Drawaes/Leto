@@ -7,6 +7,7 @@ using System.Buffers;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
 using static Leto.Windows.Interop.BCrypt;
+using static Leto.BufferExtensions;
 using System.Runtime.InteropServices;
 using Leto.Internal;
 
@@ -16,38 +17,43 @@ namespace Leto.Windows.Sessions
     {
         private TimeSpan _maxTicketAge = TimeSpan.FromDays(1);
         private EphemeralKey _currentKey;
-        private Buffer<byte> _ivRandom;
-        private OwnedBuffer<byte> _keyStorage;
-        private SafeBCryptKeyHandle _keyHandle;
+        private SafeBCryptAlgorithmHandle _algo = BCryptOpenAlgorithmProvider("AES");
+
         private EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(44, 100);
-
-
+        
         public EphemeralSessionProvider()
         {
-            _keyStorage = _bufferPool.Rent(0);
-            BCryptGenRandom(_keyStorage.Buffer.Span);
-            _ivRandom = _keyStorage.Buffer.Slice(32);
+            SetBlockChainingMode(_algo, BCRYPT_CHAIN_MODE_GCM);
+            var keyStorage = _bufferPool.Rent(0);
+            BCryptGenRandom(keyStorage.Buffer.Span.Slice(0,44));
+            _currentKey = new EphemeralKey(_algo, keyStorage);
         }
 
         public unsafe void EncryptSessionKey(ref WritableBuffer writer, Span<byte> ticketContent)
         {
+            var tagLength = 16;
             var key = _currentKey;
-            var nonce = key.GetNextNonce(); 
-            writer.WriteBigEndian(key.KeyId);
-            writer.WriteBigEndian(nonce);
-            var tag = new byte[16];
-            var iv = new byte[12];
-            var ivSpan = (Span<byte>)iv;
-            _ivRandom.CopyTo(ivSpan);
-            ivSpan.Slice(_ivRandom.Length).WriteBigEndian(nonce);
-            writer.Ensure(ticketContent.Length);
-            BCryptEncrypt(_keyHandle, iv, tag, ticketContent, writer.Buffer.Span);
-            writer.Write(tag);
+            var nonce = key.GetNextNonce();
+            BufferExtensions.WriteVector<ushort>(ref writer, w =>
+            {
+                w.WriteBigEndian(key.KeyId);
+                w.WriteBigEndian(nonce);
+                w.Ensure(ticketContent.Length + tagLength);
+                var bytesWritten = _currentKey.Encrypt(nonce, ticketContent, w.Buffer.Span);
+                w.Advance(bytesWritten);
+                return w;
+            });
         }
 
         public Span<byte> ProcessSessionTicket(Span<byte> sessionTicket)
         {
-            throw new NotImplementedException();
+            var keyId = ReadBigEndian<Guid>(ref sessionTicket);
+            var key = _currentKey;
+            if (keyId != key.KeyId)
+            {
+                throw new NotImplementedException();
+            }
+            return key.Decrypt(sessionTicket);
         }
 
         public DateTime GetCurrentExpiry()

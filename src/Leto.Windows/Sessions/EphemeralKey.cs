@@ -4,6 +4,8 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
 using static Leto.Windows.Interop.BCrypt;
+using static Leto.BufferExtensions;
+using System.Binary;
 
 namespace Leto.Windows.Sessions
 {
@@ -16,10 +18,12 @@ namespace Leto.Windows.Sessions
         private long _currentNonce = 0;
         private Guid _currentKeyId = Guid.NewGuid();
 
-        public EphemeralKey(OwnedBuffer<byte> keyAndIvStore)
+        internal EphemeralKey(SafeBCryptAlgorithmHandle algoHandle, OwnedBuffer<byte> keyAndIvStore)
         {
             _keyAndIvStore = keyAndIvStore;
             BCryptGenRandom(keyAndIvStore.Span.Slice(0, _keySize + _ivRandomSize));
+            _keyHandle = BCryptImportKey(algoHandle, _keyAndIvStore.Span.Slice(0, _keySize));
+            SetBlockChainingMode(_keyHandle, BCRYPT_CHAIN_MODE_GCM);
         }
 
         public Guid KeyId => _currentKeyId;
@@ -38,6 +42,25 @@ namespace Leto.Windows.Sessions
         ~EphemeralKey()
         {
             Dispose();
+        }
+
+        public int Encrypt(long nonce, Span<byte> ticketContent, Span<byte> output)
+        {
+            var iv = _keyAndIvStore.Span.Slice(_keySize);
+            iv.Slice(4).WriteBigEndian(nonce);
+            var bytesWritten = BCryptEncrypt(_keyHandle, iv, output.Slice(ticketContent.Length, 16), ticketContent, output.Slice(0,ticketContent.Length));
+            return bytesWritten + 16; 
+        }
+
+        internal Span<byte> Decrypt(Span<byte> sessionTicket)
+        {
+            var nonce = ReadBigEndian<long>(ref sessionTicket);
+            var tag = sessionTicket.Slice(sessionTicket.Length - 16);
+            var data = sessionTicket.Slice(0, sessionTicket.Length - 16);
+            var iv = _keyAndIvStore.Span.Slice(_keySize);
+            iv.Slice(4).WriteBigEndian(nonce);
+            BCryptDecrypt(_keyHandle, iv, tag, data);
+            return data;
         }
     }
 }

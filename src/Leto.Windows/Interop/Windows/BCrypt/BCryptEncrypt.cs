@@ -43,7 +43,7 @@ namespace Leto.Windows.Interop
             ThrowOnErrorReturnCode(result);
         }
 
-        internal static unsafe void BCryptEncrypt(SafeBCryptKeyHandle key, Span<byte> iv, Span<byte> tag, Span<byte> input, Span<byte> output)
+        internal static unsafe int BCryptEncrypt(SafeBCryptKeyHandle key, Span<byte> iv, Span<byte> tag, Span<byte> input, Span<byte> output)
         {
             fixed (void* ivPtr = &iv.DangerousGetPinnableReference())
             fixed (void* tagPtr = &tag.DangerousGetPinnableReference())
@@ -66,6 +66,7 @@ namespace Leto.Windows.Interop
                 };
                 var result = BCryptEncrypt(key, inputPtr, input.Length, &encryptInfo, null, 0, outputPtr, output.Length, out int bytesWritten, 0);
                 ThrowOnErrorReturnCode(result);
+                return bytesWritten;
             }
         }
     }
