@@ -50,12 +50,12 @@ namespace Leto.RecordLayer
             return RecordState.Record;
         }
 
-        public void WriteRecords(IPipeReader pipeReader, RecordType recordType)
+        public WritableBuffer WriteRecords(IPipeReader pipeReader, RecordType recordType)
         {
             var output = _connection.Connection.Output.Alloc();
             if (!pipeReader.TryRead(out ReadResult reader))
             {
-                return;
+                return output;
             }
             var buffer = reader.Buffer;
             try
@@ -67,32 +67,15 @@ namespace Leto.RecordLayer
                 pipeReader.Advance(buffer.End);
             }
             output.Commit();
+
+            return output;
         }
 
-        public WritableBufferAwaitable WriteRecordsAndFlush(IPipeReader pipeReader, RecordType recordType)
-        {
-            var output = _connection.Connection.Output.Alloc();
-            if (!pipeReader.TryRead(out ReadResult reader))
-            {
-                return output.FlushAsync();
-            }
-            var buffer = reader.Buffer;
-            try
-            {
-                WriteRecords(ref buffer, ref output, recordType);
-            }
-            finally
-            {
-                pipeReader.Advance(buffer.End);
-            }
-            return output.FlushAsync();
-        }
-
-        public WritableBufferAwaitable WriteRecordsAndFlush(ref ReadableBuffer readableBuffer, RecordType recordType)
+        public WritableBuffer WriteRecords(ref ReadableBuffer readableBuffer, RecordType recordType)
         {
             var output = _connection.Connection.Output.Alloc();
             WriteRecords(ref readableBuffer, ref output, recordType);
-            return output.FlushAsync();
+            return output;
         }
 
         private void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType)
