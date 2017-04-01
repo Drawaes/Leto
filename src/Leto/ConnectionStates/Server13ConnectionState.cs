@@ -6,6 +6,7 @@ using Leto.BulkCiphers;
 using Leto.CipherSuites;
 using Leto.Handshake;
 using Leto.Hashes;
+using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {
@@ -28,7 +29,7 @@ namespace Leto.ConnectionStates
             throw new NotImplementedException();
         }
 
-        public Task HandleClientHello(ClientHelloParser clientHelloParser)
+        public WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHelloParser)
         {
             throw new NotImplementedException();
         }

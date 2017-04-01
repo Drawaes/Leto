@@ -13,10 +13,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
-    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170331-4" />
-    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170331-4" />
-    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170331-4" />
-    <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170331-4" />
+    <PackageReference Include="System.Binary" Version="0.1.0-e170401-1" />
+    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170401-1" />
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170401-1" />
+    <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170401-1" />
+    <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170401-1" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.2.0" />

@@ -1,15 +1,35 @@
 ﻿using Leto.Handshake;
 using Leto.KeyExchanges;
+using Leto.RecordLayer;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
+using System.Threading.Tasks;
 
 namespace Leto.ConnectionStates
 {
     public sealed partial class Server12ConnectionState
     {
-        private void SendFirstFlight(ref WritableBuffer writer)
+
+        private WritableBufferAwaitable SendFirstFlightAbbreviated(ClientHelloParser clientHello)
+        {
+            var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+            WriteServerHello(ref writer, clientHello.SessionId);
+            _secretSchedule.WriteSessionTicket(ref writer);
+            writer.Commit();
+            _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            _requiresTicket = false;
+            WriteChangeCipherSpec();
+            (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
+            writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+            _secretSchedule.GenerateAndWriteServerVerify(ref writer);
+            writer.Commit();
+            _state = HandshakeState.WaitingForClientFinishedAbbreviated;
+            return _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+        }
+
+        private void SendSecondFlight(ref WritableBuffer writer)
         {
             WriteServerHello(ref writer, new Span<byte>());
             WriteCertificates(ref writer);
@@ -107,7 +127,8 @@ namespace Leto.ConnectionStates
             writer.WriteBigEndian(_signatureScheme);
             BufferExtensions.WriteVector<ushort>(ref writer, (w) =>
             {
-                WriteKeySignature(ref w, bookMark.Span.Slice(0, messageLength));
+                var span = bookMark.Span.Slice(0, messageLength);
+                WriteKeySignature(ref w, span);
                 return w;
             });
             return writer;

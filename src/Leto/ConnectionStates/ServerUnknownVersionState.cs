@@ -135,7 +135,7 @@ namespace Leto.ConnectionStates
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
-        public Task HandleClientHello(ClientHelloParser clientHelloParser)
+        public WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHelloParser)
         {
             throw new NotImplementedException();
         }

@@ -64,7 +64,7 @@ namespace Leto.ConnectionStates
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
-        public async Task HandleClientHello(ClientHelloParser clientHello)
+        public WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHello)
         {
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
@@ -72,21 +72,10 @@ namespace Leto.ConnectionStates
             HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
             HandshakeHash.HashData(clientHello.OriginalMessage);
             ParseExtensions(ref clientHello);
+            WritableBufferAwaitable awaiter;
             if (_abbreviatedHandshake)
             {
-                var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
-                WriteServerHello(ref writer, clientHello.SessionId);
-                _secretSchedule.WriteSessionTicket(ref writer);
-                await writer.FlushAsync();
-                _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
-                _requiresTicket = false;
-                await WriteChangeCipherSpec();
-                (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
-                writer = _secureConnection.HandshakeOutput.Writer.Alloc();
-                _secretSchedule.GenerateAndWriteServerVerify(ref writer);
-                await writer.FlushAsync();
-                await _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
-                _state = HandshakeState.WaitingForClientFinishedAbbreviated;
+                awaiter = SendFirstFlightAbbreviated(clientHello);
             }
             else
             {
@@ -95,12 +84,13 @@ namespace Leto.ConnectionStates
                     KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(Span<byte>));
                 }
                 var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
-                SendFirstFlight(ref writer);
-                await writer.FlushAsync();
+                SendSecondFlight(ref writer);
+                writer.Commit();
                 _state = HandshakeState.WaitingForClientKeyExchange;
-                await _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                awaiter = _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             }
             var ignore = ReadingLoop();
+            return awaiter;
         }
 
         private async Task ReadingLoop()
@@ -138,7 +128,7 @@ namespace Leto.ConnectionStates
                                     await writer.FlushAsync();
                                     _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                                 }
-                                await WriteChangeCipherSpec();
+                                WriteChangeCipherSpec();
                                 _writeKey = _storedKey;
                                 writer = _secureConnection.HandshakeOutput.Writer.Alloc();
                                 _secretSchedule.GenerateAndWriteServerVerify(ref writer);
@@ -166,11 +156,11 @@ namespace Leto.ConnectionStates
             }
         }
 
-        private async Task WriteChangeCipherSpec()
+        private void WriteChangeCipherSpec()
         {
             var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian<byte>(1);
-            await writer.FlushAsync();
+            writer.Commit();
             _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
         }
 
@@ -197,6 +187,8 @@ namespace Leto.ConnectionStates
                         ProcessSessionTicket(buffer);
                         break;
                     case ExtensionType.server_name:
+                    case ExtensionType.supported_versions:
+                    case ExtensionType.key_share:
                         break;
                     default:
                         throw new NotImplementedException();

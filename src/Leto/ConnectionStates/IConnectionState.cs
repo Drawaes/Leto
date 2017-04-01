@@ -14,7 +14,7 @@ namespace Leto.ConnectionStates
     {
         CipherSuite CipherSuite { get; }
         void ChangeCipherSpec();
-        Task HandleClientHello(ClientHelloParser clientHelloParser);
+        WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHelloParser);
         IHash HandshakeHash { get; }
         TlsVersion RecordVersion { get; }
         AeadBulkCipher ReadKey { get; }
