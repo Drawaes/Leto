@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="1.1.1" />
+    <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170401-1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Leto.OpenSsl11\Leto.OpenSsl11.csproj" />
+    <ProjectReference Include="..\..\src\Leto.Windows\Leto.Windows.csproj" />
+    <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\TestCert.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

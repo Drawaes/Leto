@@ -41,7 +41,7 @@ namespace Leto.WindowsFacts
             return true;
         }
 
-        //[Fact]
+        [Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

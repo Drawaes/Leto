@@ -17,6 +17,8 @@ namespace Leto.Windows
             PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             PredefinedCipherSuites.RSA_AES_128_GCM_SHA256,
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
+            PredefinedCipherSuites.TLS_AES_128_GCM_SHA256,
+            PredefinedCipherSuites.TLS_AES_256_GCM_SHA384,
         });
         private WindowsKeyExchangeProvider _keyExchangeProvider;
         private WindowsHashProvider _hashProvider;

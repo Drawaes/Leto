@@ -10,33 +10,32 @@ using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {
-    public class Server13ConnectionState : IConnectionState
+    public sealed class Server13ConnectionState : ConnectionState, IConnectionState
     {
-        public CipherSuite CipherSuite => throw new NotImplementedException();
+        public Server13ConnectionState(SecurePipeConnection secureConnection)
+            : base(secureConnection)
+        {
+        }
 
-        public IHash HandshakeHash => throw new NotImplementedException();
-
-        public TlsVersion RecordVersion => throw new NotImplementedException();
-
-        public AeadBulkCipher ReadKey => throw new NotImplementedException();
-
-        public AeadBulkCipher WriteKey => throw new NotImplementedException();
-
-        public bool HandshakeComplete => throw new NotImplementedException();
-
+        public TlsVersion RecordVersion => TlsVersion.Tls12;
+        
         public void ChangeCipherSpec()
         {
+            Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.ChangeCipherSpec);
+        }
+
+        public WritableBufferAwaitable HandleClientHello(ref ClientHelloParser clientHello)
+        {
+            CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls13Draft18, clientHello.CipherSuites);
+            HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
+            HandshakeHash.HashData(clientHello.OriginalMessage);
+
             throw new NotImplementedException();
         }
 
-        public WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHelloParser)
+        protected override void Dispose(bool disposing)
         {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
+            base.Dispose(disposing);
         }
     }
 }

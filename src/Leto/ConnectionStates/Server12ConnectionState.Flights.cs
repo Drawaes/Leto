@@ -14,19 +14,32 @@ namespace Leto.ConnectionStates
 
         private WritableBufferAwaitable SendFirstFlightAbbreviated(ClientHelloParser clientHello)
         {
-            var writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+            var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
             WriteServerHello(ref writer, clientHello.SessionId);
             _secretSchedule.WriteSessionTicket(ref writer);
             writer.Commit();
-            _recordHandler.WriteRecords(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             _requiresTicket = false;
             WriteChangeCipherSpec();
             (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
-            writer = _secureConnection.HandshakeOutput.Writer.Alloc();
+            writer = SecureConnection.HandshakeOutput.Writer.Alloc();
             _secretSchedule.GenerateAndWriteServerVerify(ref writer);
             writer.Commit();
             _state = HandshakeState.WaitingForClientFinishedAbbreviated;
-            return _recordHandler.WriteRecordsAndFlush(_secureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            return _recordHandler.WriteRecordsAndFlush(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+        }
+
+        private WritableBufferAwaitable SendFirstFlightFull()
+        {
+            if (KeyExchange == null)
+            {
+                KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(Span<byte>));
+            }
+            var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
+            SendSecondFlight(ref writer);
+            writer.Commit();
+            _state = HandshakeState.WaitingForClientKeyExchange;
+            return _recordHandler.WriteRecordsAndFlush(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         private void SendSecondFlight(ref WritableBuffer writer)
@@ -100,11 +113,11 @@ namespace Leto.ConnectionStates
         {
             if (_secureRenegotiation)
             {
-                _secureConnection.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
+                SecureConnection.Listener.SecureRenegotiationProvider.WriteExtension(ref writer);
             }
             if (_negotiatedAlpn != Handshake.Extensions.ApplicationLayerProtocolType.None)
             {
-                _secureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
+                SecureConnection.Listener.AlpnProvider.WriteExtension(ref writer, _negotiatedAlpn);
             }
             if (_requiresTicket)
             {
@@ -141,7 +154,7 @@ namespace Leto.ConnectionStates
             _secretSchedule.ServerRandom.CopyTo(tempBuffer.Slice(TlsConstants.RandomLength));
             message.CopyTo(tempBuffer.Slice(TlsConstants.RandomLength * 2));
             writer.Ensure(_certificate.SignatureSize);
-            var bytesWritten = _certificate.SignHash(_secureConnection.Listener.CryptoProvider.HashProvider,
+            var bytesWritten = _certificate.SignHash(_cryptoProvider.HashProvider,
                 _signatureScheme, tempBuffer, writer.Buffer.Span);
             writer.Advance(bytesWritten);
         }

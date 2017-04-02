@@ -46,6 +46,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.WindowsFacts", "test\L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.ProtocolFacts", "test\Leto.ProtocolFacts\Leto.ProtocolFacts.csproj", "{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketServer", "samples\SocketServer\SocketServer.csproj", "{4E69773F-D420-493B-899B-18EF1767BE14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,10 @@ Global
 		{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E69773F-D420-493B-899B-18EF1767BE14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E69773F-D420-493B-899B-18EF1767BE14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E69773F-D420-493B-899B-18EF1767BE14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E69773F-D420-493B-899B-18EF1767BE14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -88,5 +94,6 @@ Global
 		{DC923514-D2A9-4E80-A020-8C58406E7A00} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 		{0E1D900F-49D9-4330-9FF2-EBEEFFF0A4F3} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
+		{4E69773F-D420-493B-899B-18EF1767BE14} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 	EndGlobalSection
 EndGlobal

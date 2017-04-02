@@ -32,9 +32,6 @@ namespace Leto.ConnectionStates
         public AeadBulkCipher ReadKey => null;
         public AeadBulkCipher WriteKey => null;
         public bool HandshakeComplete => throw new NotImplementedException();
-        public ICertificate Certificate => throw new NotImplementedException();
-        public IKeyExchange KeyExchange => throw new NotImplementedException();
-        public SignatureScheme SignatureScheme => throw new NotImplementedException();
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {
@@ -49,20 +46,20 @@ namespace Leto.ConnectionStates
             {
                 var reader = await _securePipe.HandshakeInput.Reader.ReadAsync();
                 var buffer = reader.Buffer;
-                HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake, out HandshakeType recordType);
-                if (recordType != HandshakeType.client_hello)
-                {
-                    _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
-                    if (recordType == HandshakeType.none)
-                    {
-                        continue;
-                    }
-                    Alerts.AlertException.ThrowUnexpectedMessage(recordType);
-                }
                 IConnectionState connectionState;
                 ClientHelloParser helloParser;
                 try
                 {
+                    HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake, out HandshakeType recordType);
+                    if (recordType != HandshakeType.client_hello)
+                    {
+                        _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
+                        if (recordType == HandshakeType.none)
+                        {
+                            continue;
+                        }
+                        Alerts.AlertException.ThrowUnexpectedMessage(recordType);
+                    }
                     helloParser = new ClientHelloParser(handshake);
                     var version = GetVersion(ref helloParser);
                     switch (version)
@@ -71,7 +68,8 @@ namespace Leto.ConnectionStates
                             connectionState = new Server12ConnectionState(_securePipe);
                             break;
                         case TlsVersion.Tls13Draft18:
-                            throw new NotImplementedException();
+                            connectionState = new Server13ConnectionState(_securePipe);
+                            break;
                         default:
                             throw new NotImplementedException();
                     }
@@ -81,7 +79,7 @@ namespace Leto.ConnectionStates
                 {
                     _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.Start);
                 }
-                await connectionState.HandleClientHello(helloParser);
+                await connectionState.HandleClientHello(ref helloParser);
                 return;
             }
         }
@@ -135,7 +133,7 @@ namespace Leto.ConnectionStates
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
-        public WritableBufferAwaitable HandleClientHello(ClientHelloParser clientHelloParser)
+        public WritableBufferAwaitable HandleClientHello(ref ClientHelloParser clientHelloParser)
         {
             throw new NotImplementedException();
         }

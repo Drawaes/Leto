@@ -19,6 +19,9 @@ namespace Leto.OpenSsl11
             PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             PredefinedCipherSuites.RSA_AES_128_GCM_SHA256,
             PredefinedCipherSuites.RSA_AES_256_GCM_SHA384,
+            PredefinedCipherSuites.TLS_AES_128_GCM_SHA256,
+            PredefinedCipherSuites.TLS_AES_256_GCM_SHA384,
+            PredefinedCipherSuites.TLS_CHACHA20_POLY1305_SHA256,
         });
         private OpenSslKeyExchangeProvider _keyExchangeProvider;
         private IHashProvider _hashProvider;

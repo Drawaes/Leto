@@ -22,6 +22,7 @@ namespace Leto.Windows
         private KeyMode _keyMode;
         private OwnedBuffer<byte> _scratchSpace;
         private BufferHandle _scratchPin;
+        private static readonly byte[] _empty = new byte[16];
 
         internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
@@ -52,6 +53,10 @@ namespace Leto.Windows
         public unsafe void Init(KeyMode mode)
         {
             _keyMode = mode;
+            fixed (void* empty = _empty)
+            {
+                Unsafe.CopyBlock(TempIVPointer, empty,(uint) _empty.Length);
+            }
             _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
             {
                 dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,

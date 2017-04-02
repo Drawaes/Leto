@@ -75,7 +75,8 @@ namespace Leto.ConnectionStates.SecretSchedules
         public bool ReadSessionTicket(Span<byte> buffer)
         {
             buffer = Sessions.ProcessSessionTicket(buffer);
-            var info = buffer.Read<SessionInfo>();
+            SessionInfo info;
+            (info, buffer) = buffer.Consume<SessionInfo>();
             if (info.Version != _state.RecordVersion)
             {
                 return false;
