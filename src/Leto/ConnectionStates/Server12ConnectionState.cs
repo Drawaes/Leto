@@ -16,9 +16,6 @@ namespace Leto.ConnectionStates
 {
     public sealed partial class Server12ConnectionState : ConnectionState, IConnectionState
     {
-        private ApplicationLayerProtocolType _negotiatedAlpn;
-        private bool _secureRenegotiation;
-        private SignatureScheme _signatureScheme;
         private SecretSchedule12 _secretSchedule;
         private AeadBulkCipher _storedKey;
         private bool _requiresTicket;
@@ -30,7 +27,6 @@ namespace Leto.ConnectionStates
             _secretSchedule = new SecretSchedule12(this);
         }
 
-        public IKeyExchange KeyExchange { get; internal set; }
         public TlsVersion RecordVersion => TlsVersion.Tls12;
 
         public void ChangeCipherSpec()
@@ -133,44 +129,27 @@ namespace Leto.ConnectionStates
             }
         }
 
+        protected override void HandleExtension(ExtensionType extensionType, Span<byte> buffer)
+        {
+            switch (extensionType)
+            {
+                case ExtensionType.supported_groups:
+                    KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, buffer);
+                    break;
+                case ExtensionType.SessionTicket:
+                    ProcessSessionTicket(buffer);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         private void WriteChangeCipherSpec()
         {
             var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian<byte>(1);
             writer.Commit();
             _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
-        }
-
-        private void ParseExtensions(ref ClientHelloParser clientHello)
-        {
-            foreach (var (extensionType, buffer) in clientHello.Extensions)
-            {
-                switch (extensionType)
-                {
-                    case ExtensionType.application_layer_protocol_negotiation:
-                        _negotiatedAlpn = SecureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
-                        break;
-                    case ExtensionType.supported_groups:
-                        KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, buffer);
-                        break;
-                    case ExtensionType.signature_algorithms:
-                        _signatureScheme = _certificate.SelectAlgorithm(buffer);
-                        break;
-                    case ExtensionType.renegotiation_info:
-                        SecureConnection.Listener.SecureRenegotiationProvider.ProcessExtension(buffer);
-                        _secureRenegotiation = true;
-                        break;
-                    case ExtensionType.SessionTicket:
-                        ProcessSessionTicket(buffer);
-                        break;
-                    case ExtensionType.server_name:
-                    case ExtensionType.supported_versions:
-                    case ExtensionType.key_share:
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
         }
 
         private void ProcessSessionTicket(Span<byte> buffer)

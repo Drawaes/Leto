@@ -13,6 +13,7 @@ namespace Leto
         private ApplicationLayerProtocolProvider _alpnProvider;
         private SecureRenegotiationProvider _secureRenegotiationProvider;
         private CertificateList _certificateList = new CertificateList();
+        private HostNameProvider _hostNameProvider = new HostNameProvider();
         private SecretSchedulePool _secretPool;
         private PipeFactory _pipeFactory;
         private bool _factoryOwned;
@@ -40,6 +41,7 @@ namespace Leto
         public SecureRenegotiationProvider SecureRenegotiationProvider => _secureRenegotiationProvider;
         public CertificateList CertificateList => _certificateList;
         public SecretSchedulePool SecretSchedulePool => _secretPool;
+        public HostNameProvider HostNameProvider => _hostNameProvider;
 
         public Task<SecurePipeConnection> CreateConnection(IPipeConnection connection)
         {

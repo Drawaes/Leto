@@ -7,5 +7,7 @@ namespace Leto.KeyExchanges
     {
         IKeyExchange GetKeyExchange(NamedGroup namedGroup);
         IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, Span<byte> supportedGroups);
+        IKeyExchange GetKeyExchange(Span<byte> keyshare);
+        IKeyExchange GetKeyExchangeFromSupportedGroups(Span<byte> buffer);
     }
 }

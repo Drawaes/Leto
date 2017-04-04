@@ -2,7 +2,9 @@
 using Leto.Certificates;
 using Leto.CipherSuites;
 using Leto.Handshake;
+using Leto.Handshake.Extensions;
 using Leto.Hashes;
+using Leto.KeyExchanges;
 using Leto.RecordLayer;
 using System;
 using System.Collections.Generic;
@@ -16,9 +18,13 @@ namespace Leto.ConnectionStates
         protected AeadBulkCipher _writeKey;
         protected RecordHandler _recordHandler;
         protected ICryptoProvider _cryptoProvider;
+        protected bool _secureRenegotiation;
         protected HandshakeState _state;
         protected ICertificate _certificate;
+        protected SignatureScheme _signatureScheme;
+        protected ApplicationLayerProtocolType _negotiatedAlpn;
         private SecurePipeConnection _secureConnection;
+        protected string _hostName;
 
         public ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -32,18 +38,56 @@ namespace Leto.ConnectionStates
         public AeadBulkCipher WriteKey => _writeKey;
         public IHash HandshakeHash { get; set; }
         public CipherSuite CipherSuite { get; set; }
+        public IKeyExchange KeyExchange { get; internal set; }
         public bool HandshakeComplete => _state == HandshakeState.HandshakeCompleted;
 
-        public void Dispose()
+        protected void ParseExtensions(ref ClientHelloParser clientHello)
         {
-            Dispose(true);
+            foreach (var (extensionType, buffer) in clientHello.Extensions)
+            {
+                switch (extensionType)
+                {
+                    case ExtensionType.application_layer_protocol_negotiation:
+                        _negotiatedAlpn = SecureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
+                        break;
+                    case ExtensionType.renegotiation_info:
+                        SecureConnection.Listener.SecureRenegotiationProvider.ProcessExtension(buffer);
+                        _secureRenegotiation = true;
+                        break;
+                    case ExtensionType.server_name:
+                        _hostName = SecureConnection.Listener.HostNameProvider.ProcessHostNameExtension(buffer);
+                        break;
+                    case ExtensionType.signature_algorithms:
+                        if (_certificate == null)
+                        {
+                            (_certificate, _signatureScheme) = SecureConnection.Listener.CertificateList.GetCertificate(buffer);
+                        }
+                        else
+                        {
+                            _signatureScheme = _certificate.SelectAlgorithm(buffer);
+                        }
+                        break;
+                    case ExtensionType.supported_versions:
+                        break;
+                    default:
+                        HandleExtension(extensionType, buffer);
+                        break;
+                }
+            }
         }
+
+        protected abstract void HandleExtension(ExtensionType extensionType, Span<byte> buffer);
 
         protected virtual void Dispose(bool disposing)
         {
             HandshakeHash?.Dispose();
             HandshakeHash = null;
             GC.SuppressFinalize(this);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
 
         ~ConnectionState()

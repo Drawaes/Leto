@@ -8,6 +8,26 @@ namespace Leto.OpenSsl11
 {
     public sealed class OpenSslKeyExchangeProvider : IKeyExchangeProvider
     {
+        public IKeyExchange GetKeyExchangeFromSupportedGroups(Span<byte> supportedGroups)
+        {
+            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            while (supportedGroups.Length > 0)
+            {
+                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                switch (namedGroup)
+                {
+                    case NamedGroup.secp256r1:
+                    case NamedGroup.secp384r1:
+                    case NamedGroup.secp521r1:
+                        return new OpenSslECCurveKeyExchange(namedGroup);
+                    case NamedGroup.x25519:
+                    case NamedGroup.x448:
+                        return new OpenSslECFunctionKeyExchange(namedGroup);
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Tls 1.3 and onwards KeyExchange selection
         /// </summary>
@@ -40,7 +60,7 @@ namespace Leto.OpenSsl11
         /// <returns></returns>
         public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, Span<byte> supportedGroups)
         {
-            switch(keyExchange)
+            switch (keyExchange)
             {
                 case KeyExchangeType.Rsa:
                     return new RsaKeyExchange();
@@ -57,10 +77,10 @@ namespace Leto.OpenSsl11
         private IKeyExchange EcdheKeyExchange(Span<byte> supportedGroups)
         {
             supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
-            while(supportedGroups.Length >0)
+            while (supportedGroups.Length > 0)
             {
                 var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
-                switch(namedGroup)
+                switch (namedGroup)
                 {
                     case NamedGroup.secp256r1:
                     case NamedGroup.secp384r1:
@@ -79,5 +99,11 @@ namespace Leto.OpenSsl11
         {
             //No resources currently to clean up
         }
+
+        public IKeyExchange GetKeyExchange(Span<byte> keyshare)
+        {
+            throw new NotImplementedException();
+        }
+        
     }
 }

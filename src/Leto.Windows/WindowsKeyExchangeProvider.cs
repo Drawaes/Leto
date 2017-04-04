@@ -76,6 +76,25 @@ namespace Leto.Windows
             return null;
         }
 
+        public IKeyExchange GetKeyExchangeFromSupportedGroups(Span<byte> supportedGroups)
+        {
+            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            while (supportedGroups.Length > 0)
+            {
+                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                switch (namedGroup)
+                {
+                    case NamedGroup.secp256r1:
+                        return new WindowsECCurveKeyExchange(_secp256r1, namedGroup);
+                    case NamedGroup.secp384r1:
+                        return new WindowsECCurveKeyExchange(_secp384r1, namedGroup);
+                    case NamedGroup.secp521r1:
+                        return new WindowsECCurveKeyExchange(_secp521r1, namedGroup);
+                }
+            }
+            return null;
+        }
+
         public void Dispose()
         {
             _secp256r1?.Dispose();
@@ -85,6 +104,11 @@ namespace Leto.Windows
             _secp521r1?.Dispose();
             _secp521r1 = null;
             GC.SuppressFinalize(this);
+        }
+
+        public IKeyExchange GetKeyExchange(Span<byte> keyshare)
+        {
+            throw new NotImplementedException();
         }
 
         ~WindowsKeyExchangeProvider()

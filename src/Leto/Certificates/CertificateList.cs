@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Leto.BufferExtensions;
 
 namespace Leto.Certificates
 {
@@ -36,6 +37,24 @@ namespace Leto.Certificates
         public ICertificate GetCertificate(string host, SignatureScheme type)
         {
             return _certificates[0];
+        }
+
+        public (ICertificate, SignatureScheme) GetCertificate(Span<byte> buffer)
+        {
+            buffer = ReadVector16(ref buffer);
+            while(buffer.Length > 0)
+            {
+                var scheme = ReadBigEndian<SignatureScheme>(ref buffer);
+                for(int i = 0; i < _certificates.Count;i++)
+                {
+                    if (_certificates[i].SupportsScheme(scheme))
+                    {
+                        return (_certificates[i], scheme);
+                    }
+                }
+            }
+            Alerts.AlertException.ThrowFailedHandshake("Failed to find a certificate and scheme that matches");
+            return (null, SignatureScheme.none);
         }
     }
 }

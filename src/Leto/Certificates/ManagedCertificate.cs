@@ -44,7 +44,7 @@ namespace Leto.Certificates
                 _certificateType = CertificateType.ecdsa;
                 _certificateData = certificate.RawData;
                 _signatureSize = _ecdsaPrivateKey.KeySize / 8;
-                switch(_ecdsaPrivateKey.KeySize)
+                switch (_ecdsaPrivateKey.KeySize)
                 {
                     case 256:
                         _ecDsaSignatureScheme = SignatureScheme.ecdsa_secp256r1_sha256;
@@ -82,7 +82,7 @@ namespace Leto.Certificates
 
         public SignatureScheme SelectAlgorithm(Span<byte> buffer)
         {
-            if(_certificateType == CertificateType.ecdsa)
+            if (_certificateType == CertificateType.ecdsa)
             {
                 return _ecDsaSignatureScheme;
             }
@@ -119,6 +119,21 @@ namespace Leto.Certificates
             }
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Certificate signing failed");
             return 0;
+        }
+
+        public bool SupportsScheme(SignatureScheme scheme)
+        {
+            if (_certificateType == CertificateType.ecdsa)
+            {
+                return scheme == _ecDsaSignatureScheme;
+            }
+            var lastByte = 0x00FF & (ushort)scheme;
+            var firstByte = 0xFF00 & (ushort)scheme;
+            if (lastByte == 0x0001 || firstByte == 0x0800)
+            {
+                return true;
+            }
+            return false;
         }
 
         private HashAlgorithmName GetHashName(SignatureScheme scheme)
