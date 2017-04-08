@@ -13,10 +13,8 @@ namespace Leto.ConnectionStates
     {
         private void SendFirstFlightAbbreviated(ClientHelloParser clientHello)
         {
-            var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
-            WriteServerHello(ref writer, clientHello.SessionId);
-            _secretSchedule.WriteSessionTicket(ref writer);
-            writer.Commit();
+            WriteServerHello(clientHello.SessionId);
+            _secretSchedule.WriteSessionTicket();
             _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             _requiresTicket = false;
             WriteChangeCipherSpec();
@@ -32,29 +30,27 @@ namespace Leto.ConnectionStates
             {
                 KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(Span<byte>));
             }
-            var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
-            SendSecondFlight(ref writer);
-            writer.Commit();
+            SendSecondFlight();
             _state = HandshakeState.WaitingForClientKeyExchange;
             _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
-        private void SendSecondFlight(ref WritableBuffer writer)
+        private void SendSecondFlight()
         {
-            WriteServerHello(ref writer, new Span<byte>());
-            WriteCertificates(ref writer);
-            WriteServerKeyExchange(ref writer);
-            WriteServerHelloDone(ref writer);
+            WriteServerHello(new Span<byte>());
+            WriteCertificates();
+            WriteServerKeyExchange();
+            WriteServerHelloDone();
         }
 
-        private void WriteServerHelloDone(ref WritableBuffer writer) =>
+        private void WriteServerHelloDone() =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) => { return; }, HandshakeType.server_hello_done);
 
-        private void WriteCertificates(ref WritableBuffer writer) =>
+        private void WriteCertificates() =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
                 CertificateWriter.WriteCertificates(buffer, _certificate), HandshakeType.certificate);
 
-        private void WriteServerKeyExchange(ref WritableBuffer writer)
+        private void WriteServerKeyExchange()
         {
             if (KeyExchange.RequiresServerKeyExchange)
             {
@@ -62,7 +58,7 @@ namespace Leto.ConnectionStates
             }
         }
 
-        private void WriteServerHello(ref WritableBuffer writer, Span<byte> sessionId) =>
+        private void WriteServerHello(Span<byte> sessionId) =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerContent(ref buffer, sessionId), HandshakeType.server_hello);
         
         private void WriteServerContent(ref WritableBuffer writer, Span<byte> sessionId)

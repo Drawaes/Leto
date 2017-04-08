@@ -147,7 +147,6 @@ namespace Leto.ConnectionStates
             var hasReader = SecureConnection.HandshakeInput.Reader.TryRead(out ReadResult reader);
             if (!hasReader) return hasWritten;
             var buffer = reader.Buffer;
-            WritableBuffer writer;
             try
             {
                 while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))

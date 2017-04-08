@@ -104,7 +104,6 @@ namespace Leto.ConnectionStates
             var hasReader = SecureConnection.HandshakeInput.Reader.TryRead(out ReadResult reader);
             if (!hasReader) return hasWritten;
             var buffer = reader.Buffer;
-            WritableBuffer writer;
             try
             {
                 while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
@@ -128,9 +127,7 @@ namespace Leto.ConnectionStates
                             }
                             if (_requiresTicket)
                             {
-                                writer = SecureConnection.HandshakeOutput.Writer.Alloc();
-                                _secretSchedule.WriteSessionTicket(ref writer);
-                                writer.Commit();
+                                _secretSchedule.WriteSessionTicket();
                                 hasWritten = true;
                                 _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                             }

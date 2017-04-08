@@ -41,6 +41,7 @@ namespace Leto.Handshake
                 var hashBuffer = writer.AsReadableBuffer();
                 state.HandshakeHash.HashData(hashBuffer);
             }
+            writer.Commit();
         }
     }
 }

@@ -85,7 +85,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             return true;
         }
 
-        public void WriteSessionTicket(ref WritableBuffer writer) =>
+        public void WriteSessionTicket() =>
             _state.WriteHandshakeFrame((ref WritableBuffer w) =>
             {
                 var currentExpiry = _state.SecureConnection.Listener.SessionProvider.GetCurrentExpiry();
