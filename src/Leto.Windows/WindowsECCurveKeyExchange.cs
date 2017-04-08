@@ -61,7 +61,6 @@ namespace Leto.Windows
                 BCryptDeriveKey(secret, hashType, salt, output);
             }
             Dispose();
-
         }
 
         private void GenerateKeyPair()

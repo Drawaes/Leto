@@ -41,7 +41,7 @@ namespace Leto.Windows
         private unsafe byte* MacContextPointer => (byte*)_scratchPin.PinnedPointer;
         private unsafe byte* TagPointer => MacContextPointer + _blockLength;
         private unsafe byte* TempIVPointer => TagPointer + _tagSize;
-        private unsafe void* AdditionalInfoPointer => TempIVPointer + _iv.Length;
+        private unsafe void* AdditionalInfoPointer => TempIVPointer + _tagSize;
 
         public unsafe void AddAdditionalInfo(AdditionalInfo addInfo)
         {
@@ -55,7 +55,7 @@ namespace Leto.Windows
             _keyMode = mode;
             fixed (void* empty = _empty)
             {
-                Unsafe.CopyBlock(TempIVPointer, empty, (uint)_empty.Length);
+                Unsafe.CopyBlock(TempIVPointer, empty, (uint)_tagSize);
             }
             _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
             {

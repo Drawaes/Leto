@@ -85,7 +85,9 @@ namespace Leto.ConnectionStates.SecretSchedules
             return true;
         }
 
-        public void WriteSessionTicket() =>
+        public void WriteSessionTicket()
+        {
+            if (_state.SecureConnection.Listener.SessionProvider == null) return;
             _state.WriteHandshakeFrame((ref WritableBuffer w) =>
             {
                 var currentExpiry = _state.SecureConnection.Listener.SessionProvider.GetCurrentExpiry();
@@ -103,7 +105,7 @@ namespace Leto.ConnectionStates.SecretSchedules
 
                 Sessions.EncryptSessionKey(ref w, ticketBuffer);
             }, HandshakeType.new_session_ticket);
-
+        }
         public bool GenerateAndCompareClientVerify(Span<byte> clientVerify)
         {
             var hashResult = new byte[_state.HandshakeHash.HashSize];

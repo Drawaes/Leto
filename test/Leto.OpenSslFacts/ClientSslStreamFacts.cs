@@ -38,7 +38,7 @@ namespace Leto.OpenSslFacts
 
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
         
-        //[Fact(Skip = "Test test")]
+        [Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

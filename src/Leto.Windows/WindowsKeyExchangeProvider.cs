@@ -110,8 +110,8 @@ namespace Leto.Windows
         {
             while(keyshare.Length > 0)
             {
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref keyshare);
                 var key = BufferExtensions.ReadVector16(ref keyshare);
+                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref key);
                 var instance = GetKeyExchange(namedGroup);
                 if(instance != null)
                 {

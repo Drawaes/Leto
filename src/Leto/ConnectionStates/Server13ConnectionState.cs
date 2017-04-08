@@ -9,11 +9,14 @@ using Leto.Hashes;
 using System.IO.Pipelines;
 using System.Net.Http;
 using Leto.KeyExchanges;
+using Leto.Sessions;
 
 namespace Leto.ConnectionStates
 {
     public sealed class Server13ConnectionState : ConnectionState, IConnectionState
     {
+        private PskExchangeMode _pskMode = PskExchangeMode.none;
+
         public Server13ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection)
         {
         }
@@ -134,8 +137,28 @@ namespace Leto.ConnectionStates
                     break;
                 case ExtensionType.SessionTicket:
                     break;
+                case ExtensionType.psk_key_exchange_modes:
+                    ProcessPskMode(buffer);
+                    break;
                 default:
                     throw new NotImplementedException();
+            }
+        }
+
+        private void ProcessPskMode(Span<byte> buffer)
+        {
+            while (buffer.Length > 0)
+            {
+                PskExchangeMode mode;
+                (mode, buffer) = buffer.Consume<PskExchangeMode>();
+                if (_pskMode == PskExchangeMode.none)
+                {
+                    _pskMode = mode;
+                }
+                else
+                {
+                    _pskMode |= mode;
+                }
             }
         }
 
@@ -151,11 +174,18 @@ namespace Leto.ConnectionStates
             {
                 while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
                 {
-                    Span<byte> span;
+                    HandshakeHash?.HashData(messageBuffer);
                     switch (messageType)
                     {
                         case HandshakeType.client_hello when _state == HandshakeState.WaitingHelloRetry:
-                            throw new NotImplementedException();
+                            var clientParser = new ClientHelloParser(messageBuffer);
+                            ParseExtensions(ref clientParser);
+                            if(!KeyExchange?.HasPeerKey == true)
+                            {
+                                Alerts.AlertException.ThrowFailedHandshake("Unable to negotiate a common exchange");
+                            }
+                            SendServerFirstFlight();
+                            return true;
                         default:
                             throw new NotImplementedException();
                     }

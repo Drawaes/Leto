@@ -17,7 +17,7 @@ namespace Leto.Windows.Interop
             fixed (void* inputPtr = &input.DangerousGetPinnableReference())
             fixed (void* outputPtr = &input.DangerousGetPinnableReference())
             {
-                var result = BCryptDecrypt(key, inputPtr, input.Length, &info, ivBuffer, info.cbNonce, outputPtr, output.Length, out int length, 0);
+                var result = BCryptDecrypt(key, inputPtr, input.Length, &info, ivBuffer, info.cbMacContext, outputPtr, output.Length, out int length, 0);
                 ThrowOnErrorReturnCode(result);
                 return info;
             }
@@ -28,7 +28,7 @@ namespace Leto.Windows.Interop
         {
             fixed (void* ioPtr = &inputOutput.DangerousGetPinnableReference())
             {
-                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, &info, ivBuffer, info.cbNonce, ioPtr, inputOutput.Length, out int length, 0);
+                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, &info, ivBuffer, info.cbMacContext, ioPtr, inputOutput.Length, out int length, 0);
                 ThrowOnErrorReturnCode(result);
                 return info;
             }
@@ -42,7 +42,7 @@ namespace Leto.Windows.Interop
                 context.pbTag = tagPtr;
                 context.cbTag = tag.Length;
                 context.dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
-                var result = BCryptEncrypt(key, null, 0, &context, ivBuffer, context.cbNonce, null, 0, out int size, 0);
+                var result = BCryptEncrypt(key, null, 0, &context, ivBuffer, context.cbMacContext, null, 0, out int size, 0);
                 ThrowOnErrorReturnCode(result);
             }
         }
