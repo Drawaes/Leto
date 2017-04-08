@@ -8,16 +8,13 @@ namespace Leto.CipherSuites
     {
         private CipherSuite[] _cipherSuites;
 
-        public CipherSuiteProvider(CipherSuite[] cipherSuites)
-        {
-            _cipherSuites = cipherSuites;
-        }
+        public CipherSuiteProvider(CipherSuite[] cipherSuites) => _cipherSuites = cipherSuites;
 
         public CipherSuite GetCipherSuite(ushort cipherSuite)
         {
-            for(int i = 0; i < _cipherSuites.Length; i++)
+            for (var i = 0; i < _cipherSuites.Length; i++)
             {
-                if(_cipherSuites[i].Code == cipherSuite)
+                if (_cipherSuites[i].Code == cipherSuite)
                 {
                     return _cipherSuites[i];
                 }

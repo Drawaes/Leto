@@ -12,8 +12,8 @@ namespace Leto.Internal
         //being incorrect
         public static bool ConstantTimeEquals(this Span<byte> a, Span<byte> b)
         {
-            uint diff = (uint)a.Length ^ (uint)b.Length;
-            for (int i = 0; i < a.Length && i < b.Length; i++)
+            var diff = (uint)a.Length ^ (uint)b.Length;
+            for (var i = 0; i < a.Length && i < b.Length; i++)
             {
                 diff |= (uint)(a[i] ^ b[i]);
             }

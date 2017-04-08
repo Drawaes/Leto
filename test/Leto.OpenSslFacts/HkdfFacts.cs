@@ -44,7 +44,7 @@ OKM=8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4
         public void HkdfFact(string input)
         {
             var lines = input.Split('\n').Select(l => l.Trim().Split('=')).ToDictionary(val => val[0], val => val[1]);
-            HashType hashType = (HashType)Enum.Parse(typeof(HashType), lines["Hash"], true);
+            var hashType = (HashType)Enum.Parse(typeof(HashType), lines["Hash"], true);
             var ikm = BulkCipherFacts.StringToByteArray(lines["IKM"]);
             var salt = string.IsNullOrEmpty(lines["salt"]) ? new byte[0] : BulkCipherFacts.StringToByteArray(lines["salt"]);
             var info = string.IsNullOrEmpty(lines["info"]) ? new byte[0] : BulkCipherFacts.StringToByteArray(lines["info"]);

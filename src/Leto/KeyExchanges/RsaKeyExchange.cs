@@ -16,15 +16,11 @@ namespace Leto.KeyExchanges
 
         public NamedGroup NamedGroup => NamedGroup.None;
 
-        public void DeriveMasterSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
-        {
+        public void DeriveMasterSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output) =>
             hashProvider.Tls12Prf(hashType, _premasterSecret, TlsConstants.Tls12.Label_MasterSecret, seed, output);
-        }
 
-        public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
-        {
+        public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output) =>
             throw new NotImplementedException();
-        }
 
         public void Dispose()
         {
@@ -39,9 +35,6 @@ namespace Leto.KeyExchanges
             _premasterSecret = peerKey.ToArray();
         }
 
-        public int WritePublicKey(Span<byte> keyBuffer)
-        {
-            throw new NotImplementedException();
-        }
+        public int WritePublicKey(Span<byte> keyBuffer) => throw new NotImplementedException();
     }
 }

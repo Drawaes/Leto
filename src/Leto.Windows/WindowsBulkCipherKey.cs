@@ -55,7 +55,7 @@ namespace Leto.Windows
             _keyMode = mode;
             fixed (void* empty = _empty)
             {
-                Unsafe.CopyBlock(TempIVPointer, empty,(uint) _empty.Length);
+                Unsafe.CopyBlock(TempIVPointer, empty, (uint)_empty.Length);
             }
             _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
             {
@@ -117,10 +117,7 @@ namespace Leto.Windows
             return (int)totalWritten;
         }
 
-        public unsafe void WriteTag(ReadOnlySpan<byte> tagSpan)
-        {
-            BCryptDecryptSetTag(_keyHandle, tagSpan, _context, TempIVPointer);
-        }
+        public unsafe void WriteTag(ReadOnlySpan<byte> tagSpan) => BCryptDecryptSetTag(_keyHandle, tagSpan, _context, TempIVPointer);
 
         public void Dispose()
         {

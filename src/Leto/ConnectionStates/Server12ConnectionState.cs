@@ -3,11 +3,7 @@ using System.IO.Pipelines;
 using Leto.Handshake;
 using Leto.RecordLayer;
 using Leto.CipherSuites;
-using Leto.Handshake.Extensions;
-using Leto.KeyExchanges;
-using Leto.Hashes;
 using System.Threading.Tasks;
-using Leto.Certificates;
 using Leto.BulkCiphers;
 using Leto.ConnectionStates.SecretSchedules;
 using System.Binary;
@@ -21,11 +17,8 @@ namespace Leto.ConnectionStates
         private bool _requiresTicket;
         private bool _abbreviatedHandshake;
 
-        public Server12ConnectionState(SecurePipeConnection secureConnection)
-            : base(secureConnection)
-        {
+        public Server12ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection) =>
             _secretSchedule = new SecretSchedule12(this);
-        }
 
         public TlsVersion RecordVersion => TlsVersion.Tls12;
 
@@ -45,7 +38,7 @@ namespace Leto.ConnectionStates
             Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
         }
 
-        public WritableBufferAwaitable HandleClientHello(ref ClientHelloParser clientHello)
+        public bool HandleClientHello(ref ClientHelloParser clientHello)
         {
             CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls12, clientHello.CipherSuites);
             HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
@@ -53,80 +46,16 @@ namespace Leto.ConnectionStates
             _certificate = SecureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             ParseExtensions(ref clientHello);
-            WritableBufferAwaitable awaiter;
             if (_abbreviatedHandshake)
             {
-                awaiter = SendFirstFlightAbbreviated(clientHello);
+                SendFirstFlightAbbreviated(clientHello);
             }
             else
             {
-                awaiter = SendFirstFlightFull();
+                SendFirstFlightFull();
             }
-            var ignore = ReadingLoop();
-            return awaiter;
-        }
-
-        private async Task ReadingLoop()
-        {
-            while (true)
-            {
-                var reader = await SecureConnection.HandshakeInput.Reader.ReadAsync();
-                var buffer = reader.Buffer;
-                WritableBuffer writer;
-                try
-                {
-                    while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
-                    {
-                        Span<byte> span;
-                        switch (messageType)
-                        {
-                            case HandshakeType.client_key_exchange when _state == HandshakeState.WaitingForClientKeyExchange:
-                                span = messageBuffer.ToSpan();
-                                HandshakeHash.HashData(span);
-                                span = span.Slice(HandshakeFraming.HeaderSize);
-                                KeyExchange.SetPeerKey(span, _certificate, _signatureScheme);
-                                _secretSchedule.GenerateMasterSecret();
-                                _state = HandshakeState.WaitingForChangeCipherSpec;
-                                break;
-                            case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinished:
-                                span = messageBuffer.ToSpan();
-                                if (_secretSchedule.GenerateAndCompareClientVerify(span))
-                                {
-                                    _state = HandshakeState.HandshakeCompleted;
-                                }
-                                if (_requiresTicket)
-                                {
-                                    writer = SecureConnection.HandshakeOutput.Writer.Alloc();
-                                    _secretSchedule.WriteSessionTicket(ref writer);
-                                    writer.Commit();
-                                    _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
-                                }
-                                WriteChangeCipherSpec();
-                                _writeKey = _storedKey;
-                                writer = SecureConnection.HandshakeOutput.Writer.Alloc();
-                                _secretSchedule.GenerateAndWriteServerVerify(ref writer);
-                                writer.Commit();
-                                await _recordHandler.WriteRecordsAndFlush(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
-                                _secretSchedule.DisposeStore();
-                                break;
-                            case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinishedAbbreviated:
-                                span = messageBuffer.ToSpan();
-                                if (_secretSchedule.GenerateAndCompareClientVerify(span))
-                                {
-                                }
-                                _state = HandshakeState.HandshakeCompleted;
-                                _secretSchedule.DisposeStore();
-                                break;
-                            default:
-                                throw new NotImplementedException();
-                        }
-                    }
-                }
-                finally
-                {
-                    SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
-                }
-            }
+            ProcessHandshake();
+            return true;
         }
 
         protected override void HandleExtension(ExtensionType extensionType, Span<byte> buffer)
@@ -167,6 +96,69 @@ namespace Leto.ConnectionStates
             KeyExchange?.Dispose();
             KeyExchange = null;
             base.Dispose(disposing);
+        }
+
+        public bool ProcessHandshake()
+        {
+            var hasWritten = false;
+            var hasReader = SecureConnection.HandshakeInput.Reader.TryRead(out ReadResult reader);
+            if (!hasReader) return hasWritten;
+            var buffer = reader.Buffer;
+            WritableBuffer writer;
+            try
+            {
+                while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
+                {
+                    Span<byte> span;
+                    switch (messageType)
+                    {
+                        case HandshakeType.client_key_exchange when _state == HandshakeState.WaitingForClientKeyExchange:
+                            span = messageBuffer.ToSpan();
+                            HandshakeHash.HashData(span);
+                            span = span.Slice(HandshakeFraming.HeaderSize);
+                            KeyExchange.SetPeerKey(span, _certificate, _signatureScheme);
+                            _secretSchedule.GenerateMasterSecret();
+                            _state = HandshakeState.WaitingForChangeCipherSpec;
+                            break;
+                        case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinished:
+                            span = messageBuffer.ToSpan();
+                            if (_secretSchedule.GenerateAndCompareClientVerify(span))
+                            {
+                                _state = HandshakeState.HandshakeCompleted;
+                            }
+                            if (_requiresTicket)
+                            {
+                                writer = SecureConnection.HandshakeOutput.Writer.Alloc();
+                                _secretSchedule.WriteSessionTicket(ref writer);
+                                writer.Commit();
+                                hasWritten = true;
+                                _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                            }
+                            WriteChangeCipherSpec();
+                            _writeKey = _storedKey;
+                            _secretSchedule.GenerateAndWriteServerVerify();
+                            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                            hasWritten = true;
+                            _secretSchedule.DisposeStore();
+                            break;
+                        case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinishedAbbreviated:
+                            span = messageBuffer.ToSpan();
+                            if (_secretSchedule.GenerateAndCompareClientVerify(span))
+                            {
+                            }
+                            _state = HandshakeState.HandshakeCompleted;
+                            _secretSchedule.DisposeStore();
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                }
+            }
+            finally
+            {
+                SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
+            }
+            return hasWritten;
         }
     }
 }

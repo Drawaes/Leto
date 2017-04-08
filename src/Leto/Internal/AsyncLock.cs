@@ -31,12 +31,9 @@ namespace Leto.Internal
         {
             private readonly AsyncLock _toRelease;
 
-            internal Releaser(AsyncLock toRelease) { _toRelease = toRelease; }
+            internal Releaser(AsyncLock toRelease) => _toRelease = toRelease;
 
-            public void Dispose()
-            {
-                _toRelease?._semaphore.Release();
-            }
+            public void Dispose() => _toRelease?._semaphore.Release();
         }
     }
 }

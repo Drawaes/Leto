@@ -39,11 +39,8 @@ namespace Leto.WindowsFacts
             }
         }
 
-        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError)
-        {
-            return true;
-        }
-
+        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
+        
         [Fact]
         public void SocketTest()
         {

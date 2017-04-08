@@ -48,11 +48,9 @@ namespace Leto.Handshake
             }
         }
 
-        private static void ThrowBytesLeftOver()
-        {
+        private static void ThrowBytesLeftOver() =>
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Bytes left after the end of the client hello");
-        }
-
+        
         public TlsVersion TlsVersion => _tlsVersion;
         public Span<byte> ClientRandom => _clientRandom;
         public List<(ExtensionType, Span<byte>)> Extensions => _extensions;

@@ -9,6 +9,8 @@ namespace Leto
 {
     public static class BufferExtensions
     {
+        public delegate void ContentWriter(ref WritableBuffer writer);
+
         public static unsafe T Reverse<[Primitive]T>(T value) where T : struct
         {
             // note: relying on JIT goodness here!
@@ -52,11 +54,11 @@ namespace Leto
             else
             {
                 // default implementation
-                int len = Unsafe.SizeOf<T>();
+                var len = Unsafe.SizeOf<T>();
                 var val = stackalloc byte[len];
                 Unsafe.Write(val, value);
                 int to = len >> 1, dest = len - 1;
-                for (int i = 0; i < to; i++)
+                for (var i = 0; i < to; i++)
                 {
                     var tmp = val[i];
                     val[i] = val[dest];
@@ -130,10 +132,8 @@ namespace Leto
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (T value, Span<byte> outBuffer) Consume<T>(this Span<byte> buffer) where T : struct
-        {
-            return (buffer.Read<T>(), buffer.Slice(Unsafe.SizeOf<T>()));
-        }
+        public static (T value, Span<byte> outBuffer) Consume<T>(this Span<byte> buffer) where T : struct =>
+            (buffer.Read<T>(), buffer.Slice(Unsafe.SizeOf<T>()));
 
         public static void Write24BitNumber(ref WritableBuffer buffer, int numberToWrite)
         {
@@ -155,8 +155,19 @@ namespace Leto
             buffer.Ensure(3);
             var bookmark = buffer.Buffer;
             buffer.Advance(3);
-            int currentSize = buffer.BytesWritten;
+            var currentSize = buffer.BytesWritten;
             buffer = contentWriter(buffer);
+            currentSize = buffer.BytesWritten - currentSize;
+            bookmark.Span.Write24BitNumber(currentSize);
+        }
+
+        public static void WriteVector24Bit(ref WritableBuffer buffer, ContentWriter contentWriter)
+        {
+            buffer.Ensure(3);
+            var bookmark = buffer.Buffer;
+            buffer.Advance(3);
+            var currentSize = buffer.BytesWritten;
+            contentWriter(ref buffer);
             currentSize = buffer.BytesWritten - currentSize;
             bookmark.Span.Write24BitNumber(currentSize);
         }

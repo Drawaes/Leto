@@ -85,10 +85,7 @@ namespace Leto.ConnectionStates
             GC.SuppressFinalize(this);
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
+        public void Dispose() => Dispose(true);
 
         ~ConnectionState()
         {

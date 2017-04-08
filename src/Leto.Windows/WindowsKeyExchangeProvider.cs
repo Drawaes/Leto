@@ -108,12 +108,20 @@ namespace Leto.Windows
 
         public IKeyExchange GetKeyExchange(Span<byte> keyshare)
         {
-            throw new NotImplementedException();
+            while(keyshare.Length > 0)
+            {
+                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref keyshare);
+                var key = BufferExtensions.ReadVector16(ref keyshare);
+                var instance = GetKeyExchange(namedGroup);
+                if(instance != null)
+                {
+                    instance.SetPeerKey(key, null, Certificates.SignatureScheme.none);
+                    return instance;
+                }
+            }
+            return null;
         }
 
-        ~WindowsKeyExchangeProvider()
-        {
-            Dispose();
-        }
+        ~WindowsKeyExchangeProvider() => Dispose();
     }
 }

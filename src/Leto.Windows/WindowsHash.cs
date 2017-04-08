@@ -33,10 +33,7 @@ namespace Leto.Windows
             return _size;
         }
 
-        public void HashData(ReadOnlySpan<byte> data)
-        {
-            BCryptHashData(_hashHandle, data);
-        }
+        public void HashData(ReadOnlySpan<byte> data) => BCryptHashData(_hashHandle, data);
 
         public int InterimHash(Span<byte> output)
         {

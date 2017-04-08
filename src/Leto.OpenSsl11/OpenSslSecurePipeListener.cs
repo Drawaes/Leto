@@ -14,12 +14,9 @@ namespace Leto.OpenSsl11
     {
         private ICryptoProvider _cryptoProvider;
         private CertificateList _certificateList = new CertificateList();
-        
+
         public OpenSslSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
-            :base(certificate, pipeFactory)
-        {
-            _cryptoProvider = new OpenSslCryptoProvider();
-        }
+            : base(certificate, pipeFactory) => _cryptoProvider = new OpenSslCryptoProvider();
 
         public override ICryptoProvider CryptoProvider => _cryptoProvider;
         public override ISessionProvider SessionProvider => null;

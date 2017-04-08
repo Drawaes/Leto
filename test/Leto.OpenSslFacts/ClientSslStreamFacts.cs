@@ -36,11 +36,8 @@ namespace Leto.OpenSslFacts
             }
         }
 
-        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError)
-        {
-            return true;
-        }
-
+        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
+        
         //[Fact(Skip = "Test test")]
         public void SocketTest()
         {

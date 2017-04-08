@@ -29,25 +29,10 @@ namespace Leto.OpenSsl11
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
 
-        public void Init(KeyMode mode)
-        {
-            EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, mode);
-        }
-
-        public int Update(Span<byte> input, Span<byte> output)
-        {
-            return EVP_CipherUpdate(_ctx, output, input);
-        }
-
-        public int Update(Span<byte> inputAndOutput)
-        {
-            return EVP_CipherUpdate(_ctx, inputAndOutput, inputAndOutput);
-        }
-
-        public void AddAdditionalInfo(AdditionalInfo addInfo)
-        {
-            EVP_CipherUpdate(_ctx, addInfo);
-        }
+        public void Init(KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, mode);
+        public int Update(Span<byte> input, Span<byte> output) => EVP_CipherUpdate(_ctx, output, input);
+        public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput, inputAndOutput);
+        public void AddAdditionalInfo(AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, addInfo);
 
         public void ReadTag(Span<byte> span)
         {
@@ -64,16 +49,13 @@ namespace Leto.OpenSsl11
             EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
             EVP_CipherFinal_ex(_ctx);
         }
-        
+
         public void Dispose()
         {
             _ctx.Free();
             GC.SuppressFinalize(this);
         }
 
-        ~OpenSslBulkCipherKey()
-        {
-            Dispose();
-        }
+        ~OpenSslBulkCipherKey() => Dispose();
     }
 }

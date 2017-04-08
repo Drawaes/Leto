@@ -1,10 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26228.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6C9F168D-895E-4FB3-A7C7-61EB03C7B97D}"
 	ProjectSection(SolutionItems) = preProject
+		.EditorConfig = .EditorConfig
 		common.props = common.props
 		NuGet.Config = NuGet.Config
 		README.md = README.md
@@ -34,19 +35,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{837E39A4
 		build\dependencies.props = build\dependencies.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto", "src\Leto\Leto.csproj", "{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto", "src\Leto\Leto.csproj", "{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.OpenSslFacts", "test\Leto.OpenSslFacts\Leto.OpenSslFacts.csproj", "{72685434-D105-4004-B023-4E428AADDA26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.OpenSslFacts", "test\Leto.OpenSslFacts\Leto.OpenSslFacts.csproj", "{72685434-D105-4004-B023-4E428AADDA26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.OpenSsl11", "src\Leto.OpenSsl11\Leto.OpenSsl11.csproj", "{D5367558-339F-4F66-9885-3A0C7EBB94B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.OpenSsl11", "src\Leto.OpenSsl11\Leto.OpenSsl11.csproj", "{D5367558-339F-4F66-9885-3A0C7EBB94B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.Windows", "src\Leto.Windows\Leto.Windows.csproj", "{DC923514-D2A9-4E80-A020-8C58406E7A00}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.Windows", "src\Leto.Windows\Leto.Windows.csproj", "{DC923514-D2A9-4E80-A020-8C58406E7A00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.WindowsFacts", "test\Leto.WindowsFacts\Leto.WindowsFacts.csproj", "{0E1D900F-49D9-4330-9FF2-EBEEFFF0A4F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.WindowsFacts", "test\Leto.WindowsFacts\Leto.WindowsFacts.csproj", "{0E1D900F-49D9-4330-9FF2-EBEEFFF0A4F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.ProtocolFacts", "test\Leto.ProtocolFacts\Leto.ProtocolFacts.csproj", "{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.ProtocolFacts", "test\Leto.ProtocolFacts\Leto.ProtocolFacts.csproj", "{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketServer", "samples\SocketServer\SocketServer.csproj", "{4E69773F-D420-493B-899B-18EF1767BE14}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketServer", "samples\SocketServer\SocketServer.csproj", "{4E69773F-D420-493B-899B-18EF1767BE14}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

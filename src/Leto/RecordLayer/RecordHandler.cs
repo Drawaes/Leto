@@ -52,12 +52,12 @@ namespace Leto.RecordLayer
 
         public void WriteRecords(IPipeReader pipeReader, RecordType recordType)
         {
-            var output = _connection.Connection.Output.Alloc();
             if (!pipeReader.TryRead(out ReadResult reader))
             {
                 return;
             }
             var buffer = reader.Buffer;
+            var output = _connection.Connection.Output.Alloc();
             try
             {
                 WriteRecords(ref buffer, ref output, recordType);

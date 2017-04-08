@@ -26,7 +26,7 @@ indent_size = 2
 # .NET Code Style Settings
 # See https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
 # REVIEW: Should these be errors? warnings? suggestions?
-[*.cs,*.vb]
+[{*.cs,*.vb}]
 dotnet_sort_system_directives_first = true
 
 # Don't use 'this.'/'Me.' prefix for anything

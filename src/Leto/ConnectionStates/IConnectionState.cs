@@ -1,12 +1,9 @@
 ﻿using Leto.BulkCiphers;
-using Leto.Certificates;
 using Leto.CipherSuites;
 using Leto.Handshake;
 using Leto.Hashes;
-using Leto.KeyExchanges;
 using System;
 using System.IO.Pipelines;
-using System.Threading.Tasks;
 
 namespace Leto.ConnectionStates
 {
@@ -14,7 +11,8 @@ namespace Leto.ConnectionStates
     {
         CipherSuite CipherSuite { get; }
         void ChangeCipherSpec();
-        WritableBufferAwaitable HandleClientHello(ref ClientHelloParser clientHelloParser);
+        bool HandleClientHello(ref ClientHelloParser clientHelloParser);
+        bool ProcessHandshake();
         IHash HandshakeHash { get; }
         TlsVersion RecordVersion { get; }
         AeadBulkCipher ReadKey { get; }

@@ -19,13 +19,16 @@ namespace Leto.WindowsFacts
         private static readonly byte[] s_iv = StringToByteArray("31  8B  18  E9");
         private static readonly byte[] s_frameHeader = StringToByteArray("16  03  03  00  28");
 
-        public static byte[] StringToByteArray(String hex)
+        public static byte[] StringToByteArray(string hex)
         {
             hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c)));
-            int NumberChars = hex.Length;
-            byte[] bytes = new byte[NumberChars / 2];
-            for (int i = 0; i < NumberChars; i += 2)
+            var NumberChars = hex.Length;
+            var bytes = new byte[NumberChars / 2];
+            for (var i = 0; i < NumberChars; i += 2)
+            {
                 bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            }
+
             return bytes;
         }
 

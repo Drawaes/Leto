@@ -1,8 +1,5 @@
-﻿using Leto.Certificates;
-using Leto.KeyExchanges;
+﻿using Leto.KeyExchanges;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Leto.OpenSsl11
 {
@@ -100,10 +97,6 @@ namespace Leto.OpenSsl11
             //No resources currently to clean up
         }
 
-        public IKeyExchange GetKeyExchange(Span<byte> keyshare)
-        {
-            throw new NotImplementedException();
-        }
-        
+        public IKeyExchange GetKeyExchange(Span<byte> keyshare) => throw new NotImplementedException();
     }
 }

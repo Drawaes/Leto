@@ -37,51 +37,47 @@ namespace Leto.ConnectionStates
         {
             _replaceConnectionState = replaceConnectionState;
             _securePipe = securePipe;
-            var ignore = ReadLoop();
         }
 
-        private async Task ReadLoop()
+        public bool ProcessHandshake()
         {
-            while (true)
+            var hasReader = _securePipe.HandshakeInput.Reader.TryRead(out ReadResult reader);
+            if (!hasReader) return false;
+            var buffer = reader.Buffer;
+            IConnectionState connectionState;
+            ClientHelloParser helloParser;
+            try
             {
-                var reader = await _securePipe.HandshakeInput.Reader.ReadAsync();
-                var buffer = reader.Buffer;
-                IConnectionState connectionState;
-                ClientHelloParser helloParser;
-                try
+                HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake, out HandshakeType recordType);
+                if (recordType != HandshakeType.client_hello)
                 {
-                    HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer handshake, out HandshakeType recordType);
-                    if (recordType != HandshakeType.client_hello)
+                    _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
+                    if (recordType == HandshakeType.none)
                     {
-                        _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
-                        if (recordType == HandshakeType.none)
-                        {
-                            continue;
-                        }
-                        Alerts.AlertException.ThrowUnexpectedMessage(recordType);
+                        return false;
                     }
-                    helloParser = new ClientHelloParser(handshake);
-                    var version = GetVersion(ref helloParser);
-                    switch (version)
-                    {
-                        case TlsVersion.Tls12:
-                            connectionState = new Server12ConnectionState(_securePipe);
-                            break;
-                        case TlsVersion.Tls13Draft18:
-                            connectionState = new Server13ConnectionState(_securePipe);
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                    _replaceConnectionState(connectionState);
+                    Alerts.AlertException.ThrowUnexpectedMessage(recordType);
                 }
-                finally
+                helloParser = new ClientHelloParser(handshake);
+                var version = GetVersion(ref helloParser);
+                switch (version)
                 {
-                    _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.Start);
+                    case TlsVersion.Tls12:
+                        connectionState = new Server12ConnectionState(_securePipe);
+                        break;
+                    case TlsVersion.Tls13Draft18:
+                        connectionState = new Server13ConnectionState(_securePipe);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
-                await connectionState.HandleClientHello(ref helloParser);
-                return;
+                _replaceConnectionState(connectionState);
             }
+            finally
+            {
+                _securePipe.HandshakeInput.Reader.Advance(buffer.Start, buffer.Start);
+            }
+            return connectionState.HandleClientHello(ref helloParser);
         }
 
         private TlsVersion GetVersion(ref ClientHelloParser helloParser)
@@ -128,15 +124,9 @@ namespace Leto.ConnectionStates
             return tlsVersion;
         }
 
-        public void ChangeCipherSpec()
-        {
-            Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
-        }
+        public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
 
-        public WritableBufferAwaitable HandleClientHello(ref ClientHelloParser clientHelloParser)
-        {
-            throw new NotImplementedException();
-        }
+        public bool HandleClientHello(ref ClientHelloParser clientHelloParser) => throw new NotSupportedException();
 
         public void Dispose()
         {

@@ -56,10 +56,9 @@ namespace Leto.Internal
         private sealed class EphemeralMemory : OwnedBuffer<byte>
         {
             private EphemeralBufferPoolUnix _pool;
-            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolUnix pool) : base(null, 0, length, memory)
-            {
-                _pool = pool;
-            }
+            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolUnix pool)
+                : base(null, 0, length, memory) => _pool = pool;
+
             internal bool Rented;
             protected override void Dispose(bool disposing)
             {

@@ -49,11 +49,8 @@ namespace Leto
             return secureConnection.HandshakeAwaiter;
         }
 
-        public void Dispose()
-        {
-            Dispose(false);
-        }
-
+        public void Dispose() => Dispose(false);
+        
         protected virtual void Dispose(bool disposing)
         {
             if (_factoryOwned)

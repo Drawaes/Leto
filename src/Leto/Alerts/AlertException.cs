@@ -7,7 +7,7 @@ namespace Leto.Alerts
     public class AlertException : Exception
     {
         public AlertException(AlertLevel alertLevel, AlertDescription description, string message)
-            :base(message)
+            : base(message)
         {
             Level = alertLevel;
             Description = description;
@@ -21,34 +21,17 @@ namespace Leto.Alerts
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerHidden()]
-        public static void ThrowAlert(AlertLevel alertLevel, AlertDescription description, string message)
-        {
+        public static void ThrowAlert(AlertLevel alertLevel, AlertDescription description, string message) =>
             throw new AlertException(alertLevel, description, message);
-        }
-
-        public static void ThrowFailedHandshake(string message)
-        {
+        public static void ThrowFailedHandshake(string message) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.handshake_failure, message);
-        }
-
-        public static void ThrowUnexpectedMessage(RecordLayer.RecordType recordType)
-        {
+        public static void ThrowUnexpectedMessage(RecordLayer.RecordType recordType) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.unexpected_message, $"Unexpected message of type {recordType}");
-        }
-
-        public static void ThrowUnexpectedMessage(Handshake.HandshakeType handshakeType)
-        {
+        public static void ThrowUnexpectedMessage(Handshake.HandshakeType handshakeType) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.unexpected_message, $"Unexpected message of type {handshakeType}");
-        }
-
-        public static void ThrowInvalidLength(int expected, int actual)
-        {
+        public static void ThrowInvalidLength(int expected, int actual) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, $"Invalid vector length expected {expected} actual {actual}");
-        }
-
-        public static void ThrowDecode(string message)
-        {
+        public static void ThrowDecode(string message) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, message);
-        }
     }
 }

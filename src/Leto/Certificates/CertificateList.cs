@@ -8,10 +8,7 @@ namespace Leto.Certificates
     {
         private List<ICertificate> _certificates = new List<ICertificate>();
 
-        public void AddCertificate(ICertificate certificate)
-        {
-            _certificates.Add(certificate);
-        }
+        public void AddCertificate(ICertificate certificate) => _certificates.Add(certificate);
 
         public ICertificate GetCertificate(string host, CertificateType certificateType)
         {
@@ -34,18 +31,15 @@ namespace Leto.Certificates
             return null;
         }
 
-        public ICertificate GetCertificate(string host, SignatureScheme type)
-        {
-            return _certificates[0];
-        }
-
+        public ICertificate GetCertificate(string host, SignatureScheme type) => _certificates[0];
+        
         public (ICertificate, SignatureScheme) GetCertificate(Span<byte> buffer)
         {
             buffer = ReadVector16(ref buffer);
             while(buffer.Length > 0)
             {
                 var scheme = ReadBigEndian<SignatureScheme>(ref buffer);
-                for(int i = 0; i < _certificates.Count;i++)
+                for(var i = 0; i < _certificates.Count;i++)
                 {
                     if (_certificates[i].SupportsScheme(scheme))
                     {

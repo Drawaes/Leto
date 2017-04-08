@@ -60,7 +60,12 @@ namespace Leto
                                 case RecordType.Handshake:
                                     var handshakeWriter = _handshakeInput.Writer.Alloc();
                                     handshakeWriter.Append(messageBuffer);
-                                    await handshakeWriter.FlushAsync();
+                                    handshakeWriter.Commit();
+                                    if (_state.ProcessHandshake())
+                                    {
+                                        var w = _connection.Output.Alloc();
+                                        await w.FlushAsync();
+                                    }
                                     if (_state.HandshakeComplete)
                                     {
                                         var ignore = ReadingApplicationDataLoop();

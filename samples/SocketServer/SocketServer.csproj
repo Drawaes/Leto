@@ -7,7 +7,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="1.1.1" />
-    <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170401-1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170406-2" />
   </ItemGroup>
 
   <ItemGroup>

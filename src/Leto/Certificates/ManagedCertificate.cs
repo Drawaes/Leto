@@ -25,7 +25,7 @@ namespace Leto.Certificates
             else
             {
                 _certificateChain = new byte[chain.Count][];
-                for (int i = 0; i < _certificateChain.Length; i++)
+                for (var i = 0; i < _certificateChain.Length; i++)
                 {
                     _certificateChain[i] = chain[i].RawData;
                 }
@@ -72,7 +72,7 @@ namespace Leto.Certificates
         {
             if (_certificateType == CertificateType.rsa)
             {
-                RSAEncryptionPadding padding = RSAEncryptionPadding.Pkcs1;
+                var padding = RSAEncryptionPadding.Pkcs1;
                 var result = _rsaPrivateKey.Decrypt(encryptedData.ToArray(), padding);
                 result.CopyTo(output);
                 return result.Length;

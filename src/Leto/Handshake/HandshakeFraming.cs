@@ -30,17 +30,16 @@ namespace Leto.Handshake
             handshakeType = header.MessageType;
             return true;
         }
-
-        public static void WriteHandshakeFrame(ref WritableBuffer writer, IHash handshakeHash,
-            Func<WritableBuffer, WritableBuffer> contentWriter, HandshakeType handshakeType)
+                
+        public static void WriteHandshakeFrame(this ConnectionStates.ConnectionState state, BufferExtensions.ContentWriter content, HandshakeType handshakeType)
         {
-            var dataWritten = writer.BytesWritten;
+            var writer = state.SecureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian(handshakeType);
-            BufferExtensions.WriteVector24Bit(ref writer, contentWriter);
-            if (handshakeHash != null)
+            BufferExtensions.WriteVector24Bit(ref writer, content);
+            if (state.HandshakeHash != null)
             {
-                var hashBuffer = writer.AsReadableBuffer().Slice(dataWritten);
-                handshakeHash.HashData(hashBuffer);
+                var hashBuffer = writer.AsReadableBuffer();
+                state.HandshakeHash.HashData(hashBuffer);
             }
         }
     }

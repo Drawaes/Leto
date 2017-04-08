@@ -31,7 +31,7 @@ namespace Leto.Hashes
                 //HMAC_hash(secret, A(n) + seed)
                 hashProvider.HmacData(hashType, secret, a1, currentKeyData);
                 //Copy required bytes into the output keymaterial and reduce size remaining
-                int amountToCopy = Math.Min(keyMaterial.Length, currentKeyData.Length);
+                var amountToCopy = Math.Min(keyMaterial.Length, currentKeyData.Length);
                 currentKeyData.Slice(0, amountToCopy).CopyTo(keyMaterial);
                 keyMaterial = keyMaterial.Slice(amountToCopy);
                 //A(n) = HMAC_hash(secret, A(n-1))
@@ -56,7 +56,7 @@ namespace Leto.Hashes
         //https://tools.ietf.org/html/rfc5869
         public static void HkdfExpand(this IHashProvider provider, HashType hashType, ReadOnlySpan<byte> prk, ReadOnlySpan<byte> info, Span<byte> output)
         {
-            int hashLength = provider.HashSize(hashType);
+            var hashLength = provider.HashSize(hashType);
             var tLength = hashLength + info.Length + sizeof(byte);
             var t = new byte[tLength];
             info.CopyTo(t.Slice(hashLength));
@@ -67,7 +67,7 @@ namespace Leto.Hashes
             provider.HmacData(hashType, prk, t.Slice(hashLength), t.Slice(0,hashLength));
             while (true)
             {
-                int amountToCopy = Math.Min(hashLength, output.Length);
+                var amountToCopy = Math.Min(hashLength, output.Length);
                 t.Slice(0, amountToCopy).CopyTo(output);
                 output = output.Slice(amountToCopy);
                 if (output.Length == 0) return;

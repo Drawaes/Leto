@@ -8,9 +8,6 @@ namespace Leto.Windows
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerStepThrough]
-        internal static void ThrowException(Exception ex)
-        {
-            throw ex;
-        }
+        internal static void ThrowException(Exception ex) => throw ex;
     }
 }
