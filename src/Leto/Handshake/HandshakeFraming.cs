@@ -3,6 +3,7 @@ using System;
 using System.Binary;
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;
+using Leto.Internal;
 
 namespace Leto.Handshake
 {
@@ -35,7 +36,7 @@ namespace Leto.Handshake
         {
             var writer = state.SecureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian(handshakeType);
-            BufferExtensions.WriteVector24Bit(ref writer, content);
+            BufferExtensions.WriteVector<UInt24>(ref writer, content);
             if (state.HandshakeHash != null)
             {
                 var hashBuffer = writer.AsReadableBuffer();

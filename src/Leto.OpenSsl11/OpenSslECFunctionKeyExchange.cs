@@ -4,6 +4,7 @@ using Leto.Hashes;
 using static Leto.OpenSsl11.Interop.LibCrypto;
 using Leto.Certificates;
 using System.Buffers;
+using Leto.Internal;
 
 namespace Leto.OpenSsl11
 {
@@ -56,16 +57,16 @@ namespace Leto.OpenSsl11
             hashProvider.HmacData(hashType, salt, secretSpan, output);
         }
 
-        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
-            peerKey = BufferExtensions.ReadVector8(ref peerKey);
+            peerKey = peerKey.ReadVector<byte>();
             if (peerKey.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The peer key is not the length of the keyexchange size {peerKey.Length} - {_keyExchangeSize}");
             }
             _peerKey = EVP_PKEY_new();
             EVP_PKEY_set_type(_peerKey, _nid);
-            EVP_PKEY_set1_tls_encodedpoint(_peerKey, peerKey);
+            EVP_PKEY_set1_tls_encodedpoint(_peerKey, peerKey.ToSpan());
             GenerateKeyPair();
         }
 

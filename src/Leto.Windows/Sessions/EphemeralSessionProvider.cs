@@ -20,12 +20,12 @@ namespace Leto.Windows.Sessions
         private SafeBCryptAlgorithmHandle _algo = BCryptOpenAlgorithmProvider("AES");
 
         private EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(44, 100);
-        
+
         public EphemeralSessionProvider()
         {
             SetBlockChainingMode(_algo, BCRYPT_CHAIN_MODE_GCM);
             var keyStorage = _bufferPool.Rent(0);
-            BCryptGenRandom(keyStorage.Buffer.Span.Slice(0,44));
+            BCryptGenRandom(keyStorage.Buffer.Span.Slice(0, 44));
             _currentKey = new EphemeralKey(_algo, keyStorage);
         }
 
@@ -34,20 +34,19 @@ namespace Leto.Windows.Sessions
             var tagLength = 16;
             var key = _currentKey;
             var nonce = key.GetNextNonce();
-            BufferExtensions.WriteVector<ushort>(ref writer, w =>
+            BufferExtensions.WriteVector<ushort>(ref writer, (ref WritableBuffer w) =>
             {
                 w.WriteBigEndian(key.KeyId);
                 w.WriteBigEndian(nonce);
                 w.Ensure(ticketContent.Length + tagLength);
                 var bytesWritten = _currentKey.Encrypt(nonce, ticketContent, w.Buffer.Span);
                 w.Advance(bytesWritten);
-                return w;
             });
         }
 
-        public Span<byte> ProcessSessionTicket(Span<byte> sessionTicket)
+        public Span<byte> ProcessSessionTicket(BigEndianAdvancingSpan sessionTicket)
         {
-            var keyId = ReadBigEndian<Guid>(ref sessionTicket);
+            var keyId = sessionTicket.Read<Guid>();
             var key = _currentKey;
             if (keyId != key.KeyId)
             {
@@ -56,19 +55,8 @@ namespace Leto.Windows.Sessions
             return key.Decrypt(sessionTicket);
         }
 
-        public DateTime GetCurrentExpiry()
-        {
-            return DateTime.UtcNow.Add(_maxTicketAge);
-        }
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
-
-        ~EphemeralSessionProvider()
-        {
-            Dispose();
-        }
+        public DateTime GetCurrentExpiry() => DateTime.UtcNow.Add(_maxTicketAge);
+        public void Dispose() => GC.SuppressFinalize(this);
+        ~EphemeralSessionProvider() => Dispose();
     }
 }

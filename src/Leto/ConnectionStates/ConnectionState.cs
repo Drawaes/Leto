@@ -9,6 +9,7 @@ using Leto.RecordLayer;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Leto.Internal;
 
 namespace Leto.ConnectionStates
 {
@@ -76,7 +77,7 @@ namespace Leto.ConnectionStates
             }
         }
 
-        protected abstract void HandleExtension(ExtensionType extensionType, Span<byte> buffer);
+        protected abstract void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer);
 
         protected virtual void Dispose(bool disposing)
         {

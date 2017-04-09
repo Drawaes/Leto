@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Leto.BulkCiphers;
 using Leto.CipherSuites;
 using Leto.Handshake;
 using Leto.Hashes;
 using System.IO.Pipelines;
-using System.Net.Http;
 using Leto.KeyExchanges;
 using Leto.Sessions;
+using Leto.Internal;
 
 namespace Leto.ConnectionStates
 {
@@ -66,18 +62,17 @@ namespace Leto.ConnectionStates
         {
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + sizeof(ushort);
             writer.Ensure(fixedSize);
-            var span = writer.Buffer.Span;
-            span = span.WriteBigEndian(TlsVersion.Tls13Draft18);
-            SecureConnection.Listener.CryptoProvider.FillWithRandom(span.Slice(0, TlsConstants.RandomLength));
-            span = span.Slice(TlsConstants.RandomLength);
-            span = span.WriteBigEndian(CipherSuite.Code);
+            var span = new Internal.BigEndianAdvancingSpan(writer.Buffer.Span);
+            span.Write(TlsVersion.Tls13Draft18);
+            SecureConnection.Listener.CryptoProvider.FillWithRandom(span.TakeSlice(TlsConstants.RandomLength).ToSpan());
+            span.Write(CipherSuite.Code);
             writer.Advance(fixedSize);
 
             BufferExtensions.WriteVector<ushort>(ref writer, WriteServerHelloExtensions);
             return writer;
         }
 
-        private WritableBuffer WriteServerHelloExtensions(WritableBuffer writer)
+        private void WriteServerHelloExtensions(ref WritableBuffer writer)
         {
             if (PskIdentity != -1)
             {
@@ -86,19 +81,17 @@ namespace Leto.ConnectionStates
                 writer.WriteBigEndian((ushort)PskIdentity);
             }
             WriteServerKeyshare(ref writer, new IKeyExchange[] { KeyExchange });
-            return writer;
         }
 
         private void WriteServerKeyshare(ref WritableBuffer writer, IKeyExchange[] keyExchanges)
         {
             writer.WriteBigEndian(ExtensionType.key_share);
-            BufferExtensions.WriteVector<ushort>(ref writer, w =>
+            BufferExtensions.WriteVector<ushort>(ref writer, (ref WritableBuffer w) =>
             {
                 foreach (var ks in keyExchanges)
                 {
                     WriteKeyShare(ref w, ks);
                 }
-                return w;
             });
         }
 
@@ -110,15 +103,14 @@ namespace Leto.ConnectionStates
             writer.Advance(keyshare.WritePublicKey(writer.Buffer.Span));
         }
 
-        public WritableBuffer WriteRetryKeyshare(WritableBuffer buffer)
+        public void WriteRetryKeyshare(ref WritableBuffer buffer)
         {
             buffer.WriteBigEndian(ExtensionType.key_share);
             buffer.WriteBigEndian((ushort)sizeof(NamedGroup));
             buffer.WriteBigEndian(KeyExchange.NamedGroup);
-            return buffer;
         }
 
-        protected override void HandleExtension(ExtensionType extensionType, Span<byte> buffer)
+        protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
         {
             switch (extensionType)
             {
@@ -145,12 +137,11 @@ namespace Leto.ConnectionStates
             }
         }
 
-        private void ProcessPskMode(Span<byte> buffer)
+        private void ProcessPskMode(BigEndianAdvancingSpan buffer)
         {
             while (buffer.Length > 0)
             {
-                PskExchangeMode mode;
-                (mode, buffer) = buffer.Consume<PskExchangeMode>();
+                var mode = buffer.Read<PskExchangeMode>();
                 if (_pskMode == PskExchangeMode.none)
                 {
                     _pskMode = mode;
@@ -180,7 +171,7 @@ namespace Leto.ConnectionStates
                         case HandshakeType.client_hello when _state == HandshakeState.WaitingHelloRetry:
                             var clientParser = new ClientHelloParser(messageBuffer);
                             ParseExtensions(ref clientParser);
-                            if(!KeyExchange?.HasPeerKey == true)
+                            if (!KeyExchange?.HasPeerKey == true)
                             {
                                 Alerts.AlertException.ThrowFailedHandshake("Unable to negotiate a common exchange");
                             }

@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
+using Leto.Internal;
 
 namespace Leto.ConnectionStates
 {
@@ -28,7 +29,7 @@ namespace Leto.ConnectionStates
         {
             if (KeyExchange == null)
             {
-                KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(Span<byte>));
+                KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, default(BigEndianAdvancingSpan));
             }
             SendSecondFlight();
             _state = HandshakeState.WaitingForClientKeyExchange;
@@ -60,33 +61,27 @@ namespace Leto.ConnectionStates
 
         private void WriteServerHello(Span<byte> sessionId) =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerContent(ref buffer, sessionId), HandshakeType.server_hello);
-        
+
         private void WriteServerContent(ref WritableBuffer writer, Span<byte> sessionId)
         {
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + sessionId.Length;
             writer.Ensure(fixedSize);
-            var span = writer.Buffer.Span;
-            span = span.WriteBigEndian(TlsVersion.Tls12);
-            _secretSchedule.ServerRandom.CopyTo(span);
-            span = span.Slice(_secretSchedule.ServerRandom.Length);
+            var span = new Internal.BigEndianAdvancingSpan(writer.Buffer.Span);
+            span.Write(TlsVersion.Tls12);
+            span.CopyFrom(_secretSchedule.ServerRandom);
 
             //We don't support session id's instead resumption is supported through tickets
             //If we are using a ticket the client will want us to respond with the same id
-            span = span.WriteBigEndian((byte)sessionId.Length);
-            sessionId.CopyTo(span);
-            span = span.Slice(sessionId.Length);
+            span.Write((byte)sessionId.Length);
+            span.CopyFrom(sessionId);
 
-            span = span.WriteBigEndian(CipherSuite.Code);
+            span.Write(CipherSuite.Code);
             //We don't support compression at the TLS level as it is prone to attacks
-            span = span.WriteBigEndian<byte>(0);
+            span.Write<byte>(0);
 
             writer.Advance(fixedSize);
             //Completed the fixed section now we write the extensions
-            BufferExtensions.WriteVector<ushort>(ref writer, w =>
-            {
-                WriteExtensions(ref w);
-                return w;
-            });
+            BufferExtensions.WriteVector<ushort>(ref writer, WriteExtensions);
         }
 
         public void WriteExtensions(ref WritableBuffer writer)
@@ -118,11 +113,10 @@ namespace Leto.ConnectionStates
             var keybytesWritten = KeyExchange.WritePublicKey(writer.Buffer.Span);
             writer.Advance(keybytesWritten);
             writer.WriteBigEndian(_signatureScheme);
-            BufferExtensions.WriteVector<ushort>(ref writer, (w) =>
+            BufferExtensions.WriteVector<ushort>(ref writer, (ref WritableBuffer w) =>
             {
                 var span = bookMark.Span.Slice(0, messageLength);
                 WriteKeySignature(ref w, span);
-                return w;
             });
         }
 

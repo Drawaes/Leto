@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Leto.BulkCiphers;
 using Leto.Certificates;
 using Leto.KeyExchanges;
+using Leto.Internal;
 
 namespace Leto.ConnectionStates
 {
@@ -87,12 +88,12 @@ namespace Leto.ConnectionStates
                 return MatchVersionOrThrow(helloParser.TlsVersion);
             }
             var (ext, extBuffer) = helloParser.Extensions.SingleOrDefault((ex) => ex.Item1 == ExtensionType.supported_versions);
-            if (extBuffer != default(Span<byte>))
+            if (extBuffer.Length > 0)
             {
-                var versionVector = ReadVector8(ref extBuffer);
+                var versionVector = extBuffer.ReadVector<byte>();
                 while (versionVector.Length > 0)
                 {
-                    var foundVersion = (TlsVersion)ReadBigEndian<ushort>(ref versionVector);
+                    var foundVersion = versionVector.Read<TlsVersion>();
                     if (MatchVersion(foundVersion))
                     {
                         return foundVersion;

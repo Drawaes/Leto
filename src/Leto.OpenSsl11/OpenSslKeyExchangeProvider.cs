@@ -1,16 +1,17 @@
 ﻿using Leto.KeyExchanges;
 using System;
+using Leto.Internal;
 
 namespace Leto.OpenSsl11
 {
     public sealed class OpenSslKeyExchangeProvider : IKeyExchangeProvider
     {
-        public IKeyExchange GetKeyExchangeFromSupportedGroups(Span<byte> supportedGroups)
+        public IKeyExchange GetKeyExchangeFromSupportedGroups(BigEndianAdvancingSpan supportedGroups)
         {
-            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            supportedGroups = supportedGroups.ReadVector<ushort>();
             while (supportedGroups.Length > 0)
             {
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                var namedGroup = supportedGroups.Read<NamedGroup>();
                 switch (namedGroup)
                 {
                     case NamedGroup.secp256r1:
@@ -55,7 +56,7 @@ namespace Leto.OpenSsl11
         /// <param name="keyExchange"></param>
         /// <param name="supportedGroups"></param>
         /// <returns></returns>
-        public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, Span<byte> supportedGroups)
+        public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, BigEndianAdvancingSpan supportedGroups)
         {
             switch (keyExchange)
             {
@@ -71,12 +72,12 @@ namespace Leto.OpenSsl11
             }
         }
 
-        private IKeyExchange EcdheKeyExchange(Span<byte> supportedGroups)
+        private IKeyExchange EcdheKeyExchange(BigEndianAdvancingSpan supportedGroups)
         {
-            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            supportedGroups = supportedGroups.ReadVector<ushort>();
             while (supportedGroups.Length > 0)
             {
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                var namedGroup = supportedGroups.Read<NamedGroup>();
                 switch (namedGroup)
                 {
                     case NamedGroup.secp256r1:
@@ -97,6 +98,6 @@ namespace Leto.OpenSsl11
             //No resources currently to clean up
         }
 
-        public IKeyExchange GetKeyExchange(Span<byte> keyshare) => throw new NotImplementedException();
+        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare) => throw new NotImplementedException();
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
+using Leto.Internal;
 using static Leto.BufferExtensions;
 
 namespace Leto.Handshake.Extensions
@@ -62,7 +63,7 @@ namespace Leto.Handshake.Extensions
             return null;
         }
 
-        public ApplicationLayerProtocolType ProcessExtension(Span<byte> span)
+        public ApplicationLayerProtocolType ProcessExtension(BigEndianAdvancingSpan span)
         {
             if (_protocols == null)
             {
@@ -78,16 +79,16 @@ namespace Leto.Handshake.Extensions
             }
         }
 
-        private ApplicationLayerProtocolType ProcessExtensionServerOrder(Span<byte> span)
+        private ApplicationLayerProtocolType ProcessExtensionServerOrder(BigEndianAdvancingSpan span)
         {
-            span = ReadVector16(ref span);
+            span = span.ReadVector<ushort>();
             foreach (var (alpn, buffer) in _supportedProtocols)
             {
                 var loopSpan = span;
                 while (loopSpan.Length > 0)
                 {
-                    var protocol = ReadVector8(ref loopSpan);
-                    if (protocol.SequenceEqual(buffer))
+                    var protocol = loopSpan.ReadVector<byte>();
+                    if (protocol.ToSpan().SequenceEqual(buffer))
                     {
                         return alpn;
                     }
@@ -97,14 +98,14 @@ namespace Leto.Handshake.Extensions
             return ApplicationLayerProtocolType.None;
         }
 
-        private ApplicationLayerProtocolType ProcessExtensionClientOrder(Span<byte> span)
+        private ApplicationLayerProtocolType ProcessExtensionClientOrder(BigEndianAdvancingSpan span)
         {
-            span = ReadVector16(ref span);
+            span = span.ReadVector<ushort>();
             while (span.Length > 0)
             {
                 foreach (var (alpn, buffer) in _supportedProtocols)
                 {
-                    var protocol = ReadVector8(ref span);
+                    var protocol = span.ReadVector<byte>().ToSpan();
                     if (protocol.SequenceEqual(buffer))
                     {
                         return alpn;

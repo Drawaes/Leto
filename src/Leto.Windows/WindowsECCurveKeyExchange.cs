@@ -7,6 +7,7 @@ using Leto.Certificates;
 using Leto.Hashes;
 using Leto.Windows.Interop;
 using static Leto.Windows.Interop.BCrypt;
+using Leto.Internal;
 
 namespace Leto.Windows
 {
@@ -77,15 +78,15 @@ namespace Leto.Windows
             _peerKey = null;
         }
 
-        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
-            peerKey = BufferExtensions.ReadVector8(ref peerKey);
+            peerKey = peerKey.ReadVector<byte>();
             if (peerKey.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
             }
             GenerateKeyPair();
-            _peerKey = BCryptImportECKey(_handle, peerKey);
+            _peerKey = BCryptImportECKey(_handle, peerKey.ToSpan());
         }
 
         public int WritePublicKey(Span<byte> keyBuffer)

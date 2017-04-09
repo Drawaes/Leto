@@ -73,7 +73,7 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public bool ReadSessionTicket(Span<byte> buffer)
         {
-            buffer = Sessions.ProcessSessionTicket(buffer);
+            buffer = Sessions.ProcessSessionTicket(new Internal.BigEndianAdvancingSpan(buffer));
             SessionInfo info;
             (info, buffer) = buffer.Consume<SessionInfo>();
             if (info.Version != _state.RecordVersion)

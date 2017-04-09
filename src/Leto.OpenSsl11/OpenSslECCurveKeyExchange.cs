@@ -4,6 +4,7 @@ using Leto.Hashes;
 using static Leto.OpenSsl11.Interop.LibCrypto;
 using Leto.Certificates;
 using System.Buffers;
+using Leto.Internal;
 
 namespace Leto.OpenSsl11
 {
@@ -59,9 +60,9 @@ namespace Leto.OpenSsl11
             hashProvider.HmacData(hashType, salt, secretSpan, output);
         }
 
-        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
-            peerKey = BufferExtensions.ReadVector8(ref peerKey);
+            peerKey = peerKey.ReadVector<byte>();
             if (peerKey.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
@@ -73,7 +74,7 @@ namespace Leto.OpenSsl11
             var point = EC_POINT_new(group);
             try
             {
-                EC_POINT_oct2point(group, point, peerKey);
+                EC_POINT_oct2point(group, point, peerKey.ToSpan());
                 var ecKey = EC_KEY_new_by_curve_name(_curveNid);
                 try
                 {

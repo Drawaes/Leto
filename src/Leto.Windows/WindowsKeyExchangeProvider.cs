@@ -3,6 +3,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using static Leto.Windows.Interop.BCrypt;
+using Leto.Internal;
 
 namespace Leto.Windows
 {
@@ -41,7 +42,7 @@ namespace Leto.Windows
             }
         }
 
-        public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, Span<byte> supportedGroups)
+        public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, BigEndianAdvancingSpan supportedGroups)
         {
             switch (keyExchange)
             {
@@ -55,12 +56,12 @@ namespace Leto.Windows
             }
         }
 
-        private IKeyExchange EcdheKeyExchange(Span<byte> supportedGroups)
+        private IKeyExchange EcdheKeyExchange(BigEndianAdvancingSpan supportedGroups)
         {
-            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            supportedGroups = supportedGroups.ReadVector<ushort>();
             while (supportedGroups.Length > 0)
             {
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                var namedGroup = supportedGroups.Read<NamedGroup>();
                 switch (namedGroup)
                 {
                     case NamedGroup.secp256r1:
@@ -76,12 +77,12 @@ namespace Leto.Windows
             return null;
         }
 
-        public IKeyExchange GetKeyExchangeFromSupportedGroups(Span<byte> supportedGroups)
+        public IKeyExchange GetKeyExchangeFromSupportedGroups(BigEndianAdvancingSpan supportedGroups)
         {
-            supportedGroups = BufferExtensions.ReadVector16(ref supportedGroups);
+            supportedGroups = supportedGroups.ReadVector<ushort>();
             while (supportedGroups.Length > 0)
             {
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref supportedGroups);
+                var namedGroup = supportedGroups.Read<NamedGroup>();
                 switch (namedGroup)
                 {
                     case NamedGroup.secp256r1:
@@ -106,12 +107,12 @@ namespace Leto.Windows
             GC.SuppressFinalize(this);
         }
 
-        public IKeyExchange GetKeyExchange(Span<byte> keyshare)
+        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare)
         {
             while(keyshare.Length > 0)
             {
-                var key = BufferExtensions.ReadVector16(ref keyshare);
-                var namedGroup = BufferExtensions.ReadBigEndian<NamedGroup>(ref key);
+                var key = keyshare.ReadVector<ushort>();
+                var namedGroup = key.Read<NamedGroup>();
                 var instance = GetKeyExchange(namedGroup);
                 if(instance != null)
                 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Leto.Internal;
 
 namespace Leto.Handshake.Extensions
 {
@@ -8,17 +9,16 @@ namespace Leto.Handshake.Extensions
     {
         //This can be extended to check that we match a list of servernames
         //or any other logic that is required
-        public string ProcessHostNameExtension(Span<byte> buffer)
+        public string ProcessHostNameExtension(BigEndianAdvancingSpan buffer)
         {
-            buffer = BufferExtensions.ReadVector16(ref buffer);
-            byte type;
-            (type, buffer) = BufferExtensions.Consume<byte>(buffer);
+            buffer = buffer.ReadVector<ushort>();
+            var type = buffer.Read<byte>();
             if(type != 0)
             {
                 Alerts.AlertException.ThrowDecode("Unknown host type");
             }
-            buffer = BufferExtensions.ReadVector16(ref buffer);
-            return buffer.DecodeAscii();
+            buffer = buffer.ReadVector<ushort>();
+            return buffer.ToSpan().DecodeAscii();
         }
     }
 }

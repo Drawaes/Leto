@@ -1,5 +1,6 @@
 ﻿using Leto.Hashes;
 using System;
+using Leto.Internal;
 
 namespace Leto.Certificates
 {
@@ -9,7 +10,7 @@ namespace Leto.Certificates
         byte[] CertificateData { get; }
         byte[][] CertificateChain { get; }
         int SignatureSize { get; }
-        SignatureScheme SelectAlgorithm(Span<byte> buffer);
+        SignatureScheme SelectAlgorithm(BigEndianAdvancingSpan buffer);
         bool SupportsScheme(SignatureScheme scheme);
         int SignHash(IHashProvider provider, SignatureScheme scheme, Span<byte> message, Span<byte> output);
         int Decrypt(SignatureScheme scheme, Span<byte> encryptedData, Span<byte> output);

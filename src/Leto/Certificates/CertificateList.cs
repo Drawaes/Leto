@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Leto.Internal;
 using static Leto.BufferExtensions;
 
 namespace Leto.Certificates
@@ -33,12 +34,12 @@ namespace Leto.Certificates
 
         public ICertificate GetCertificate(string host, SignatureScheme type) => _certificates[0];
         
-        public (ICertificate, SignatureScheme) GetCertificate(Span<byte> buffer)
+        public (ICertificate, SignatureScheme) GetCertificate(BigEndianAdvancingSpan buffer)
         {
-            buffer = ReadVector16(ref buffer);
+            buffer = buffer.ReadVector<ushort>();
             while(buffer.Length > 0)
             {
-                var scheme = ReadBigEndian<SignatureScheme>(ref buffer);
+                var scheme = buffer.Read<SignatureScheme>();
                 for(var i = 0; i < _certificates.Count;i++)
                 {
                     if (_certificates[i].SupportsScheme(scheme))

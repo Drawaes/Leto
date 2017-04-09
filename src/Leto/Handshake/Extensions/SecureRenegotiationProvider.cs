@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Text;
+using Leto.Internal;
 
 namespace Leto.Handshake.Extensions
 {
     public class SecureRenegotiationProvider
     {
-        public void ProcessExtension(Span<byte> span)
+        public void ProcessExtension(BigEndianAdvancingSpan span)
         {
             if (span.Length != 1)
             {

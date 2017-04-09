@@ -3,6 +3,7 @@ using Leto.Hashes;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Leto.Internal;
 
 namespace Leto.KeyExchanges
 {
@@ -27,11 +28,11 @@ namespace Leto.KeyExchanges
             //Nothing to cleanup in the case of a basic key exchange
         }
 
-        public void SetPeerKey(Span<byte> peerKey, ICertificate certificate, SignatureScheme scheme)
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
-            peerKey = BufferExtensions.ReadVector16(ref peerKey);
-            var decryptedLength = certificate.Decrypt(scheme, peerKey, peerKey);
-            peerKey = peerKey.Slice(0, decryptedLength);
+            peerKey = peerKey.ReadVector<ushort>();
+            var decryptedLength = certificate.Decrypt(scheme, peerKey.ToSpan(), peerKey.ToSpan());
+            peerKey = peerKey.TakeSlice(decryptedLength);
             _premasterSecret = peerKey.ToArray();
         }
 

@@ -6,6 +6,7 @@ using System.Threading;
 using static Leto.Windows.Interop.BCrypt;
 using static Leto.BufferExtensions;
 using System.Binary;
+using Leto.Internal;
 
 namespace Leto.Windows.Sessions
 {
@@ -52,11 +53,11 @@ namespace Leto.Windows.Sessions
             return bytesWritten + 16; 
         }
 
-        internal Span<byte> Decrypt(Span<byte> sessionTicket)
+        internal Span<byte> Decrypt(BigEndianAdvancingSpan sessionTicket)
         {
-            var nonce = ReadBigEndian<long>(ref sessionTicket);
-            var tag = sessionTicket.Slice(sessionTicket.Length - 16);
-            var data = sessionTicket.Slice(0, sessionTicket.Length - 16);
+            var nonce = sessionTicket.Read<long>();
+            var data = sessionTicket.TakeSlice(sessionTicket.Length - 16).ToSpan();
+            var tag = sessionTicket.ToSpan();
             var iv = _keyAndIvStore.Span.Slice(_keySize);
             iv.Slice(4).WriteBigEndian(nonce);
             BCryptDecrypt(_keyHandle, iv, tag, data);

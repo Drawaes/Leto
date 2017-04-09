@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Leto.Hashes;
+using Leto.Internal;
 using static Leto.BufferExtensions;
 
 namespace Leto.Certificates
@@ -80,16 +81,16 @@ namespace Leto.Certificates
             throw new InvalidOperationException($"The {scheme} certificate type cannot be used to decrypt");
         }
 
-        public SignatureScheme SelectAlgorithm(Span<byte> buffer)
+        public SignatureScheme SelectAlgorithm(BigEndianAdvancingSpan buffer)
         {
             if (_certificateType == CertificateType.ecdsa)
             {
                 return _ecDsaSignatureScheme;
             }
-            buffer = ReadVector16(ref buffer);
+            buffer = buffer.ReadVector<ushort>();
             while (buffer.Length > 0)
             {
-                var scheme = ReadBigEndian<SignatureScheme>(ref buffer);
+                var scheme = buffer.Read<SignatureScheme>();
                 var lastByte = 0x00FF & (ushort)scheme;
                 switch (_certificateType)
                 {

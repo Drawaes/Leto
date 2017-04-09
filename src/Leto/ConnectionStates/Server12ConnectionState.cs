@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Leto.BulkCiphers;
 using Leto.ConnectionStates.SecretSchedules;
 using System.Binary;
+using Leto.Internal;
 
 namespace Leto.ConnectionStates
 {
@@ -58,7 +59,7 @@ namespace Leto.ConnectionStates
             return true;
         }
 
-        protected override void HandleExtension(ExtensionType extensionType, Span<byte> buffer)
+        protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
         {
             switch (extensionType)
             {
@@ -66,7 +67,7 @@ namespace Leto.ConnectionStates
                     KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, buffer);
                     break;
                 case ExtensionType.SessionTicket:
-                    ProcessSessionTicket(buffer);
+                    ProcessSessionTicket(buffer.ToSpan());
                     break;
                 default:
                     throw new NotImplementedException();
@@ -115,7 +116,7 @@ namespace Leto.ConnectionStates
                             span = messageBuffer.ToSpan();
                             HandshakeHash.HashData(span);
                             span = span.Slice(HandshakeFraming.HeaderSize);
-                            KeyExchange.SetPeerKey(span, _certificate, _signatureScheme);
+                            KeyExchange.SetPeerKey(new Internal.BigEndianAdvancingSpan(span), _certificate, _signatureScheme);
                             _secretSchedule.GenerateMasterSecret();
                             _state = HandshakeState.WaitingForChangeCipherSpec;
                             break;

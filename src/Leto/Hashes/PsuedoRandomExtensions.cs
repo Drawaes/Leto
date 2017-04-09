@@ -91,14 +91,14 @@ namespace Leto.Hashes
         {
             var hkdfSize = HkdfLabelHeaderSize + label.Length + hash.Length;
             var hkdfLabel = new byte[hkdfSize];
-            
-            var hkdfSpan = hkdfLabel.WriteBigEndian((ushort)output.Length);
-            hkdfSpan = hkdfSpan.WriteBigEndian((byte)label.Length);
-            label.CopyTo(hkdfSpan);
-            hkdfSpan = hkdfSpan.Slice(label.Length);
-            hkdfSpan = hkdfSpan.WriteBigEndian((byte)hash.Length);
-            hash.CopyTo(hkdfSpan);
-            
+
+            var hkdfSpan = new Internal.BigEndianAdvancingSpan(hkdfLabel);
+            hkdfSpan.Write((ushort)output.Length);
+            hkdfSpan.Write((byte)label.Length);
+            hkdfSpan.CopyFrom(label);
+            hkdfSpan.Write((byte)hash.Length);
+            hkdfSpan.CopyFrom(hash);
+                        
             HkdfExpand(provider, hashType, secret, hkdfLabel, output);
         }
     }
