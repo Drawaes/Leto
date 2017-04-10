@@ -32,7 +32,7 @@ namespace Leto.RecordLayer
             }
             else
             {
-                messageBuffer = buffer.Slice(0, _minimumMessageSize + header.Length);
+                messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
                 _connection.State.ReadKey.Decrypt(ref messageBuffer, header.RecordType, header.Version);
             }
