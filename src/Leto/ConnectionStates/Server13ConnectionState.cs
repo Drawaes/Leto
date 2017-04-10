@@ -6,12 +6,15 @@ using System.IO.Pipelines;
 using Leto.KeyExchanges;
 using Leto.Sessions;
 using Leto.Internal;
+using Leto.RecordLayer;
+using Leto.ConnectionStates.SecretSchedules;
 
 namespace Leto.ConnectionStates
 {
     public sealed class Server13ConnectionState : ConnectionState, IConnectionState
     {
         private PskExchangeMode _pskMode = PskExchangeMode.none;
+        private SecretSchedule13 _secretSchedule;
 
         public Server13ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection)
         {
@@ -20,7 +23,7 @@ namespace Leto.ConnectionStates
         public TlsVersion RecordVersion => TlsVersion.Tls12;
         public int PskIdentity { get; set; } = -1;
 
-        public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordLayer.RecordType.ChangeCipherSpec);
+        public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
 
         public bool HandleClientHello(ref ClientHelloParser clientHello)
         {
@@ -31,6 +34,7 @@ namespace Leto.ConnectionStates
 
             if (KeyExchange.HasPeerKey)
             {
+                _secretSchedule = new SecretSchedule13(this, new Span<byte>());
                 SendServerFirstFlight();
             }
             else
@@ -59,7 +63,17 @@ namespace Leto.ConnectionStates
         private void SendServerFirstFlight()
         {
             HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordLayer.RecordType.Handshake);
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
+            (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeSecret();
+            SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
+            HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
+            HandshakeFraming.WriteHandshakeFrame(this, WriteCertificate, HandshakeType.certificate);
+        }
+
+        private void WriteEncryptedExtensions(ref WritableBuffer writer)
+        {
+            writer.WriteBigEndian<ushort>(0);
         }
 
         private void WriteServerHelloContent(ref WritableBuffer writer)

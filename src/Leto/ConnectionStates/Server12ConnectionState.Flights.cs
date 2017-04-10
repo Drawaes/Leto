@@ -66,7 +66,7 @@ namespace Leto.ConnectionStates
         {
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + sessionId.Length;
             writer.Ensure(fixedSize);
-            var span = new Internal.BigEndianAdvancingSpan(writer.Buffer.Span);
+            var span = new BigEndianAdvancingSpan(writer.Buffer.Span);
             span.Write(TlsVersion.Tls12);
             span.CopyFrom(_secretSchedule.ServerRandom);
 

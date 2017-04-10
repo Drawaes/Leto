@@ -98,6 +98,20 @@ namespace Leto.OpenSsl11
             //No resources currently to clean up
         }
 
-        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare) => throw new NotImplementedException();
+        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare)
+        {
+            while (keyshare.Length > 0)
+            {
+                var key = keyshare.ReadVector<ushort>();
+                var namedGroup = key.Read<NamedGroup>();
+                var instance = GetKeyExchange(namedGroup);
+                if (instance != null)
+                {
+                    instance.SetPeerKey(key);
+                    return instance;
+                }
+            }
+            return null;
+        }
     }
 }
