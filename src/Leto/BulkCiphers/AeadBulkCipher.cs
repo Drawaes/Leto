@@ -4,118 +4,25 @@ using System.IO.Pipelines;
 
 namespace Leto.BulkCiphers
 {
-    public sealed class AeadBulkCipher : IDisposable
+    public abstract class AeadBulkCipher : IDisposable
     {
-        private const int AdditionalInfoHeaderSize = 13;
-        private readonly byte[] _sequence;
-        private ulong _sequenceNumber;
-        private IBulkCipherKey _key;
-        private byte _paddingSize;
+        protected const int AdditionalInfoHeaderSize = 13;
+        protected ulong _sequenceNumber;
+        protected IBulkCipherKey _key;
 
-        public AeadBulkCipher(IBulkCipherKey key)
+        public AeadBulkCipher()
         {
-            _sequence = new byte[key.IV.Length];
-            _key = key;
         }
 
-        public byte PaddingSize { get => _paddingSize; set => _paddingSize = value; }
-        public int Overhead => _key.TagSize + _paddingSize;
+        public int Overhead => _key.TagSize;
         public int IVSize => _key.IV.Length;
-
-        public void WriteNonce(ref WritableBuffer buffer) => buffer.Write(_key.IV.Span.Slice(4));
-
-        public void Decrypt(ref ReadableBuffer messageBuffer, bool requiresAdditionalInfo)
-        {
-            int plainTextSize, plainTextStart;
-            if (requiresAdditionalInfo)
-            {
-                var addInfo = ReadAdditionalInfo(ref messageBuffer);
-                _key.Init(KeyMode.Decryption);
-                _key.AddAdditionalInfo(addInfo);
-                plainTextSize = addInfo.PlainTextLength;
-                plainTextStart = AdditionalInfoHeaderSize;
-            }
-            else
-            {
-                _key.Init(KeyMode.Decryption);
-                plainTextSize = messageBuffer.Length - _key.TagSize;
-                plainTextStart = 0;
-            }
-            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
-            messageBuffer = messageBuffer.Slice(plainTextStart, plainTextSize);
-            foreach (var b in messageBuffer)
-            {
-                if (b.Length == 0) continue;
-                _key.Update(b.Span);
-            }
-            var tagSpan = tagBuffer.ToSpan();
-            _key.WriteTag(tagSpan);
-            _sequenceNumber++;
-            IncrementSequence();
-        }
-
-        public void EncryptWithAuthData(ref WritableBuffer buffer, RecordType recordType, TlsVersion tlsVersion, int plaintextLength)
-        {
-            var plainText = buffer.AsReadableBuffer();
-            plainText = plainText.Slice(plainText.Length - plaintextLength);
-            _key.Init(KeyMode.Encryption);
-            WriteAdditionalInfo(recordType, tlsVersion, plaintextLength);
-
-            foreach (var b in plainText)
-            {
-                if (b.Length == 0) continue;
-                _key.Update(b.Span);
-            }
-            WriteTag(ref buffer);
-            _sequenceNumber++;
-            IncrementSequence();
-        }
-
-        public void IncrementSequence()
-        {
-            var vPtr = _key.IV.Span;
-            var i = vPtr.Length - 1;
-            while (i > 3)
-            {
-                unchecked
-                {
-                    var val = vPtr[i] ^ _sequence[i];
-                    _sequence[i] = (byte)(_sequence[i] + 1);
-                    vPtr[i] = (byte)(_sequence[i] ^ val);
-                    if (_sequence[i] > 0) return;
-                }
-                i -= 1;
-            }
-            Alerts.AlertException.ThrowDecode("Failed to increment sequence on Aead Cipher");
-        }
-
-        private void WriteAdditionalInfo(RecordType recordType, TlsVersion tlsVersion, int plaintextLength)
-        {
-            var additionalInfo = new AdditionalInfo()
-            {
-                SequenceNumber = _sequenceNumber,
-                RecordType = recordType,
-                TlsVersion = tlsVersion,
-                PlainTextLength = (ushort)plaintextLength
-            };
-            _key.AddAdditionalInfo(additionalInfo);
-        }
-
-        private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer reader)
-        {
-            var headerSpan = reader.Slice(0, AdditionalInfoHeaderSize).ToSpan();
-
-            var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
-            (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
-            (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<TlsVersion>();
-            (additionalInfo.PlainTextLengthBigEndian, headerSpan) = headerSpan.Consume<ushort>();
-            additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
-
-            headerSpan.CopyTo(_key.IV.Span.Slice(4));
-            return additionalInfo;
-        }
-
-        private void WriteTag(ref WritableBuffer writer)
+                
+        public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
+        public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);
+        public void SetKey(IBulkCipherKey key) => _key = key;
+        public virtual void IncrementSequence() => _sequenceNumber++;
+                
+        protected void WriteTag(ref WritableBuffer writer)
         {
             writer.Ensure(_key.TagSize);
             _key.ReadTag(writer.Buffer.Span.Slice(0, _key.TagSize));

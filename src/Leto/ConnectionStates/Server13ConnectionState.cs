@@ -56,20 +56,22 @@ namespace Leto.ConnectionStates
             SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordLayer.RecordType.Handshake);
         }
 
-        private void SendServerFirstFlight() => throw new NotImplementedException();
+        private void SendServerFirstFlight()
+        {
+            HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordLayer.RecordType.Handshake);
+        }
 
-        private WritableBuffer WriteServerHelloContent(WritableBuffer writer)
+        private void WriteServerHelloContent(ref WritableBuffer writer)
         {
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + sizeof(ushort);
             writer.Ensure(fixedSize);
-            var span = new Internal.BigEndianAdvancingSpan(writer.Buffer.Span);
+            var span = new BigEndianAdvancingSpan(writer.Buffer.Span);
             span.Write(TlsVersion.Tls13Draft18);
             SecureConnection.Listener.CryptoProvider.FillWithRandom(span.TakeSlice(TlsConstants.RandomLength).ToSpan());
             span.Write(CipherSuite.Code);
             writer.Advance(fixedSize);
-
             BufferExtensions.WriteVector<ushort>(ref writer, WriteServerHelloExtensions);
-            return writer;
         }
 
         private void WriteServerHelloExtensions(ref WritableBuffer writer)

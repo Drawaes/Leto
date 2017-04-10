@@ -59,6 +59,16 @@ namespace Leto.OpenSsl11
             var secretSpan = tempBuffer.Slice(0, secretSize);
             hashProvider.HmacData(hashType, salt, secretSpan, output);
         }
+        
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey)
+        {
+            peerKey = peerKey.ReadVector<ushort>();
+            if (peerKey.Length != _keyExchangeSize)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
+            }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
 
         public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
@@ -67,6 +77,11 @@ namespace Leto.OpenSsl11
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
             }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
+
+        private void InternalSetPeerKey(Span<byte> peerKey)
+        {
             GenerateKeyPair();
             //Get0 methods mean that we do not own the object, and therefore should not free
             //as they belong to another structure so we only need to free the point
@@ -74,7 +89,7 @@ namespace Leto.OpenSsl11
             var point = EC_POINT_new(group);
             try
             {
-                EC_POINT_oct2point(group, point, peerKey.ToSpan());
+                EC_POINT_oct2point(group, point, peerKey);
                 var ecKey = EC_KEY_new_by_curve_name(_curveNid);
                 try
                 {
@@ -130,9 +145,6 @@ namespace Leto.OpenSsl11
             GC.SuppressFinalize(this);
         }
 
-        ~OpenSslECCurveKeyExchange()
-        {
-            Dispose();
-        }
+        ~OpenSslECCurveKeyExchange() => Dispose();
     }
 }

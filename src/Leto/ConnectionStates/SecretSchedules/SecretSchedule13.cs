@@ -18,5 +18,19 @@ namespace Leto.ConnectionStates.SecretSchedules
             _cryptoProvider = state.SecureConnection.Listener.CryptoProvider;
             (_secretStore, _keyStore) = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
         }
+
+        public void Dispose()
+        {
+            _secretStore?.Dispose();
+            _secretStore = null;
+            _keyStore?.Dispose();
+            _keyStore = null;
+            GC.SuppressFinalize(this);
+        }
+
+        ~SecretSchedule13()
+        {
+            Dispose();
+        }
     }
 }

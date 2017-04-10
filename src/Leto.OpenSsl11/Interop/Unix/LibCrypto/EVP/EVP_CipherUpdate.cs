@@ -14,18 +14,18 @@ namespace Leto.OpenSsl11.Interop
         internal static unsafe int EVP_CipherUpdate(EVP_CIPHER_CTX ctx, Span<byte> output, Span<byte> input)
         {
             fixed (void* inputPtr = &input.DangerousGetPinnableReference())
-            fixed (void* outputPtr = &input.DangerousGetPinnableReference())
+            fixed (void* outputPtr = &output.DangerousGetPinnableReference())
             {
-                int outputSize = output.Length;
+                var outputSize = output.Length;
                 var result = EVP_CipherUpdate(ctx, outputPtr, ref outputSize, inputPtr, input.Length);
                 ThrowOnErrorReturnCode(result);
                 return outputSize;
             }
         }
 
-        internal static int EVP_CipherUpdate(EVP_CIPHER_CTX ctx, AdditionalInfo input)
+        internal static int EVP_CipherUpdate(EVP_CIPHER_CTX ctx, ref AdditionalInfo input)
         {
-            int size = 0;
+            var size = 0;
             var result = EVP_CipherUpdate(ctx, IntPtr.Zero, ref size, ref input, Marshal.SizeOf<AdditionalInfo>());
             ThrowOnErrorReturnCode(result);
             return size;

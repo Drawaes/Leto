@@ -41,7 +41,7 @@ namespace Leto.WindowsFacts
 
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
         
-        [Fact]
+        //[Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

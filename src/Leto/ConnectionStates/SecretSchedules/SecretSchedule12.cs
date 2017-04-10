@@ -142,8 +142,8 @@ namespace Leto.ConnectionStates.SecretSchedules
             material.Slice(keySize * 2, 4).CopyTo(_clientKey.Span.Slice(keySize));
             material.Slice(keySize, keySize).CopyTo(_serverKey.Span);
             material.Slice(keySize * 2 + 4, 4).CopyTo(_serverKey.Span.Slice(keySize));
-            var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher(_state.CipherSuite.BulkCipherType, _clientKey);
-            var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher(_state.CipherSuite.BulkCipherType, _serverKey);
+            var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, _clientKey);
+            var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, _serverKey);
             return (clientKey, serverKey);
         }
 

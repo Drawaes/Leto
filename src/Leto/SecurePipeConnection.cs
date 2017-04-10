@@ -17,12 +17,11 @@ namespace Leto
         private IPipeConnection _connection;
         private IConnectionState _state;
         private SecurePipeListener _listener;
-        private readonly RecordHandler _recordHandler;
         private TaskCompletionSource<SecurePipeConnection> _handshakeComplete = new TaskCompletionSource<SecurePipeConnection>();
 
         internal SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, SecurePipeListener listener)
         {
-            _recordHandler = new RecordHandler(this);
+            RecordHandler = new GeneralRecordHandler(this);
             _listener = listener;
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();
@@ -41,7 +40,7 @@ namespace Leto
         internal IPipe HandshakeInput => _handshakeInput;
         internal IPipe HandshakeOutput => _handshakeOutput;
         internal IConnectionState State => _state;
-        internal RecordHandler RecordHandler => _recordHandler;
+        internal RecordHandler RecordHandler { get; set; }
 
         private async Task ReadingLoop()
         {
@@ -53,9 +52,9 @@ namespace Leto
                     var buffer = result.Buffer;
                     try
                     {
-                        while (_recordHandler.ReadRecord(ref buffer, out ReadableBuffer messageBuffer) == RecordState.Record)
+                        while (RecordHandler.ReadRecord(ref buffer, out ReadableBuffer messageBuffer) == RecordState.Record)
                         {
-                            switch (_recordHandler.CurrentRecordType)
+                            switch (RecordHandler.CurrentRecordType)
                             {
                                 case RecordType.Handshake:
                                     var handshakeWriter = _handshakeInput.Writer.Alloc();

@@ -10,7 +10,7 @@ namespace Leto.BulkCiphers
         void Init(KeyMode mode);
         int Update(Span<byte> input, Span<byte> output);
         int Update(Span<byte> inputAndOutput);
-        void AddAdditionalInfo(AdditionalInfo addInfo);
+        void AddAdditionalInfo(ref AdditionalInfo addInfo);
         void ReadTag(Span<byte> span);
         void WriteTag(ReadOnlySpan<byte> tagSpan);
     }

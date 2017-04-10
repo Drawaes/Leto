@@ -116,7 +116,7 @@ namespace Leto.ConnectionStates
                             span = messageBuffer.ToSpan();
                             HandshakeHash.HashData(span);
                             span = span.Slice(HandshakeFraming.HeaderSize);
-                            KeyExchange.SetPeerKey(new Internal.BigEndianAdvancingSpan(span), _certificate, _signatureScheme);
+                            KeyExchange.SetPeerKey(new BigEndianAdvancingSpan(span), _certificate, _signatureScheme);
                             _secretSchedule.GenerateMasterSecret();
                             _state = HandshakeState.WaitingForChangeCipherSpec;
                             break;

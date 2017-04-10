@@ -5,7 +5,7 @@ namespace Leto.BulkCiphers
 {
     public interface IBulkCipherKeyProvider : IDisposable
     {
-        AeadBulkCipher GetCipher(BulkCipherType cipherType, Buffer<byte> keyStorage);
+        T GetCipher<T>(BulkCipherType cipherType, Buffer<byte> keyStorage) where T : AeadBulkCipher, new();
         (int keySize, int ivSize) GetCipherSize(BulkCipherType cipherType);
     }
 }

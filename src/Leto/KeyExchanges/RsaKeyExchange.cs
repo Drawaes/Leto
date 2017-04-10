@@ -35,7 +35,7 @@ namespace Leto.KeyExchanges
             peerKey = peerKey.TakeSlice(decryptedLength);
             _premasterSecret = peerKey.ToArray();
         }
-
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey) => throw new NotSupportedException();
         public int WritePublicKey(Span<byte> keyBuffer) => throw new NotImplementedException();
     }
 }

@@ -64,9 +64,24 @@ namespace Leto.OpenSsl11
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The peer key is not the length of the keyexchange size {peerKey.Length} - {_keyExchangeSize}");
             }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
+
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey)
+        {
+            peerKey = peerKey.ReadVector<ushort>();
+            if (peerKey.Length != _keyExchangeSize)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.illegal_parameter, $"The peer key is not the length of the keyexchange size {peerKey.Length} - {_keyExchangeSize}");
+            }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
+
+        private void InternalSetPeerKey(Span<byte> peerKey)
+        {
             _peerKey = EVP_PKEY_new();
             EVP_PKEY_set_type(_peerKey, _nid);
-            EVP_PKEY_set1_tls_encodedpoint(_peerKey, peerKey.ToSpan());
+            EVP_PKEY_set1_tls_encodedpoint(_peerKey, peerKey);
             GenerateKeyPair();
         }
 

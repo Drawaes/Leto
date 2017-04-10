@@ -85,8 +85,23 @@ namespace Leto.Windows
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
             }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
+
+        public void SetPeerKey(BigEndianAdvancingSpan peerKey)
+        {
+            peerKey = peerKey.ReadVector<ushort>();
+            if (peerKey.Length != _keyExchangeSize)
+            {
+                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
+            }
+            InternalSetPeerKey(peerKey.ToSpan());
+        }
+
+        private void InternalSetPeerKey(Span<byte> peerKey)
+        {
             GenerateKeyPair();
-            _peerKey = BCryptImportECKey(_handle, peerKey.ToSpan());
+            _peerKey = BCryptImportECKey(_handle, peerKey);
         }
 
         public int WritePublicKey(Span<byte> keyBuffer)

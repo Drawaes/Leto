@@ -32,7 +32,7 @@ namespace Leto.OpenSsl11
         public void Init(KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, mode);
         public int Update(Span<byte> input, Span<byte> output) => EVP_CipherUpdate(_ctx, output, input);
         public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput, inputAndOutput);
-        public void AddAdditionalInfo(AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, addInfo);
+        public void AddAdditionalInfo(ref AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, ref addInfo);
 
         public void ReadTag(Span<byte> span)
         {

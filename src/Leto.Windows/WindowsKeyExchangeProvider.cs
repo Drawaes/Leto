@@ -116,7 +116,7 @@ namespace Leto.Windows
                 var instance = GetKeyExchange(namedGroup);
                 if(instance != null)
                 {
-                    instance.SetPeerKey(key, null, Certificates.SignatureScheme.none);
+                    instance.SetPeerKey(key);
                     return instance;
                 }
             }

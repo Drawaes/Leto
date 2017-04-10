@@ -43,11 +43,10 @@ namespace Leto.Windows
         private unsafe byte* TempIVPointer => TagPointer + _tagSize;
         private unsafe void* AdditionalInfoPointer => TempIVPointer + _tagSize;
 
-        public unsafe void AddAdditionalInfo(AdditionalInfo addInfo)
+        public unsafe void AddAdditionalInfo(ref AdditionalInfo addInfo)
         {
-            Unsafe.Write(AdditionalInfoPointer, addInfo);
-            _context.pbAuthData = AdditionalInfoPointer;
-            _context.cbAuthData = sizeof(AdditionalInfo);
+            _context.pbAuthData = Unsafe.AsPointer(ref addInfo);
+            _context.cbAuthData = Unsafe.SizeOf<AdditionalInfo>();
         }
 
         public unsafe void Init(KeyMode mode)
