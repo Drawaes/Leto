@@ -84,7 +84,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             buffer.CopyTo(_masterSecret.Span);
             return true;
         }
-
+        
         public void WriteSessionTicket()
         {
             if (_state.SecureConnection.Listener.SessionProvider == null) return;

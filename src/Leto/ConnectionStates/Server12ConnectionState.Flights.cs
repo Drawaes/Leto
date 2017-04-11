@@ -46,11 +46,7 @@ namespace Leto.ConnectionStates
 
         private void WriteServerHelloDone() =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) => { return; }, HandshakeType.server_hello_done);
-
-        private void WriteCertificates() =>
-            this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
-                CertificateWriter.WriteCertificates(buffer, _certificate), HandshakeType.certificate);
-
+        
         private void WriteServerKeyExchange()
         {
             if (KeyExchange.RequiresServerKeyExchange)

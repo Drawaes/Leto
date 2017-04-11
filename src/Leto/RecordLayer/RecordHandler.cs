@@ -42,5 +42,7 @@ namespace Leto.RecordLayer
 
         protected abstract void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType);
         public abstract RecordState ReadRecord(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer);
+
+        public void WriteHandshakeRecords() => WriteRecords(_connection.HandshakeOutput.Reader, RecordType.Handshake);
     }
 }

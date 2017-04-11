@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Leto.Internal;
+using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {
@@ -78,7 +79,7 @@ namespace Leto.ConnectionStates
         }
 
         protected abstract void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer);
-
+                
         protected virtual void Dispose(bool disposing)
         {
             HandshakeHash?.Dispose();

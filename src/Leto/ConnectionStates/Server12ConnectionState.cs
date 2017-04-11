@@ -81,6 +81,9 @@ namespace Leto.ConnectionStates
             writer.Commit();
             _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
         }
+        
+        private void WriteCertificates() => this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
+                CertificateWriter.WriteCertificates(buffer, _certificate, false), HandshakeType.certificate);
 
         private void ProcessSessionTicket(Span<byte> buffer)
         {

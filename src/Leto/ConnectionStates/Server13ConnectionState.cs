@@ -20,7 +20,7 @@ namespace Leto.ConnectionStates
         {
         }
 
-        public TlsVersion RecordVersion => TlsVersion.Tls12;
+        public TlsVersion RecordVersion => TlsVersion.Tls1;
         public int PskIdentity { get; set; } = -1;
 
         public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
@@ -57,23 +57,51 @@ namespace Leto.ConnectionStates
                 BufferExtensions.WriteVector<ushort>(ref w, WriteRetryKeyshare);
             }, HandshakeType.hello_retry_request);
             _state = HandshakeState.WaitingHelloRetry;
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordLayer.RecordType.Handshake);
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         private void SendServerFirstFlight()
         {
             HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            SecureConnection.RecordHandler.WriteHandshakeRecords();
             SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
             (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeSecret();
             SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
             HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
-            HandshakeFraming.WriteHandshakeFrame(this, WriteCertificate, HandshakeType.certificate);
+            HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
+            HandshakeFraming.WriteHandshakeFrame(this, SendCertificateVerify, HandshakeType.certificate_verify);
+            _secretSchedule.GenerateServerFinishedKey();
+            SecureConnection.RecordHandler.WriteHandshakeRecords();
+            HandshakeFraming.WriteHandshakeFrame(this, ServerFinished, HandshakeType.finished);
+            SecureConnection.RecordHandler.WriteHandshakeRecords();
         }
 
-        private void WriteEncryptedExtensions(ref WritableBuffer writer)
+        private void WriteCertificates(ref WritableBuffer buffer)
         {
-            writer.WriteBigEndian<ushort>(0);
+            buffer.WriteBigEndian<byte>(0);
+            buffer = CertificateWriter.WriteCertificates(buffer, _certificate, true);
+        }
+
+        private void WriteEncryptedExtensions(ref WritableBuffer writer) => writer.WriteBigEndian<ushort>(0);
+
+        public unsafe void SendCertificateVerify(ref WritableBuffer writer)
+        {
+            writer.WriteBigEndian(_signatureScheme);
+            var bookMark = writer.Buffer;
+            writer.WriteBigEndian((ushort)0);
+            var hash = new byte[HandshakeHash.HashSize + TlsConstants.Tls13.SignatureDigestPrefix.Length +
+                TlsConstants.Tls13.Label_ServerCertificateVerify.Length];
+            TlsConstants.Tls13.SignatureDigestPrefix.CopyTo(hash, 0);
+            TlsConstants.Tls13.Label_ServerCertificateVerify.CopyTo(hash, TlsConstants.Tls13.SignatureDigestPrefix.Length);
+            fixed (byte* hPtr = hash)
+            {
+                var sigPtr = hPtr + TlsConstants.Tls13.SignatureDigestPrefix.Length + TlsConstants.Tls13.Label_ServerCertificateVerify.Length;
+                HandshakeHash.InterimHash(new Span<byte>(sigPtr, HandshakeHash.HashSize));
+                writer.Ensure(_certificate.SignatureSize);
+                var sigSize = _certificate.SignHash(_cryptoProvider.HashProvider, _signatureScheme, hash, writer.Buffer.Span);
+                writer.Advance(sigSize);
+                (new BigEndianAdvancingSpan(bookMark.Span)).Write((ushort)sigSize);
+            }
         }
 
         private void WriteServerHelloContent(ref WritableBuffer writer)
@@ -109,6 +137,14 @@ namespace Leto.ConnectionStates
                     WriteKeyShare(ref w, ks);
                 }
             });
+        }
+
+        public unsafe void ServerFinished(ref WritableBuffer writer)
+        {
+            var hash = new byte[HandshakeHash.HashSize];
+            HandshakeHash.InterimHash(hash);
+            _cryptoProvider.HashProvider.HmacData(CipherSuite.HashType, _secretSchedule.FinishedKey, hash, hash);
+            writer.Write(hash);
         }
 
         public static void WriteKeyShare(ref WritableBuffer writer, IKeyExchange keyshare)

@@ -36,7 +36,23 @@ namespace Leto.RecordLayer
 
         protected override void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType)
         {
-            throw new NotImplementedException();
+            ReadableBuffer append;
+            while (buffer.Length > 0)
+            {
+                append = buffer.Slice(0, Math.Min(_maxMessageSize, buffer.Length));
+                buffer = buffer.Slice(append.End);
+                var recordHeader = new RecordHeader()
+                {
+                    RecordType = RecordType.Application,
+                    Length = (ushort)append.Length,
+                    Version = _connection.State.RecordVersion
+                };
+                writer.Ensure(_minimumMessageSize);
+                recordHeader.Length += (ushort)(sizeof(RecordType) + _connection.State.WriteKey.Overhead);
+                writer.Buffer.Span.Write(recordHeader);
+                writer.Advance(_minimumMessageSize);
+                _connection.State.WriteKey.Encrypt(ref writer, append, recordType, _connection.State.RecordVersion);
+            }
         }
     }
 }
