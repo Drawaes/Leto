@@ -13,7 +13,17 @@ namespace Leto.BulkCiphers
         
         public override void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion)
         {
-            throw new NotImplementedException();
+            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
+            messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - _key.TagSize);
+            _key.Init(KeyMode.Decryption);
+            foreach (var b in messageBuffer)
+            {
+                if (b.Length == 0) continue;
+                _key.Update(b.Span);
+            }
+            var tagSpan = tagBuffer.ToSpan();
+            _key.WriteTag(tagSpan);
+            IncrementSequence();
         }
 
         public unsafe override void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion)

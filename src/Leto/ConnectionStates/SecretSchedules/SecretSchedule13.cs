@@ -20,6 +20,8 @@ namespace Leto.ConnectionStates.SecretSchedules
         private Buffer<byte> _clientTraffic;
         private Buffer<byte> _serverTraffic;
         private Buffer<byte> _finishedKey;
+        private int _keySize;
+        private int _ivSize;
 
         public SecretSchedule13(Server13ConnectionState state, Span<byte> presharedKey)
         {
@@ -33,11 +35,10 @@ namespace Leto.ConnectionStates.SecretSchedules
             _serverTraffic = GetBufferSlice(_hashSize);
             _finishedKey = GetBufferSlice(_hashSize);
             _cryptoProvider.HashProvider.HkdfExtract(state.CipherSuite.HashType, new Span<byte>(), presharedKey, _secret.Span);
+            (_keySize, _ivSize) = _cryptoProvider.BulkCipherProvider.GetCipherSize(_state.CipherSuite.BulkCipherType);
         }
 
-        public Span<byte> FinishedKey => _finishedKey.Span;
-
-        public (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateHandshakeSecret()
+        public (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateHandshakeKeys()
         {
             _state.KeyExchange.DeriveSecret(_cryptoProvider.HashProvider, _state.CipherSuite.HashType, _secret.Span, _secret.Span);
             _state.KeyExchange.Dispose();
@@ -48,31 +49,54 @@ namespace Leto.ConnectionStates.SecretSchedules
             ExpandLabel(_secret, Label_ClientHandshakeTrafficSecret, hash, _clientTraffic);
             ExpandLabel(_secret, Label_ServerHandshakeTrafficSecret, hash, _serverTraffic);
 
-            var (keySize, ivSize) = _cryptoProvider.BulkCipherProvider.GetCipherSize(_state.CipherSuite.BulkCipherType);
-
-            var clientKey = _keyStore.Buffer.Slice(0, keySize + ivSize);
-            ExpandLabel(_clientTraffic, Label_TrafficIv, new Span<byte>(), clientKey.Slice(keySize));
-            ExpandLabel(_clientTraffic, Label_TrafficKey, new Span<byte>(), clientKey.Slice(0, keySize));
-
-            var serverKey = _keyStore.Buffer.Slice(0, keySize + ivSize);
-            ExpandLabel(_serverTraffic, Label_TrafficIv, new Span<byte>(), serverKey.Slice(keySize));
-            ExpandLabel(_serverTraffic, Label_TrafficKey, new Span<byte>(), serverKey.Slice(0, keySize));
-            var cKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, clientKey);
-            var sKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, serverKey);
-
-            return (cKey, sKey);
+            var clientKey = GetKey(_clientTraffic, _keyStore.Buffer.Slice(0, _keySize + _ivSize));
+            var serverKey = GetKey(_serverTraffic, _keyStore.Buffer.Slice(_keySize + _ivSize, _keySize + _ivSize));
+            return (clientKey, serverKey);
         }
 
-        private void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Buffer<byte> output)
+        public (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateApplicationKeys()
         {
+            _cryptoProvider.HashProvider.HkdfExtract(_state.CipherSuite.HashType, _secret.Span, new Span<byte>(), _secret.Span);
+            var hash = new byte[_hashSize];
+            _state.HandshakeHash.FinishHash(hash);
+            ExpandLabel(_secret, Label_ClientApplicationTrafficSecret, hash, _clientTraffic);
+            ExpandLabel(_secret, Label_ServerApplicationTrafficSecret, hash, _serverTraffic);
+            var clientKey = GetKey(_clientTraffic, _keyStore.Buffer.Slice(0, _keySize + _ivSize));
+            var serverKey = GetKey(_serverTraffic, _keyStore.Buffer.Slice(_keySize + _ivSize, _keySize + _ivSize));
+            return (clientKey, serverKey);
+        }
+
+        private AeadBulkCipher GetKey(Buffer<byte> secret, Buffer<byte> keyBuffer)
+        {
+            ExpandLabel(secret, Label_TrafficIv, new Span<byte>(), keyBuffer.Slice(_keySize));
+            ExpandLabel(secret, Label_TrafficKey, new Span<byte>(), keyBuffer.Slice(0, _keySize));
+            return _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, keyBuffer);
+        }
+
+        internal bool ProcessClientFinished(Span<byte> clientBuffer)
+        {
+            GenerateClientServerKey();
+            var buffer = new byte[_hashSize];
+            _state.HandshakeHash.InterimHash(buffer);
+            _cryptoProvider.HashProvider.HmacData(_state.CipherSuite.HashType, _finishedKey.Span, buffer, buffer);
+            return Internal.CompareFunctions.ConstantTimeEquals(clientBuffer, buffer);
+        }
+
+        internal void GenerateServerFinished(Span<byte> buffer)
+        {
+            GenerateServerFinishedKey();
+            _state.HandshakeHash.InterimHash(buffer);
+            _cryptoProvider.HashProvider.HmacData(_state.CipherSuite.HashType, _finishedKey.Span, buffer, buffer);
+        }
+
+        private void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Buffer<byte> output) =>
             _cryptoProvider.HashProvider.HkdfExpandLabel(_state.CipherSuite.HashType, secret.Span, label, hash, output.Span);
-        }
 
-        public void GenerateServerFinishedKey()
-        {
-            var output = _finishedKey.Span;
-            _cryptoProvider.HashProvider.HkdfExpandLabel(_state.CipherSuite.HashType, _secret.Span, Label_ServerFinishedKey, new Span<byte>(), output);
-        }
+        private void GenerateClientServerKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
+            _state.CipherSuite.HashType, _clientTraffic.Span, Label_ServerFinishedKey, new Span<byte>(), _finishedKey.Span);
+
+        private void GenerateServerFinishedKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
+            _state.CipherSuite.HashType, _serverTraffic.Span, Label_ServerFinishedKey, new Span<byte>(), _finishedKey.Span);
 
         private Buffer<byte> GetBufferSlice(int size)
         {

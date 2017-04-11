@@ -29,7 +29,7 @@ namespace Leto.RecordLayer
             buffer = buffer.Slice(messageBuffer.End);
             _connection.State.ReadKey.Decrypt(ref messageBuffer, header.RecordType, header.Version);
             //RemovePadding(ref messageBuffer);
-            _currentRecordType = buffer.Slice(buffer.Length - sizeof(RecordType)).ReadBigEndian<RecordType>();
+            _currentRecordType = messageBuffer.Slice(messageBuffer.Length - sizeof(RecordType)).ReadBigEndian<RecordType>();
             messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - sizeof(RecordType));
             return RecordState.Record;
         }

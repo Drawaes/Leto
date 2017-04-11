@@ -45,19 +45,49 @@ namespace Leto.ConnectionStates
             return true;
         }
 
-        private void SendHelloRetry()
+        public bool ProcessHandshake()
         {
-            this.WriteHandshakeFrame((ref WritableBuffer w) =>
+            var hasWritten = false;
+            var hasReader = SecureConnection.HandshakeInput.Reader.TryRead(out ReadResult reader);
+            if (!hasReader) return hasWritten;
+            var buffer = reader.Buffer;
+            try
             {
-                if (_state == HandshakeState.WaitingHelloRetry)
+                while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
                 {
-                    Alerts.AlertException.ThrowUnexpectedMessage(HandshakeType.client_hello);
+                    switch (messageType)
+                    {
+                        case HandshakeType.client_hello when _state == HandshakeState.WaitingHelloRetry:
+                            var clientParser = new ClientHelloParser(messageBuffer);
+                            HandshakeHash.HashData(messageBuffer);
+                            ParseExtensions(ref clientParser);
+                            if (!KeyExchange?.HasPeerKey == true)
+                            {
+                                Alerts.AlertException.ThrowFailedHandshake("Unable to negotiate a common exchange");
+                            }
+                            SendServerFirstFlight();
+                            return true;
+                        case HandshakeType.finished when _state == HandshakeState.WaitingForClientFinished:
+                            var message = messageBuffer.ToSpan();
+                            message = message.Slice(HandshakeFraming.HeaderSize);
+                            if (_secretSchedule.ProcessClientFinished(message))
+                            {
+                                _state = HandshakeState.HandshakeCompleted;
+                            }
+                            _writeKey.Dispose();
+                            _readKey.Dispose();
+                            (_readKey, _writeKey) = _secretSchedule.GenerateApplicationKeys();
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
                 }
-                w.WriteBigEndian(TlsVersion.Tls13Draft18);
-                BufferExtensions.WriteVector<ushort>(ref w, WriteRetryKeyshare);
-            }, HandshakeType.hello_retry_request);
-            _state = HandshakeState.WaitingHelloRetry;
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            }
+            finally
+            {
+                SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
+            }
+            return hasWritten;
         }
 
         private void SendServerFirstFlight()
@@ -65,15 +95,14 @@ namespace Leto.ConnectionStates
             HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
             SecureConnection.RecordHandler.WriteHandshakeRecords();
             SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
-            (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeSecret();
+            (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeKeys();
             SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
             HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
             HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
             HandshakeFraming.WriteHandshakeFrame(this, SendCertificateVerify, HandshakeType.certificate_verify);
-            _secretSchedule.GenerateServerFinishedKey();
-            SecureConnection.RecordHandler.WriteHandshakeRecords();
             HandshakeFraming.WriteHandshakeFrame(this, ServerFinished, HandshakeType.finished);
             SecureConnection.RecordHandler.WriteHandshakeRecords();
+            _state = HandshakeState.WaitingForClientFinished;
         }
 
         private void WriteCertificates(ref WritableBuffer buffer)
@@ -141,10 +170,10 @@ namespace Leto.ConnectionStates
 
         public unsafe void ServerFinished(ref WritableBuffer writer)
         {
-            var hash = new byte[HandshakeHash.HashSize];
-            HandshakeHash.InterimHash(hash);
-            _cryptoProvider.HashProvider.HmacData(CipherSuite.HashType, _secretSchedule.FinishedKey, hash, hash);
-            writer.Write(hash);
+            var hashSize = _cryptoProvider.HashProvider.HashSize(CipherSuite.HashType);
+            writer.Ensure(hashSize);
+            _secretSchedule.GenerateServerFinished(writer.Buffer.Span.Slice(0, hashSize));
+            writer.Advance(hashSize);
         }
 
         public static void WriteKeyShare(ref WritableBuffer writer, IKeyExchange keyshare)
@@ -160,33 +189,6 @@ namespace Leto.ConnectionStates
             buffer.WriteBigEndian(ExtensionType.key_share);
             buffer.WriteBigEndian((ushort)sizeof(NamedGroup));
             buffer.WriteBigEndian(KeyExchange.NamedGroup);
-        }
-
-        protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
-        {
-            switch (extensionType)
-            {
-                case ExtensionType.supported_groups:
-                    if (KeyExchange == null)
-                    {
-                        KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchangeFromSupportedGroups(buffer);
-                    }
-                    break;
-                case ExtensionType.key_share:
-                    if (KeyExchange?.HasPeerKey == true)
-                    {
-                        return;
-                    }
-                    KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(buffer) ?? KeyExchange;
-                    break;
-                case ExtensionType.SessionTicket:
-                    break;
-                case ExtensionType.psk_key_exchange_modes:
-                    ProcessPskMode(buffer);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
         }
 
         private void ProcessPskMode(BigEndianAdvancingSpan buffer)
@@ -205,40 +207,42 @@ namespace Leto.ConnectionStates
             }
         }
 
-        protected override void Dispose(bool disposing) => base.Dispose(disposing);
-
-        public bool ProcessHandshake()
+        private void SendHelloRetry()
         {
-            var hasWritten = false;
-            var hasReader = SecureConnection.HandshakeInput.Reader.TryRead(out ReadResult reader);
-            if (!hasReader) return hasWritten;
-            var buffer = reader.Buffer;
-            try
+            this.WriteHandshakeFrame((ref WritableBuffer w) =>
             {
-                while (HandshakeFraming.ReadHandshakeFrame(ref buffer, out ReadableBuffer messageBuffer, out HandshakeType messageType))
+                if (_state == HandshakeState.WaitingHelloRetry)
                 {
-                    HandshakeHash?.HashData(messageBuffer);
-                    switch (messageType)
-                    {
-                        case HandshakeType.client_hello when _state == HandshakeState.WaitingHelloRetry:
-                            var clientParser = new ClientHelloParser(messageBuffer);
-                            ParseExtensions(ref clientParser);
-                            if (!KeyExchange?.HasPeerKey == true)
-                            {
-                                Alerts.AlertException.ThrowFailedHandshake("Unable to negotiate a common exchange");
-                            }
-                            SendServerFirstFlight();
-                            return true;
-                        default:
-                            throw new NotImplementedException();
-                    }
+                    Alerts.AlertException.ThrowUnexpectedMessage(HandshakeType.client_hello);
                 }
-            }
-            finally
-            {
-                SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
-            }
-            return hasWritten;
+                w.WriteBigEndian(TlsVersion.Tls13Draft18);
+                BufferExtensions.WriteVector<ushort>(ref w, WriteRetryKeyshare);
+            }, HandshakeType.hello_retry_request);
+            _state = HandshakeState.WaitingHelloRetry;
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
+
+        protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
+        {
+            switch (extensionType)
+            {
+                case ExtensionType.supported_groups:
+                    KeyExchange = KeyExchange ?? _cryptoProvider.KeyExchangeProvider.GetKeyExchangeFromSupportedGroups(buffer);
+                    break;
+                case ExtensionType.key_share:
+                    if (KeyExchange?.HasPeerKey == true) return;
+                    KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(buffer) ?? KeyExchange;
+                    break;
+                case ExtensionType.SessionTicket:
+                    break;
+                case ExtensionType.psk_key_exchange_modes:
+                    ProcessPskMode(buffer);
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+        protected override void Dispose(bool disposing) => base.Dispose(disposing);
     }
 }
