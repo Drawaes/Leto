@@ -12,16 +12,8 @@ namespace Leto.OpenSsl11
             while (supportedGroups.Length > 0)
             {
                 var namedGroup = supportedGroups.Read<NamedGroup>();
-                switch (namedGroup)
-                {
-                    case NamedGroup.secp256r1:
-                    case NamedGroup.secp384r1:
-                    case NamedGroup.secp521r1:
-                        return new OpenSslECCurveKeyExchange(namedGroup);
-                    case NamedGroup.x25519:
-                    case NamedGroup.x448:
-                        return new OpenSslECFunctionKeyExchange(namedGroup);
-                }
+                var keyExchange = GetKeyExchange(namedGroup);
+                if (keyExchange != null) return keyExchange;
             }
             return null;
         }
@@ -45,6 +37,7 @@ namespace Leto.OpenSsl11
                 case NamedGroup.ffdhe4096:
                 case NamedGroup.ffdhe6144:
                 case NamedGroup.ffdhe8192:
+                    return new OpenSslFiniteFieldKeyExchange(namedGroup);
                 default:
                     return null;
             }
@@ -63,6 +56,7 @@ namespace Leto.OpenSsl11
                 case KeyExchangeType.Rsa:
                     return new RsaKeyExchange();
                 case KeyExchangeType.Ecdhe:
+                case KeyExchangeType.Dhe:
                     //need to check the supported groups to check if we are going to use
                     //a named curve function or a named curve
                     return EcdheKeyExchange(supportedGroups);
@@ -78,16 +72,8 @@ namespace Leto.OpenSsl11
             while (supportedGroups.Length > 0)
             {
                 var namedGroup = supportedGroups.Read<NamedGroup>();
-                switch (namedGroup)
-                {
-                    case NamedGroup.secp256r1:
-                    case NamedGroup.secp384r1:
-                    case NamedGroup.secp521r1:
-                        return new OpenSslECCurveKeyExchange(namedGroup);
-                    case NamedGroup.x25519:
-                    case NamedGroup.x448:
-                        return new OpenSslECFunctionKeyExchange(namedGroup);
-                }
+                var keyExchange = GetKeyExchange(namedGroup);
+                if (keyExchange != null) return keyExchange;
             }
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
             return null;

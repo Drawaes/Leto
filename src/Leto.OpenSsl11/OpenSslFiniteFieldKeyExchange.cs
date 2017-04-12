@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Leto.Certificates;
@@ -28,17 +29,22 @@ namespace Leto.OpenSsl11
         public void DeriveMasterSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> seed, Span<byte> output)
         {
             var buffer = new byte[_keyExchangeSize];
-            var written = DH_compute_key(buffer, _clientBN, _localKey);
-            hashProvider.Tls12Prf(hashType, buffer, TlsConstants.Tls12.Label_MasterSecret, seed, output);
+            var written = DeriveSecret(buffer);
+            hashProvider.Tls12Prf(hashType, buffer.Slice(0, written), TlsConstants.Tls12.Label_MasterSecret, seed, output);
         }
 
         public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
         {
+            var buffer = new byte[_keyExchangeSize];
+            var written = DeriveSecret(buffer);
+            hashProvider.HmacData(hashType, salt, buffer.Slice(0, written), output);
+        }
+
+        public int DeriveSecret(Span<byte> buffer)
+        {
             try
             {
-                var buffer = new byte[_keyExchangeSize];
-                var written = DH_compute_key(buffer, _clientBN, _localKey);
-                hashProvider.HmacData(hashType, salt, buffer, output);
+                return DH_compute_key(buffer, _clientBN, _localKey);
             }
             finally
             {
@@ -81,7 +87,7 @@ namespace Leto.OpenSsl11
             return BN_bn2binpad(pub, buffer);
         }
 
-        private unsafe void GenerateKeys(byte[] privateKey, byte[] publicKey)
+        public unsafe void GenerateKeys(byte[] privateKey, byte[] publicKey)
         {
             if (_localKey.IsAllocated)
             {
