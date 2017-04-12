@@ -1,9 +1,11 @@
 # Leto
-A interest learning exercise in producing a TLS 1.3 Library based off the experimental "Pipelines" from CoreFXLabs
+A interest learning exercise in producing a TLS 1.3 Library based off the experimental "Pipelines" from CoreFXLabs.
 
-Thanks to Mint/Tris who I have used some test data (cert data for example) from.
+Currently supports TLS 1.2 and TLS 1.3 Draft 18, Draft 19 is a WIP.
 
-Currently uses OpenSsl 1.1 for the crypto part and supports
+Thanks to Mint/Tris who I have used to help understand from.
+
+Currently uses OpenSsl 1.1, and Windows CNG for the crypto part and supports
 
 Hello Retry, and standard Handshake. 
 
@@ -18,7 +20,7 @@ Key exchanges (All now supported)
 
 Some support for Windows CNG is working, most extensions. Multiple server certificates, secure renegotiation
 
-https://tls13.cetus.io is currently hosting a site running on it (but runs out in a few days)
+https://tls13.cetus.io was hosting a site running on it (but the free hosting ran out). It ran for 4 weeks serving the TLS 1.3 spec without any downtime.
 
 1. x25519
 2. x448
