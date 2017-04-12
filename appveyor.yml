@@ -9,8 +9,9 @@ before_test:
   - ECHO %APPVEYOR_REPO_COMMIT_MESSAGE%
   - dotnet --info
   - VersionNumber.bat
+  - Set Path=%Path%;openssl
   - dotnet restore
-  
+    
 test_script:
   # Build sample
   - dotnet test test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj
