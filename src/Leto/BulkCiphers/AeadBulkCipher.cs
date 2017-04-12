@@ -19,6 +19,7 @@ namespace Leto.BulkCiphers
                 
         public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);
+        public abstract void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion);
         public void SetKey(IBulkCipherKey key) => _key = key;
         public virtual void IncrementSequence() => _sequenceNumber++;
                 

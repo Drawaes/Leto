@@ -1,5 +1,7 @@
-﻿using System.IO.Pipelines;
+﻿using System;
+using System.IO.Pipelines;
 using System.Runtime.InteropServices;
+using Leto.Alerts;
 
 namespace Leto.RecordLayer
 {
@@ -9,6 +11,7 @@ namespace Leto.RecordLayer
         protected static readonly int _minimumMessageSize = Marshal.SizeOf<RecordHeader>();
         protected RecordType _currentRecordType;
         protected SecurePipeConnection _connection;
+        protected object _connectionOutputLock = new object();
 
         public RecordHandler(SecurePipeConnection secureConnection) => _connection = secureConnection;
 
@@ -16,33 +19,39 @@ namespace Leto.RecordLayer
 
         public void WriteRecords(IPipeReader pipeReader, RecordType recordType)
         {
-            if (!pipeReader.TryRead(out ReadResult reader))
+            lock (_connectionOutputLock)
             {
-                return;
+                if (!pipeReader.TryRead(out ReadResult reader))
+                {
+                    return;
+                }
+                var buffer = reader.Buffer;
+                var output = _connection.Connection.Output.Alloc();
+                try
+                {
+                    WriteRecords(ref buffer, ref output, recordType);
+                }
+                finally
+                {
+                    pipeReader.Advance(buffer.End);
+                }
+                output.Commit();
             }
-            var buffer = reader.Buffer;
-            var output = _connection.Connection.Output.Alloc();
-            try
-            {
-                WriteRecords(ref buffer, ref output, recordType);
-            }
-            finally
-            {
-                pipeReader.Advance(buffer.End);
-            }
-            output.Commit();
         }
 
         public WritableBufferAwaitable WriteRecordsAndFlush(ref ReadableBuffer readableBuffer, RecordType recordType)
         {
-            var output = _connection.Connection.Output.Alloc();
-            WriteRecords(ref readableBuffer, ref output, recordType);
-            return output.FlushAsync();
+            lock (_connectionOutputLock)
+            {
+                var output = _connection.Connection.Output.Alloc();
+                WriteRecords(ref readableBuffer, ref output, recordType);
+                return output.FlushAsync();
+            }
         }
 
         protected abstract void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType);
         public abstract RecordState ReadRecord(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer);
-
         public void WriteHandshakeRecords() => WriteRecords(_connection.HandshakeOutput.Reader, RecordType.Handshake);
+        public abstract WritableBufferAwaitable WriteAlert(AlertException alert);
     }
 }

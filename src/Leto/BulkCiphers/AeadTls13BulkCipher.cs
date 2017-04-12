@@ -10,7 +10,6 @@ namespace Leto.BulkCiphers
 {
     public sealed class AeadTls13BulkCipher : AeadBulkCipher
     {
-        
         public override void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion)
         {
             var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
@@ -37,6 +36,20 @@ namespace Leto.BulkCiphers
                 bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
                 writer.Advance(bytesWritten);
             }
+            writer.Ensure(sizeof(RecordType));
+            bytesWritten = _key.Update(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
+            writer.Advance(bytesWritten);
+            WriteTag(ref writer);
+            IncrementSequence();
+        }
+
+        public unsafe override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
+        {
+            _key.Init(KeyMode.Encryption);
+            int bytesWritten;
+            writer.Ensure(plainText.Length);
+            bytesWritten = _key.Update(plainText, writer.Buffer.Span);
+            writer.Advance(bytesWritten);
             writer.Ensure(sizeof(RecordType));
             bytesWritten = _key.Update(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);

@@ -25,8 +25,8 @@ namespace Leto.ConnectionStates
         protected ICertificate _certificate;
         protected SignatureScheme _signatureScheme;
         protected ApplicationLayerProtocolType _negotiatedAlpn;
-        private SecurePipeConnection _secureConnection;
         protected string _hostName;
+        private SecurePipeConnection _secureConnection;
 
         public ConnectionState(SecurePipeConnection secureConnection)
         {
@@ -79,7 +79,7 @@ namespace Leto.ConnectionStates
         }
 
         protected abstract void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer);
-                
+
         protected virtual void Dispose(bool disposing)
         {
             HandshakeHash?.Dispose();
@@ -88,10 +88,6 @@ namespace Leto.ConnectionStates
         }
 
         public void Dispose() => Dispose(true);
-
-        ~ConnectionState()
-        {
-            Dispose(false);
-        }
+        ~ConnectionState() => Dispose(false);
     }
 }

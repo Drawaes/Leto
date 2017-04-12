@@ -63,9 +63,6 @@ namespace Leto
             GC.SuppressFinalize(this);
         }
 
-        ~SecurePipeListener()
-        {
-            Dispose(true);
-        }
+        ~SecurePipeListener() => Dispose(true);
     }
 }

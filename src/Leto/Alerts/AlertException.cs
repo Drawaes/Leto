@@ -1,20 +1,29 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Leto.Internal;
 
 namespace Leto.Alerts
 {
     public class AlertException : Exception
     {
-        public AlertException(AlertLevel alertLevel, AlertDescription description, string message)
-            : base(message)
+        public AlertException(AlertLevel alertLevel, AlertDescription description, string message) : base(message)
         {
             Level = alertLevel;
             Description = description;
         }
 
+        public AlertException(Span<byte> alertSpan)
+        {
+            var reader = new BigEndianAdvancingSpan(alertSpan);
+            Level = reader.Read<AlertLevel>();
+            Description = reader.Read<AlertDescription>();
+            ReceivedFromPeer = true;
+        }
+
         public AlertLevel Level { get; }
         public AlertDescription Description { get; }
+        public bool ReceivedFromPeer { get; }
         public override string Message => $"A {Level} {Description} {base.Message}";
 
         public override string ToString() => Message;

@@ -89,10 +89,18 @@ namespace Leto
                                     {
                                         return;
                                     }
-                                    throw new NotImplementedException();
+                                    throw new Alerts.AlertException(alertSpan);
                                 default:
-                                    throw new NotImplementedException();
+                                    Alerts.AlertException.ThrowUnexpectedMessage(RecordHandler.CurrentRecordType);
+                                    break;
                             }
+                        }
+                    }
+                    catch(Alerts.AlertException alert)
+                    {
+                        if(!alert.ReceivedFromPeer)
+                        {
+                            await RecordHandler.WriteAlert(alert);
                         }
                     }
                     finally
@@ -133,6 +141,8 @@ namespace Leto
 
         public void Dispose()
         {
+            _connection?.Dispose();
+            _connection = null;
         }
     }
 }

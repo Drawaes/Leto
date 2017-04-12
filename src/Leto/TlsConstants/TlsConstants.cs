@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto
+﻿namespace Leto
 {
     public static partial class TlsConstants
     {

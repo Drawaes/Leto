@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Leto.Internal;
-using static Leto.BufferExtensions;
 
 namespace Leto.Certificates
 {
@@ -10,6 +9,7 @@ namespace Leto.Certificates
         private List<ICertificate> _certificates = new List<ICertificate>();
 
         public void AddCertificate(ICertificate certificate) => _certificates.Add(certificate);
+        public ICertificate GetCertificate(string host, SignatureScheme type) => _certificates[0];
 
         public ICertificate GetCertificate(string host, CertificateType certificateType)
         {
@@ -31,9 +31,7 @@ namespace Leto.Certificates
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.certificate_unobtainable, $"Could not find a certficate for {host} and type {certificateType}");
             return null;
         }
-
-        public ICertificate GetCertificate(string host, SignatureScheme type) => _certificates[0];
-        
+               
         public (ICertificate, SignatureScheme) GetCertificate(BigEndianAdvancingSpan buffer)
         {
             buffer = buffer.ReadVector<ushort>();

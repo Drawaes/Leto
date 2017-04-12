@@ -57,6 +57,25 @@ namespace Leto.BulkCiphers
             IncrementSequence();
         }
 
+        public override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
+        {
+            _key.Init(KeyMode.Encryption);
+            var additionalInfo = new AdditionalInfo()
+            {
+                SequenceNumber = _sequenceNumber,
+                RecordType = recordType,
+                TlsVersion = tlsVersion,
+                PlainTextLength = (ushort)plainText.Length
+            };
+            _key.AddAdditionalInfo(ref additionalInfo);
+            writer.WriteBigEndian(_sequenceNumber);
+            writer.Ensure(plainText.Length);
+            var bytesWritten = _key.Update(plainText, writer.Buffer.Span);
+            writer.Advance(bytesWritten);
+            WriteTag(ref writer);
+            IncrementSequence();
+        }
+
         private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer reader)
         {
             var headerSpan = new BigEndianAdvancingSpan(reader.Slice(0, AdditionalInfoHeaderSize).ToSpan());

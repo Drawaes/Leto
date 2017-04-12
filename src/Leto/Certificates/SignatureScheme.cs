@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Leto.Certificates
+﻿namespace Leto.Certificates
 {
     public enum SignatureScheme : ushort
     {

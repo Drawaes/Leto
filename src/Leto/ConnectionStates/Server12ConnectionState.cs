@@ -99,6 +99,8 @@ namespace Leto.ConnectionStates
         {
             KeyExchange?.Dispose();
             KeyExchange = null;
+            _secretSchedule?.Dispose();
+            _secretSchedule = null;
             base.Dispose(disposing);
         }
 
@@ -160,6 +162,6 @@ namespace Leto.ConnectionStates
                 SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
             }
             return hasWritten;
-        }
+        } 
     }
 }
