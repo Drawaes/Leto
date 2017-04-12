@@ -8,7 +8,7 @@ namespace Leto.Sessions
 {
     public interface ISessionProvider
     {
-        Span<byte> ProcessSessionTicket(BigEndianAdvancingSpan sessionTicket);
+        BigEndianAdvancingSpan ProcessSessionTicket(BigEndianAdvancingSpan sessionTicket);
         void EncryptSessionKey(ref WritableBuffer writer, Span<byte> ticketContent);
         DateTime GetCurrentExpiry();
     }

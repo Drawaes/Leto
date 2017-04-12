@@ -3,6 +3,7 @@ using System.Binary;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Text;
+using Leto.Internal;
 using Leto.RecordLayer;
 
 namespace Leto.BulkCiphers
@@ -58,14 +59,13 @@ namespace Leto.BulkCiphers
 
         private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer reader)
         {
-            var headerSpan = reader.Slice(0, AdditionalInfoHeaderSize).ToSpan();
+            var headerSpan = new BigEndianAdvancingSpan(reader.Slice(0, AdditionalInfoHeaderSize).ToSpan());
             var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
-            (additionalInfo.RecordType, headerSpan) = headerSpan.Consume<RecordType>();
-            (additionalInfo.TlsVersion, headerSpan) = headerSpan.Consume<TlsVersion>();
-            (additionalInfo.PlainTextLengthBigEndian, headerSpan) = headerSpan.Consume<ushort>();
+            additionalInfo.RecordType = headerSpan.Read<RecordType>();
+            additionalInfo.TlsVersion = headerSpan.Read<TlsVersion>();
+            additionalInfo.PlainTextLength = headerSpan.Read<ushort>();
             additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
-
-            headerSpan.CopyTo(_key.IV.Span.Slice(4));
+            headerSpan.ToSpan().CopyTo(_key.IV.Span.Slice(4));
             return additionalInfo;
         }
     }

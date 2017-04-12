@@ -73,9 +73,8 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public bool ReadSessionTicket(Span<byte> buffer)
         {
-            buffer = Sessions.ProcessSessionTicket(new Internal.BigEndianAdvancingSpan(buffer));
-            SessionInfo info;
-            (info, buffer) = buffer.Consume<SessionInfo>();
+            var advanceBuffer = Sessions.ProcessSessionTicket(new Internal.BigEndianAdvancingSpan(buffer));
+            var info = advanceBuffer.Read<SessionInfo>();
             if (info.Version != _state.RecordVersion)
             {
                 return false;
@@ -100,7 +99,7 @@ namespace Leto.ConnectionStates.SecretSchedules
                     Timestamp = currentExpiry.Ticks,
                     Version = _state.RecordVersion
                 };
-                ticketSpan.Write(info);
+                ticketSpan.WriteBigEndian(info);
                 _masterSecret.CopyTo(ticketSpan.Slice(Marshal.SizeOf<SessionInfo>()));
 
                 Sessions.EncryptSessionKey(ref w, ticketBuffer);

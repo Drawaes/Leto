@@ -78,11 +78,7 @@ namespace Leto
             }
             return buffer.ToArray();
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (T value, Span<byte> outBuffer) Consume<T>(this Span<byte> buffer) where T : struct =>
-            (buffer.Read<T>(), buffer.Slice(Unsafe.SizeOf<T>()));
-        
+                        
         public static void WriteVector<[Primitive] T>(ref WritableBuffer buffer, ContentWriter writeContent) where T : struct
         {
             var bookMark = buffer.Buffer;

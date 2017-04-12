@@ -44,7 +44,7 @@ namespace Leto.Windows.Sessions
             });
         }
 
-        public Span<byte> ProcessSessionTicket(BigEndianAdvancingSpan sessionTicket)
+        public BigEndianAdvancingSpan ProcessSessionTicket(BigEndianAdvancingSpan sessionTicket)
         {
             var keyId = sessionTicket.Read<Guid>();
             var key = _currentKey;
@@ -52,7 +52,7 @@ namespace Leto.Windows.Sessions
             {
                 throw new NotImplementedException();
             }
-            return key.Decrypt(sessionTicket);
+            return new BigEndianAdvancingSpan(key.Decrypt(sessionTicket));
         }
 
         public DateTime GetCurrentExpiry() => DateTime.UtcNow.Add(_maxTicketAge);

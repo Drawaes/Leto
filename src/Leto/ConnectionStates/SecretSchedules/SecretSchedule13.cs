@@ -48,7 +48,6 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.HandshakeHash.InterimHash(hash);
             ExpandLabel(_secret, Label_ClientHandshakeTrafficSecret, hash, _clientTraffic);
             ExpandLabel(_secret, Label_ServerHandshakeTrafficSecret, hash, _serverTraffic);
-
             var clientKey = GetKey(_clientTraffic, _keyStore.Buffer.Slice(0, _keySize + _ivSize));
             var serverKey = GetKey(_serverTraffic, _keyStore.Buffer.Slice(_keySize + _ivSize, _keySize + _ivSize));
             return (clientKey, serverKey);
@@ -73,7 +72,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             return _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, keyBuffer);
         }
 
-        internal bool ProcessClientFinished(Span<byte> clientBuffer)
+        public bool ProcessClientFinished(Span<byte> clientBuffer)
         {
             GenerateClientServerKey();
             var buffer = new byte[_hashSize];
@@ -82,7 +81,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             return Internal.CompareFunctions.ConstantTimeEquals(clientBuffer, buffer);
         }
 
-        internal void GenerateServerFinished(Span<byte> buffer)
+        public void GenerateServerFinished(Span<byte> buffer)
         {
             GenerateServerFinishedKey();
             _state.HandshakeHash.InterimHash(buffer);
