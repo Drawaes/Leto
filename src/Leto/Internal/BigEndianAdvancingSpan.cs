@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Binary;
-using System.Collections.Generic;
 using System.Runtime;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Leto.Internal
 {
@@ -12,11 +10,8 @@ namespace Leto.Internal
         private Span<byte> _internalSpan;
 
         private static readonly bool _needsToBeReversed = BitConverter.IsLittleEndian;
-        
-        public BigEndianAdvancingSpan(Span<byte> span)
-        {
-            _internalSpan = span;
-        }
+
+        public BigEndianAdvancingSpan(Span<byte> span) => _internalSpan = span;
 
         public int Length => _internalSpan.Length;
 
@@ -31,15 +26,15 @@ namespace Leto.Internal
 
         public Span<byte> ToSpan() => _internalSpan;
         public byte[] ToArray() => _internalSpan.ToArray();
-            
-        public void Write<T>(T value) where T :struct
+
+        public void Write<T>(T value) where T : struct
         {
             var size = Unsafe.SizeOf<T>();
             if (_needsToBeReversed) value = BufferExtensions.Reverse(value);
             _internalSpan.Write(value);
             _internalSpan = _internalSpan.Slice(size);
         }
-           
+
         public void CopyFrom(ReadOnlySpan<byte> span)
         {
             span.CopyTo(_internalSpan);
@@ -55,7 +50,7 @@ namespace Leto.Internal
 
         public BigEndianAdvancingSpan ReadVector<[Primitive] T>() where T : struct
         {
-            if(typeof(T) == typeof(byte))
+            if (typeof(T) == typeof(byte))
             {
                 var size = Read<byte>();
                 return TakeSlice(size);

@@ -42,6 +42,22 @@ namespace Leto.Windows
             }
         }
 
+        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare)
+        {
+            while (keyshare.Length > 0)
+            {
+                var key = keyshare.ReadVector<ushort>();
+                var namedGroup = key.Read<NamedGroup>();
+                var instance = GetKeyExchange(namedGroup);
+                if (instance != null)
+                {
+                    instance.SetPeerKey(key);
+                    return instance;
+                }
+            }
+            return null;
+        }
+        
         public IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, BigEndianAdvancingSpan supportedGroups)
         {
             switch (keyExchange)
@@ -62,16 +78,8 @@ namespace Leto.Windows
             while (supportedGroups.Length > 0)
             {
                 var namedGroup = supportedGroups.Read<NamedGroup>();
-                switch (namedGroup)
-                {
-                    case NamedGroup.secp256r1:
-                        return new WindowsECCurveKeyExchange(_secp256r1, namedGroup);
-                    case NamedGroup.secp384r1:
-                        return new WindowsECCurveKeyExchange(_secp384r1, namedGroup);
-                    case NamedGroup.secp521r1:
-                        return new WindowsECCurveKeyExchange(_secp521r1, namedGroup);
-
-                }
+                var keyExchange = GetKeyExchange(namedGroup);
+                if (keyExchange != null) return keyExchange;
             }
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
             return null;
@@ -83,15 +91,8 @@ namespace Leto.Windows
             while (supportedGroups.Length > 0)
             {
                 var namedGroup = supportedGroups.Read<NamedGroup>();
-                switch (namedGroup)
-                {
-                    case NamedGroup.secp256r1:
-                        return new WindowsECCurveKeyExchange(_secp256r1, namedGroup);
-                    case NamedGroup.secp384r1:
-                        return new WindowsECCurveKeyExchange(_secp384r1, namedGroup);
-                    case NamedGroup.secp521r1:
-                        return new WindowsECCurveKeyExchange(_secp521r1, namedGroup);
-                }
+                var keyExchange = GetKeyExchange(namedGroup);
+                if (keyExchange != null) return keyExchange;
             }
             return null;
         }
@@ -106,23 +107,7 @@ namespace Leto.Windows
             _secp521r1 = null;
             GC.SuppressFinalize(this);
         }
-
-        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare)
-        {
-            while(keyshare.Length > 0)
-            {
-                var key = keyshare.ReadVector<ushort>();
-                var namedGroup = key.Read<NamedGroup>();
-                var instance = GetKeyExchange(namedGroup);
-                if(instance != null)
-                {
-                    instance.SetPeerKey(key);
-                    return instance;
-                }
-            }
-            return null;
-        }
-
+        
         ~WindowsKeyExchangeProvider() => Dispose();
     }
 }
