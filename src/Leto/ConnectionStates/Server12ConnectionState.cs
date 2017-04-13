@@ -69,6 +69,10 @@ namespace Leto.ConnectionStates
                 case ExtensionType.SessionTicket:
                     ProcessSessionTicket(buffer.ToSpan());
                     break;
+                case ExtensionType.psk_key_exchange_modes:
+                case ExtensionType.pre_shared_key:
+                case ExtensionType.key_share:
+                    break;
                 default:
                     throw new NotImplementedException();
             }

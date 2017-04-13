@@ -32,8 +32,8 @@ namespace Leto.Windows
             _iv = keyStore.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
-            SetBlockChainingMode(_keyHandle, chainingMode);
-            _blockLength = GetBlockLength(_keyHandle);
+            _blockLength = GetBlockLength(type);
+            var authTagLengths = GetAuthTagLengths(type);
         }
 
         public Buffer<byte> IV => _iv;
@@ -41,7 +41,6 @@ namespace Leto.Windows
         private unsafe byte* MacContextPointer => (byte*)_scratchPin.PinnedPointer;
         private unsafe byte* TagPointer => MacContextPointer + _blockLength;
         private unsafe byte* TempIVPointer => TagPointer + _tagSize;
-        private unsafe void* AdditionalInfoPointer => TempIVPointer + _tagSize;
 
         public unsafe void AddAdditionalInfo(ref AdditionalInfo addInfo)
         {
@@ -124,6 +123,7 @@ namespace Leto.Windows
             _scratchSpace?.Dispose();
             _scratchSpace = null;
             _ivHandle.Free();
+
             _keyHandle?.Dispose();
             _keyHandle = null;
             GC.SuppressFinalize(this);

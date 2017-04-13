@@ -29,6 +29,10 @@ namespace Leto.WindowsFacts
                 using (var sslStream = new SslStream(stream, false, CertVal))
                 {
                     await sslStream.AuthenticateAsClientAsync("localhost");
+                    var bytes = Encoding.UTF8.GetBytes("Hello World");
+
+                    await sslStream.WriteAsync(bytes, 0, bytes.Length);
+                    var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
                 }
                 //var loopback2 = new LoopbackPipeline(factory);
                 //var stream2 = loopback2.ClientPipeline.GetStream();
@@ -40,7 +44,7 @@ namespace Leto.WindowsFacts
             }
         }
 
-        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
+        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) =>true;
         
         //[Fact]
         public void SocketTest()

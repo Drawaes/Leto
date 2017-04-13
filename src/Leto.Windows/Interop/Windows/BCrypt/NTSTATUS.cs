@@ -12,6 +12,7 @@ namespace Leto.Windows.Interop
             STATUS_NOT_FOUND = 0xc0000225,
             STATUS_INVALID_PARAMETER = 0xc000000d,
             STATUS_NO_MEMORY = 0xc0000017,
+            STATUS_INVALID_BUFFER_SIZE = 0xc0000206,
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Leto.Windows.Interop
             Span<byte> output, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
         {
             fixed (void* inputPtr = &input.DangerousGetPinnableReference())
-            fixed (void* outputPtr = &input.DangerousGetPinnableReference())
+            fixed (void* outputPtr = &output.DangerousGetPinnableReference())
             {
                 var result = BCryptDecrypt(key, inputPtr, input.Length, &info, ivBuffer, info.cbMacContext, outputPtr, output.Length, out int length, 0);
                 ThrowOnErrorReturnCode(result);

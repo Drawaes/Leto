@@ -10,14 +10,15 @@ namespace Leto.Windows
 {
     public sealed class WindowsBulkKeyProvider : IBulkCipherKeyProvider
     {
-        private SafeBCryptAlgorithmHandle _aesHandle;
+        private SafeBCryptAlgorithmHandle _aesGcmHandle;
         private BufferPool _keyScratchSpace;
         //This is used for inflight calls, we have TempIV (12), MacContext(16), Tag (16), Authdata
         private static readonly unsafe int _scratchSpaceSize = 12 + 16 + 16 + sizeof(AdditionalInfo);
         
         public WindowsBulkKeyProvider()
         {
-            _aesHandle = BCryptOpenAlgorithmProvider("AES");
+            _aesGcmHandle = BCryptOpenAlgorithmProvider("AES");
+            SetBlockChainingMode(_aesGcmHandle, BCRYPT_CHAIN_MODE_GCM);
             //This param should be somewhere better and configured, but for now we will link it to one common place
             _keyScratchSpace = new EphemeralBufferPoolWindows(_scratchSpaceSize, ConnectionStates.SecretSchedules.SecretSchedulePool.MaxInflightConnections * 2);
         }
@@ -38,7 +39,7 @@ namespace Leto.Windows
         public T GetCipher<T>(BulkCipherType cipherType, Buffer<byte> keyStorage) where T : AeadBulkCipher, new()
         {
             var (keySize, ivSize, chainingMode) = GetCipher(cipherType);
-            var key = new WindowsBulkCipherKey(_aesHandle, keyStorage, keySize, ivSize, 16, chainingMode, _keyScratchSpace.Rent(_scratchSpaceSize));
+            var key = new WindowsBulkCipherKey(_aesGcmHandle, keyStorage, keySize, ivSize, 16, chainingMode, _keyScratchSpace.Rent(_scratchSpaceSize));
             var returnValue = new T();
             returnValue.SetKey(key);
             return returnValue;
