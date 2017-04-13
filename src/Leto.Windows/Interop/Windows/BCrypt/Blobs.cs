@@ -15,60 +15,6 @@ namespace Leto.Windows.Interop
     internal partial class BCrypt
     {
         /// <summary>
-        ///     Append "value" to the data already in blob.
-        /// </summary>
-        internal static void Emit(byte[] blob, ref int offset, byte[] value)
-        {
-            Debug.Assert(blob != null);
-            Debug.Assert(offset >= 0);
-
-            Buffer.BlockCopy(value, 0, blob, offset, value.Length);
-            offset += value.Length;
-        }
-
-        /// <summary>
-        ///     Append "value" to the data already in blob.
-        /// </summary>
-        internal static void EmitByte(byte[] blob, ref int offset, byte value, int count = 1)
-        {
-            Debug.Assert(blob != null);
-            Debug.Assert(offset >= 0);
-            Debug.Assert(count > 0);
-
-            int finalOffset = offset + count;
-            for (int i = offset; i < finalOffset; i++)
-            {
-                blob[i] = value;
-            }
-            offset = finalOffset;
-        }
-
-        /// <summary>
-        ///     Append "value" in big Endian format to the data already in blob.
-        /// </summary>
-        internal static void EmitBigEndian(byte[] blob, ref int offset, int value)
-        {
-            Debug.Assert(blob != null);
-            Debug.Assert(offset >= 0);
-
-            blob[offset++] = ((byte)(value >> 24));
-            blob[offset++] = ((byte)(value >> 16));
-            blob[offset++] = ((byte)(value >> 8));
-            blob[offset++] = ((byte)(value));
-        }
-
-        /// <summary>
-        ///     Peel off the next "count" bytes in blob and return them in a byte array.
-        /// </summary>
-        internal static byte[] Consume(byte[] blob, ref int offset, int count)
-        {
-            byte[] value = new byte[count];
-            Buffer.BlockCopy(blob, offset, value, 0, count);
-            offset += count;
-            return value;
-        }
-
-        /// <summary>
         ///     Magic numbers identifying blob types
         /// </summary>
         internal enum KeyBlobMagicNumber : int
