@@ -80,19 +80,28 @@ namespace Leto.Windows
             }
         }
 
-        public unsafe int Update(Span<byte> input, Span<byte> output)
+        public unsafe int Update(Span<byte> inputOutput)
         {
-            var totalWritten = _context.cbData;
             if (_keyMode == KeyMode.Encryption)
             {
-                BCryptEncrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+                return BCryptEncrypt(_keyHandle, inputOutput,  ref _context, TempIVPointer);
             }
             else
             {
-                BCryptDecrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+                return BCryptDecrypt(_keyHandle, inputOutput, ref _context, TempIVPointer);
             }
-            totalWritten = _context.cbData - totalWritten;
-            return (int)totalWritten;
+        }
+
+        public unsafe int Update(Span<byte> input, Span<byte> output)
+        {
+            if (_keyMode == KeyMode.Encryption)
+            {
+                return BCryptEncrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+            }
+            else
+            {
+                return BCryptDecrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+            }
         }
         
         public unsafe void CheckTag(ReadOnlySpan<byte> tagSpan) => BCryptDecryptSetTag(_keyHandle, tagSpan, ref _context, TempIVPointer);

@@ -31,7 +31,7 @@ namespace Leto.OpenSsl11
 
         public void Init(KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, mode);
         public int Update(Span<byte> input, Span<byte> output) => EVP_CipherUpdate(_ctx, output, input);
-        public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput, inputAndOutput);
+        public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput);
         public void AddAdditionalInfo(ref AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, ref addInfo);
 
         public void ReadTag(Span<byte> span)
@@ -44,7 +44,7 @@ namespace Leto.OpenSsl11
             EVP_CIPHER_CTX_GetTag(_ctx, span);
         }
 
-        public void WriteTag(ReadOnlySpan<byte> tagSpan)
+        public void CheckTag(ReadOnlySpan<byte> tagSpan)
         {
             EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
             EVP_CipherFinal_ex(_ctx);

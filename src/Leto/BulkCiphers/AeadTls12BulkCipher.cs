@@ -30,7 +30,7 @@ namespace Leto.BulkCiphers
                 _key.Update(b.Span);
             }
             var tagSpan = tagBuffer.ToSpan();
-            _key.WriteTag(tagSpan);
+            _key.CheckTag(tagSpan);
             _sequenceNumber++;
         }
 
@@ -74,18 +74,6 @@ namespace Leto.BulkCiphers
             writer.Advance(bytesWritten);
             WriteTag(ref writer);
             IncrementSequence();
-        }
-
-        private AdditionalInfo ReadAdditionalInfo(ref ReadableBuffer reader)
-        {
-            var headerSpan = new BigEndianAdvancingSpan(reader.Slice(0, AdditionalInfoHeaderSize).ToSpan());
-            var additionalInfo = new AdditionalInfo() { SequenceNumber = _sequenceNumber };
-            additionalInfo.RecordType = headerSpan.Read<RecordType>();
-            additionalInfo.TlsVersion = headerSpan.Read<TlsVersion>();
-            additionalInfo.PlainTextLength = headerSpan.Read<ushort>();
-            additionalInfo.PlainTextLength -= (ushort)(_key.TagSize + sizeof(ulong));
-            headerSpan.ToSpan().CopyTo(_key.IV.Span.Slice(4));
-            return additionalInfo;
         }
     }
 }

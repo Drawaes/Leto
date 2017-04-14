@@ -23,6 +23,17 @@ namespace Leto.OpenSsl11.Interop
             }
         }
 
+        internal static unsafe int EVP_CipherUpdate(EVP_CIPHER_CTX ctx, Span<byte> inputOutput)
+        {
+            fixed (void* ptr = &inputOutput.DangerousGetPinnableReference())
+            {
+                var outputSize = inputOutput.Length;
+                var result = EVP_CipherUpdate(ctx, ptr, ref outputSize, ptr, outputSize);
+                ThrowOnErrorReturnCode(result);
+                return outputSize;
+            }
+        }
+
         internal static int EVP_CipherUpdate(EVP_CIPHER_CTX ctx, ref AdditionalInfo input)
         {
             var size = 0;

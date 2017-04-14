@@ -21,7 +21,7 @@ namespace Leto.BulkCiphers
                 _key.Update(b.Span);
             }
             var tagSpan = tagBuffer.ToSpan();
-            _key.WriteTag(tagSpan);
+            _key.CheckTag(tagSpan);
             IncrementSequence();
         }
 

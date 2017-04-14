@@ -12,6 +12,6 @@ namespace Leto.BulkCiphers
         int Update(Span<byte> inputAndOutput);
         void AddAdditionalInfo(ref AdditionalInfo addInfo);
         void ReadTag(Span<byte> span);
-        void WriteTag(ReadOnlySpan<byte> tagSpan);
+        void CheckTag(ReadOnlySpan<byte> tagSpan);
     }
 }
