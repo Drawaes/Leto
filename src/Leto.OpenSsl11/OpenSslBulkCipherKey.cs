@@ -34,26 +34,46 @@ namespace Leto.OpenSsl11
         public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput);
         public void AddAdditionalInfo(ref AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, ref addInfo);
 
-        public void ReadTag(Span<byte> span)
+        public void GetTag(Span<byte> span)
         {
             if (span.Length < _tagSize)
             {
                 ExceptionHelper.ThrowException(new ArgumentOutOfRangeException());
             }
-            EVP_CipherFinal_ex(_ctx);
             EVP_CIPHER_CTX_GetTag(_ctx, span);
         }
 
-        public void CheckTag(ReadOnlySpan<byte> tagSpan)
+        public void SetTag(ReadOnlySpan<byte> tagSpan)
         {
             EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
-            EVP_CipherFinal_ex(_ctx);
         }
 
         public void Dispose()
         {
             _ctx.Free();
             GC.SuppressFinalize(this);
+        }
+
+        public int Finish(Span<byte> inputAndOutput)
+        {
+            var bytesWritten = 0;
+            if(inputAndOutput.Length > 0)
+            {
+                bytesWritten = Update(inputAndOutput);
+            }
+            EVP_CipherFinal_ex(_ctx);
+            return bytesWritten;
+        }
+
+        public int Finish(Span<byte> input, Span<byte> output)
+        {
+            var bytesWritten = 0;
+            if(input.Length >0)
+            {
+                bytesWritten = Update(input, output);
+            }
+            EVP_CipherFinal_ex(_ctx);
+            return bytesWritten;
         }
 
         ~OpenSslBulkCipherKey() => Dispose();

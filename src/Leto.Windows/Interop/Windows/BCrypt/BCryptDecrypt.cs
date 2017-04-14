@@ -37,14 +37,9 @@ namespace Leto.Windows.Interop
         internal static unsafe void BCryptDecryptSetTag(SafeBCryptKeyHandle key,
             ReadOnlySpan<byte> tag, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO context, void* ivBuffer)
         {
-            fixed (void* tagPtr = &tag.DangerousGetPinnableReference())
-            {
-                context.pbTag = tagPtr;
-                context.cbTag = tag.Length;
-                context.dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
-                var result = BCryptDecrypt(key, null, 0, ref context, ivBuffer, context.cbMacContext, null, 0, out int size, 0);
-                ThrowOnErrorReturnCode(result);
-            }
+            context.dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
+            var result = BCryptDecrypt(key, null, 0, ref context, ivBuffer, context.cbMacContext, null, 0, out int size, 0);
+            ThrowOnErrorReturnCode(result);
         }
 
         internal static unsafe int BCryptDecrypt(SafeBCryptKeyHandle key, Span<byte> iv, Span<byte> tag, Span<byte> inputOutput)

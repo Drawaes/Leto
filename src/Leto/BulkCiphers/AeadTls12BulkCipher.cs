@@ -20,18 +20,12 @@ namespace Leto.BulkCiphers
                 PlainTextLength = (ushort)(messageBuffer.Length - sizeof(ulong) - _key.TagSize),
             };
            messageBuffer.Slice(0, sizeof(ulong)).CopyTo(_key.IV.Slice(4).Span);
-            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
+            var tagSpan = messageBuffer.Slice(messageBuffer.Length - _key.TagSize).ToSpan();
             messageBuffer = messageBuffer.Slice(sizeof(ulong), addInfo.PlainTextLength);
             _key.Init(KeyMode.Decryption);
             _key.AddAdditionalInfo(ref addInfo);
-            foreach (var b in messageBuffer)
-            {
-                if (b.Length == 0) continue;
-                _key.Update(b.Span);
-            }
-            var tagSpan = tagBuffer.ToSpan();
-            _key.CheckTag(tagSpan);
-            _sequenceNumber++;
+            _key.SetTag(tagSpan);
+            Decrypt(ref messageBuffer);
         }
 
         public override void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion)
@@ -47,15 +41,24 @@ namespace Leto.BulkCiphers
             };
             _key.AddAdditionalInfo(ref additionalInfo);
             writer.WriteBigEndian(_sequenceNumber);
+            var totalBytes = plainText.Length;
             foreach (var b in plainText)
             {
                 if (b.Length == 0) continue;
+                totalBytes -= b.Length;
                 writer.Ensure(b.Length);
-                var bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
+                int bytesWritten;
+                if (totalBytes == 0)
+                {
+                    bytesWritten = _key.Finish(b.Span, writer.Buffer.Span);
+                    writer.Advance(bytesWritten);
+                    break;
+                }
+                bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
                 writer.Advance(bytesWritten);
             }
-            WriteTag(ref writer);
             IncrementSequence();
+            WriteTag(ref writer);
         }
 
         public override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
@@ -72,10 +75,10 @@ namespace Leto.BulkCiphers
             _key.AddAdditionalInfo(ref additionalInfo);
             writer.WriteBigEndian(_sequenceNumber);
             writer.Ensure(plainText.Length);
-            var bytesWritten = _key.Update(plainText, writer.Buffer.Span);
+            var bytesWritten = _key.Finish(plainText, writer.Buffer.Span);
             writer.Advance(bytesWritten);
-            WriteTag(ref writer);
             IncrementSequence();
+            WriteTag(ref writer);
         }
     }
 }

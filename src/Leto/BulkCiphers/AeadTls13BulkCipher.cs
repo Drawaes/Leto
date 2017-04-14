@@ -12,17 +12,11 @@ namespace Leto.BulkCiphers
     {
         public override void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion)
         {
-            var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
+            var tagSpan = messageBuffer.Slice(messageBuffer.Length - _key.TagSize).ToSpan();
             messageBuffer = messageBuffer.Slice(0, messageBuffer.Length - _key.TagSize);
             _key.Init(KeyMode.Decryption);
-            foreach (var b in messageBuffer)
-            {
-                if (b.Length == 0) continue;
-                _key.Update(b.Span);
-            }
-            var tagSpan = tagBuffer.ToSpan();
-            _key.CheckTag(tagSpan);
-            IncrementSequence();
+            _key.SetTag(tagSpan);
+            Decrypt(ref messageBuffer);
         }
 
         public unsafe override void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion)
@@ -37,10 +31,10 @@ namespace Leto.BulkCiphers
                 writer.Advance(bytesWritten);
             }
             writer.Ensure(sizeof(RecordType));
-            bytesWritten = _key.Update(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
+            bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
-            WriteTag(ref writer);
             IncrementSequence();
+            WriteTag(ref writer);
         }
 
         public unsafe override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
@@ -51,10 +45,10 @@ namespace Leto.BulkCiphers
             bytesWritten = _key.Update(plainText, writer.Buffer.Span);
             writer.Advance(bytesWritten);
             writer.Ensure(sizeof(RecordType));
-            bytesWritten = _key.Update(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
+            bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
-            WriteTag(ref writer);
             IncrementSequence();
+            WriteTag(ref writer);
         }
 
         public override unsafe void IncrementSequence()

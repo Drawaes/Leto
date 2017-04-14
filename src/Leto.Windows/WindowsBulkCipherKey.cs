@@ -11,16 +11,20 @@ using System.Runtime.CompilerServices;
 
 namespace Leto.Windows
 {
-    public class WindowsBulkCipherKey : IBulkCipherKey
+    public unsafe class WindowsBulkCipherKey : IBulkCipherKey
     {
         private Buffer<byte> _iv;
         private int _tagSize;
         private SafeBCryptKeyHandle _keyHandle;
-        private BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO _context;
         private BufferHandle _ivHandle;
         private KeyMode _keyMode;
         private OwnedBuffer<byte> _scratchSpace;
         private BufferHandle _scratchPin;
+        private byte* _pointerAuthData;
+        private byte* _pointerTag;
+        private byte* _pointerMac;
+        private byte* _pointerIv;
+        private byte* _pointerModeInfo;
 
         internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
@@ -30,81 +34,79 @@ namespace Leto.Windows
             _iv = keyStore.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
+            
+            _pointerAuthData = (byte*)_scratchPin.PinnedPointer;
+            _pointerTag = _pointerAuthData + sizeof(AdditionalInfo);
+            _pointerMac = _pointerTag + _tagSize;
+            _pointerIv = _pointerMac + _tagSize;
+            _pointerModeInfo = _pointerIv + _tagSize;
         }
 
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
-        private unsafe byte* MacContextPointer => (byte*)_scratchPin.PinnedPointer;
-        private unsafe byte* TagPointer => MacContextPointer + _tagSize;
-        private unsafe byte* TempIVPointer => TagPointer + _tagSize;
-        private unsafe byte* AuthDataPointer => TempIVPointer + _tagSize;
-
-
-        public unsafe void AddAdditionalInfo(ref AdditionalInfo addInfo)
+        
+        public void AddAdditionalInfo(ref AdditionalInfo addInfo)
         {
-            _context.pbAuthData = AuthDataPointer;
-            _context.cbAuthData = Unsafe.SizeOf<AdditionalInfo>();
-            Unsafe.Write(AuthDataPointer, addInfo);
+            ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
+            context.pbAuthData = _pointerAuthData;
+            context.cbAuthData = sizeof(AdditionalInfo);
+            Unsafe.Write(context.pbAuthData, addInfo);
         }
 
-        public unsafe void Init(KeyMode mode)
+        public void Init(KeyMode mode)
         {
             _keyMode = mode;
-            _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
-            {
-                dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,
-                cbMacContext = _tagSize,
-                pbMacContext = MacContextPointer,
-                cbNonce = _iv.Length,
-                pbNonce = _ivHandle.PinnedPointer,
-                cbAuthData = 0,
-                pbAuthData = null,
-                cbTag = _tagSize,
-                cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO),
-                pbTag = TagPointer,
-                dwInfoVersion = 1,
-            };
+            Unsafe.InitBlock(_scratchPin.PinnedPointer, 0,(uint) _scratchSpace.Length);
+            ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
+            context.dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls;
+            context.cbMacContext = _tagSize;
+            context.pbMacContext = _pointerMac;
+            context.cbNonce = _iv.Length;
+            context.pbNonce = _ivHandle.PinnedPointer;
+            context.cbAuthData = 0;
+            context.pbAuthData = null;
+            context.cbTag = _tagSize;
+            context.cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO);
+            context.pbTag = _pointerTag;
+            context.dwInfoVersion = 1;
         }
 
-        public unsafe void ReadTag(Span<byte> span)
+        public void GetTag(Span<byte> span)
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                BCryptEncryptGetTag(_keyHandle, ref _context, TempIVPointer);
-                var tagSpan = new Span<byte>(TagPointer, _tagSize);
+                var tagSpan = new Span<byte>(_pointerTag, _tagSize);
                 tagSpan.CopyTo(span);
+                return;
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotSupportedException();
         }
 
-        public unsafe int Update(Span<byte> inputOutput)
+        public int Update(Span<byte> inputOutput)
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                return BCryptEncrypt(_keyHandle, inputOutput,  ref _context, TempIVPointer);
+                return BCryptEncrypt(_keyHandle, inputOutput, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
             }
             else
             {
-                return BCryptDecrypt(_keyHandle, inputOutput, ref _context, TempIVPointer);
+                return BCryptDecrypt(_keyHandle, inputOutput, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
             }
         }
 
-        public unsafe int Update(Span<byte> input, Span<byte> output)
+        public int Update(Span<byte> input, Span<byte> output)
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                return BCryptEncrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+                return BCryptEncrypt(_keyHandle, input, output, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
             }
             else
             {
-                return BCryptDecrypt(_keyHandle, input, output, ref _context, TempIVPointer);
+                return BCryptDecrypt(_keyHandle, input, output, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
             }
         }
-        
-        public unsafe void CheckTag(ReadOnlySpan<byte> tagSpan) => BCryptDecryptSetTag(_keyHandle, tagSpan, ref _context, TempIVPointer);
+
+        public void SetTag(ReadOnlySpan<byte> tagSpan) => tagSpan.CopyTo(new Span<byte>(_pointerTag, _tagSize));
 
         public void Dispose()
         {
@@ -116,6 +118,20 @@ namespace Leto.Windows
             _keyHandle?.Dispose();
             _keyHandle = null;
             GC.SuppressFinalize(this);
+        }
+
+        public int Finish(Span<byte> inputAndOutput)
+        {
+            ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
+            context.dwFlags ^= AuthenticatedCipherModeInfoFlags.ChainCalls;
+            return Update(inputAndOutput);
+        }
+
+        public int Finish(Span<byte> input, Span<byte> output)
+        {
+            ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
+            context.dwFlags ^= AuthenticatedCipherModeInfoFlags.ChainCalls;
+            return Update(input, output);
         }
 
         ~WindowsBulkCipherKey()
