@@ -18,9 +18,6 @@ namespace Leto.WindowsFacts
     public class ClientSslStreamFacts
     {
         [Theory]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_128_GCM_SHA256)]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_256_GCM_SHA384)]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)]
         [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)]
         public async Task HandshakeCompletes(CipherSuites.PredefinedCipherSuites.PredefinedSuite suite)
         {
@@ -43,7 +40,7 @@ namespace Leto.WindowsFacts
             }
         }
 
-        private async Task Echo(Task<Leto.SecurePipeConnection> connectionTask)
+        private async Task Echo(Task<SecurePipeConnection> connectionTask)
         {
             var connection = await connectionTask;
             var readResult = await connection.Input.ReadAsync();
