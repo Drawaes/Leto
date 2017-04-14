@@ -11,10 +11,11 @@ using Leto.ConnectionStates.SecretSchedules;
 
 namespace Leto.ConnectionStates
 {
-    public class Server13ConnectionState<T> : ConnectionState, IConnectionState where T : SecretSchedule13, new()
+    public abstract class Server13ConnectionState<T> : ConnectionState, IConnectionState where T : SecretSchedule13, new()
     {
         private PskExchangeMode _pskMode = PskExchangeMode.none;
         private T _secretSchedule;
+        protected TlsVersion _protocolVersion;
 
         public Server13ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection)
         {
@@ -99,6 +100,7 @@ namespace Leto.ConnectionStates
             (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeKeys();
             SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
             HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
+            SecureConnection.RecordHandler.WriteHandshakeRecords();
             if (PskIdentity == -1)
             {
                 HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
@@ -142,7 +144,7 @@ namespace Leto.ConnectionStates
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + sizeof(ushort);
             writer.Ensure(fixedSize);
             var span = new BigEndianAdvancingSpan(writer.Buffer.Span);
-            span.Write(TlsVersion.Tls13Draft18);
+            span.Write(_protocolVersion);
             SecureConnection.Listener.CryptoProvider.FillWithRandom(span.TakeSlice(TlsConstants.RandomLength).ToSpan());
             span.Write(CipherSuite.Code);
             writer.Advance(fixedSize);

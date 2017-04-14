@@ -10,12 +10,12 @@ namespace Leto.ConnectionStates.SecretSchedules
 {
     public class SecretSchedule13
     {
-        private ConnectionState _state;
+        protected ConnectionState _state;
         private ICryptoProvider _cryptoProvider;
         private OwnedBuffer<byte> _secretStore;
         private OwnedBuffer<byte> _keyStore;
         protected Buffer<byte> _secret;
-        private int _hashSize;
+        protected int _hashSize;
         private Buffer<byte> _remainingStore;
         private Buffer<byte> _clientTraffic;
         private Buffer<byte> _serverTraffic;

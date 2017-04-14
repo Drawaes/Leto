@@ -16,17 +16,15 @@ test_script:
   # Build sample
   - dotnet test test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj
   - dotnet test test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
-  - dotnet test test/Leto.WindowsFacts/Leto.WindowsFacts.csproj
   
 after_test:
   # Build and pack source
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\script\runtests.bat" -searchdirs:"..\test\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1;..\test\Leto.WindowsFacts\bin\Debug\netcoreapp1.1;..\test\Leto.ProtocolFacts\bin\Debug\netcoreapp1.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]*"')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\script\runtests.bat" -searchdirs:"..\test\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1;..\test\Leto.ProtocolFacts\bin\Debug\netcoreapp1.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]*"')
   - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\coveralls.io'))[0].FullName + '\tools\coveralls.net.exe' + ' --opencover coverage.xml')
 
   - dotnet build -c Release
   - dotnet pack -c Release src/Leto --version-suffix %suffix%
   - dotnet pack -c Release src/Leto.OpenSsl11 --version-suffix %suffix%
-  - dotnet pack -c Release src/Leto.Windows --version-suffix %suffix%
   
 artifacts:
   path: '**/*.nupkg'

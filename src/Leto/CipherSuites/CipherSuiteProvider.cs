@@ -43,5 +43,10 @@ namespace Leto.CipherSuites
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match cipher suites");
             return null;
         }
+
+        public void SetCipherSuites(CipherSuite[] cipherSuites)
+        {
+            _cipherSuites = cipherSuites;
+        }
     }
 }

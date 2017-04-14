@@ -13,31 +13,33 @@ namespace Leto.OpenSslFacts
 {
     public class ClientSslStreamFacts
     {
-        [Fact]
-        public async Task HandshakeCompletes()
+        [Theory]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_128_GCM_SHA256)]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_256_GCM_SHA384)]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)]
+        public async Task HandshakeCompletes(CipherSuites.PredefinedCipherSuites.PredefinedSuite suite)
         {
             using (var factory = new PipeFactory())
             using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
+                listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName( suite) });
                 var loopback = new LoopbackPipeline(factory);
                 var stream = loopback.ClientPipeline.GetStream();
                 var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
                 using (var sslStream = new SslStream(stream, false, CertVal))
                 {
                     await sslStream.AuthenticateAsClientAsync("localhost");
-                }
-                var loopback2 = new LoopbackPipeline(factory);
-                var stream2 = loopback2.ClientPipeline.GetStream();
-                var secureConnection2 = listener.CreateConnection(loopback2.ServerPipeline);
-                using (var sslStream2 = new SslStream(stream2, false, CertVal))
-                {
-                    await sslStream2.AuthenticateAsClientAsync("localhost");
+                    var bytes = Encoding.UTF8.GetBytes("Hello World");
+
+                    await sslStream.WriteAsync(bytes, 0, bytes.Length);
+                    var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
                 }
             }
         }
 
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
-        
+
         //[Fact]
         public void SocketTest()
         {

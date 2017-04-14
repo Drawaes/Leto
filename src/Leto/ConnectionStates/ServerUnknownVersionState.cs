@@ -68,10 +68,10 @@ namespace Leto.ConnectionStates
                         connectionState = new Server12ConnectionState(_securePipe);
                         break;
                     case TlsVersion.Tls13Draft18:
-                        connectionState = new Server13ConnectionState<SecretSchedules.SecretSchedule13>(_securePipe);
+                        connectionState = new Server13ConnectionStateDraft18(_securePipe);
                         break;
                     case TlsVersion.Tls13Draft19:
-                        connectionState = new Server13ConnectionState<SecretSchedules.SecretSchedule13Draft19>(_securePipe);
+                        connectionState = new Server13ConnectionStateDraft19(_securePipe);
                         break;
                     default:
                         throw new NotImplementedException();

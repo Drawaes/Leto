@@ -16,5 +16,42 @@ namespace Leto.CipherSuites
         public static readonly CipherSuite TLS_AES_128_GCM_SHA256 = new CipherSuite(0x1301, nameof(TLS_AES_128_GCM_SHA256), BulkCipherType.AES_128_GCM, HashType.SHA256, null, null, TlsVersion.Tls13Draft18);
         public static readonly CipherSuite TLS_AES_256_GCM_SHA384 = new CipherSuite(0x1302, nameof(TLS_AES_256_GCM_SHA384), BulkCipherType.AES_256_GCM, HashType.SHA384, null, null, TlsVersion.Tls13Draft18);
         public static readonly CipherSuite TLS_CHACHA20_POLY1305_SHA256 = new CipherSuite(0x1303, nameof(TLS_CHACHA20_POLY1305_SHA256), BulkCipherType.CHACHA20_POLY1305, HashType.SHA256, null, null, TlsVersion.Tls13Draft18);
+
+        public static CipherSuite GetSuiteByName(PredefinedSuite name)
+        {
+            switch(name)
+            {
+                case PredefinedSuite.RSA_AES_128_GCM_SHA256:
+                    return RSA_AES_128_GCM_SHA256;
+                case PredefinedSuite.RSA_AES_256_GCM_SHA384:
+                    return RSA_AES_256_GCM_SHA384;
+                case PredefinedSuite.TLS_AES_128_GCM_SHA256:
+                    return TLS_AES_128_GCM_SHA256;
+                case PredefinedSuite.TLS_AES_256_GCM_SHA384:
+                    return TLS_AES_256_GCM_SHA384;
+                case PredefinedSuite.TLS_CHACHA20_POLY1305_SHA256:
+                    return TLS_CHACHA20_POLY1305_SHA256;
+                case PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
+                    return TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256;
+                case PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
+                    return TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384;
+                case PredefinedSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
+                    return TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+        public enum PredefinedSuite
+        {
+            RSA_AES_128_GCM_SHA256,
+            RSA_AES_256_GCM_SHA384,
+            TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+            TLS_AES_128_GCM_SHA256,
+            TLS_AES_256_GCM_SHA384,
+            TLS_CHACHA20_POLY1305_SHA256
+        }
     }
 }
