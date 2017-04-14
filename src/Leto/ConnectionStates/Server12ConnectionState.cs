@@ -91,12 +91,12 @@ namespace Leto.ConnectionStates
 
         private void ProcessSessionTicket(Span<byte> buffer)
         {
-            _requiresTicket = true;
-            if (buffer.Length == 0 || !_secretSchedule.ReadSessionTicket(buffer))
-            {
-                return;
-            }
-            _abbreviatedHandshake = true;
+            //_requiresTicket = true;
+            //if (buffer.Length == 0 || !_secretSchedule.ReadSessionTicket(buffer))
+            //{
+            //    return;
+            //}
+            //_abbreviatedHandshake = true;
         }
 
         protected override void Dispose(bool disposing)
