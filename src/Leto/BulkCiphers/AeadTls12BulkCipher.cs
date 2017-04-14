@@ -36,6 +36,7 @@ namespace Leto.BulkCiphers
 
         public override void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion)
         {
+            _key.IV.Span.Slice(4).WriteBigEndian(_sequenceNumber);
             _key.Init(KeyMode.Encryption);
             var additionalInfo = new AdditionalInfo()
             {
@@ -59,6 +60,7 @@ namespace Leto.BulkCiphers
 
         public override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
         {
+            _key.IV.Span.Slice(4).WriteBigEndian(_sequenceNumber);
             _key.Init(KeyMode.Encryption);
             var additionalInfo = new AdditionalInfo()
             {

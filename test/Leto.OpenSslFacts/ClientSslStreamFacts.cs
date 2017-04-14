@@ -27,6 +27,7 @@ namespace Leto.OpenSslFacts
                 var loopback = new LoopbackPipeline(factory);
                 var stream = loopback.ClientPipeline.GetStream();
                 var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
+                var ignore = Echo(secureConnection);
                 using (var sslStream = new SslStream(stream, false, CertVal))
                 {
                     await sslStream.AuthenticateAsClientAsync("localhost");
@@ -39,6 +40,15 @@ namespace Leto.OpenSslFacts
         }
 
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
+
+        private async Task Echo(Task<Leto.SecurePipeConnection> connectionTask)
+        {
+            var connection = await connectionTask;
+            var readResult = await connection.Input.ReadAsync();
+            var writer = connection.Output.Alloc();
+            writer.Append(readResult.Buffer);
+            await writer.FlushAsync();
+        }
 
         //[Fact]
         public void SocketTest()
@@ -53,6 +63,9 @@ namespace Leto.OpenSslFacts
                     Console.WriteLine("Handshake Done");
                     var reader = await pipe.Input.ReadAsync();
                     System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
+                    var writer = pipe.Output.Alloc();
+                    writer.Append(reader.Buffer);
+                    await writer.FlushAsync();
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
                 Console.ReadLine();
