@@ -84,6 +84,10 @@ namespace Leto.ConnectionStates
         {
             HandshakeHash?.Dispose();
             HandshakeHash = null;
+            _writeKey?.Dispose();
+            _writeKey = null;
+            _readKey?.Dispose();
+            _readKey = null;
             GC.SuppressFinalize(this);
         }
 

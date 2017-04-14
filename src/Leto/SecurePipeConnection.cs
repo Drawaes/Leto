@@ -111,7 +111,7 @@ namespace Leto
             }
             finally
             {
-                _connection.Input.Complete();
+                Dispose();
             }
         }
 
@@ -135,12 +135,21 @@ namespace Leto
             }
             finally
             {
-                _connection.Output.Complete();
+                Dispose();
             }
         }
 
         public void Dispose()
         {
+            _handshakeInput.Reader.Complete();
+            _handshakeInput.Writer.Complete();
+            _handshakeOutput.Reader.Complete();
+            _handshakeOutput.Writer.Complete();
+            _outputPipe.Writer.Complete();
+            _outputPipe.Reader.Complete();
+            _inputPipe.Reader.Complete();
+            _connection.Input.Complete();
+            _connection.Output.Complete();
             _connection?.Dispose();
             _connection = null;
         }
