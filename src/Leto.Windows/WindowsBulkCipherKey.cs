@@ -16,13 +16,11 @@ namespace Leto.Windows
         private Buffer<byte> _iv;
         private int _tagSize;
         private SafeBCryptKeyHandle _keyHandle;
-        private int _blockLength;
         private BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO _context;
         private BufferHandle _ivHandle;
         private KeyMode _keyMode;
         private OwnedBuffer<byte> _scratchSpace;
         private BufferHandle _scratchPin;
-        private static readonly byte[] _empty = new byte[16];
 
         internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
@@ -32,33 +30,30 @@ namespace Leto.Windows
             _iv = keyStore.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
-            _blockLength = GetBlockLength(type);
-            var authTagLengths = GetAuthTagLengths(type);
         }
 
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
         private unsafe byte* MacContextPointer => (byte*)_scratchPin.PinnedPointer;
-        private unsafe byte* TagPointer => MacContextPointer + _blockLength;
+        private unsafe byte* TagPointer => MacContextPointer + _tagSize;
         private unsafe byte* TempIVPointer => TagPointer + _tagSize;
+        private unsafe byte* AuthDataPointer => TempIVPointer + _tagSize;
+
 
         public unsafe void AddAdditionalInfo(ref AdditionalInfo addInfo)
         {
-            _context.pbAuthData = Unsafe.AsPointer(ref addInfo);
+            _context.pbAuthData = AuthDataPointer;
             _context.cbAuthData = Unsafe.SizeOf<AdditionalInfo>();
+            Unsafe.Write(AuthDataPointer, addInfo);
         }
 
         public unsafe void Init(KeyMode mode)
         {
             _keyMode = mode;
-            fixed (void* empty = _empty)
-            {
-                Unsafe.CopyBlock(TempIVPointer, empty, (uint)_tagSize);
-            }
             _context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
             {
                 dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,
-                cbMacContext = _blockLength,
+                cbMacContext = _tagSize,
                 pbMacContext = MacContextPointer,
                 cbNonce = _iv.Length,
                 pbNonce = _ivHandle.PinnedPointer,

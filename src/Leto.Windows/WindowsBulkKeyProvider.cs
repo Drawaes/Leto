@@ -13,7 +13,7 @@ namespace Leto.Windows
         private SafeBCryptAlgorithmHandle _aesGcmHandle;
         private BufferPool _keyScratchSpace;
         //This is used for inflight calls, we have TempIV (12), MacContext(16), Tag (16), Authdata
-        private static readonly unsafe int _scratchSpaceSize = 12 + 16 + 16 + sizeof(AdditionalInfo);
+        private static readonly unsafe int _scratchSpaceSize = 16 + 16 + 16 + sizeof(AdditionalInfo);
         
         public WindowsBulkKeyProvider()
         {

@@ -19,7 +19,7 @@ namespace Leto.BulkCiphers
                 SequenceNumber = _sequenceNumber,
                 PlainTextLength = (ushort)(messageBuffer.Length - sizeof(ulong) - _key.TagSize),
             };
-            messageBuffer.Slice(0, sizeof(ulong)).CopyTo(_key.IV.Slice(4).Span);
+           messageBuffer.Slice(0, sizeof(ulong)).CopyTo(_key.IV.Slice(4).Span);
             var tagBuffer = messageBuffer.Slice(messageBuffer.Length - _key.TagSize);
             messageBuffer = messageBuffer.Slice(sizeof(ulong), addInfo.PlainTextLength);
             _key.Init(KeyMode.Decryption);
