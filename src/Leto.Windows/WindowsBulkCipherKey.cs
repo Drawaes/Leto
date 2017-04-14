@@ -70,7 +70,7 @@ namespace Leto.Windows
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                BCryptEncryptGetTag(_keyHandle, _context, TempIVPointer);
+                BCryptEncryptGetTag(_keyHandle, ref _context, TempIVPointer);
                 var tagSpan = new Span<byte>(TagPointer, _tagSize);
                 tagSpan.CopyTo(span);
             }
@@ -85,32 +85,17 @@ namespace Leto.Windows
             var totalWritten = _context.cbData;
             if (_keyMode == KeyMode.Encryption)
             {
-                _context = BCryptEncrypt(_keyHandle, input, output, _context, TempIVPointer);
+                BCryptEncrypt(_keyHandle, input, output, ref _context, TempIVPointer);
             }
             else
             {
-                _context = BCryptDecrypt(_keyHandle, input, output, _context, TempIVPointer);
+                BCryptDecrypt(_keyHandle, input, output, ref _context, TempIVPointer);
             }
             totalWritten = _context.cbData - totalWritten;
             return (int)totalWritten;
         }
-
-        public unsafe int Update(Span<byte> inputAndOutput)
-        {
-            var totalWritten = _context.cbData;
-            if (_keyMode == KeyMode.Encryption)
-            {
-                _context = BCryptEncrypt(_keyHandle, inputAndOutput, _context, TempIVPointer);
-            }
-            else
-            {
-                _context = BCryptDecrypt(_keyHandle, inputAndOutput, _context, TempIVPointer);
-            }
-            totalWritten = _context.cbData - totalWritten;
-            return (int)totalWritten;
-        }
-
-        public unsafe void WriteTag(ReadOnlySpan<byte> tagSpan) => BCryptDecryptSetTag(_keyHandle, tagSpan, _context, TempIVPointer);
+        
+        public unsafe void CheckTag(ReadOnlySpan<byte> tagSpan) => BCryptDecryptSetTag(_keyHandle, tagSpan, ref _context, TempIVPointer);
 
         public void Dispose()
         {

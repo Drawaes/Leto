@@ -24,6 +24,7 @@ namespace Leto.ConnectionStates
         private static TlsVersion[] s_supportedVersions =
         {
             TlsVersion.Tls13Draft18,
+            TlsVersion.Tls13Draft19,
             TlsVersion.Tls12,
         };
 
@@ -67,7 +68,10 @@ namespace Leto.ConnectionStates
                         connectionState = new Server12ConnectionState(_securePipe);
                         break;
                     case TlsVersion.Tls13Draft18:
-                        connectionState = new Server13ConnectionState(_securePipe);
+                        connectionState = new Server13ConnectionState<SecretSchedules.SecretSchedule13>(_securePipe);
+                        break;
+                    case TlsVersion.Tls13Draft19:
+                        connectionState = new Server13ConnectionState<SecretSchedules.SecretSchedule13Draft19>(_securePipe);
                         break;
                     default:
                         throw new NotImplementedException();

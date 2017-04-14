@@ -10,11 +10,11 @@ namespace Leto.ConnectionStates.SecretSchedules
 {
     public class SecretSchedule13
     {
-        private Server13ConnectionState _state;
+        private ConnectionState _state;
         private ICryptoProvider _cryptoProvider;
         private OwnedBuffer<byte> _secretStore;
         private OwnedBuffer<byte> _keyStore;
-        private Buffer<byte> _secret;
+        protected Buffer<byte> _secret;
         private int _hashSize;
         private Buffer<byte> _remainingStore;
         private Buffer<byte> _clientTraffic;
@@ -23,12 +23,12 @@ namespace Leto.ConnectionStates.SecretSchedules
         private int _keySize;
         private int _ivSize;
 
-        public SecretSchedule13(Server13ConnectionState state, Span<byte> presharedKey)
+        public void Init(ConnectionState state, Span<byte> presharedKey)
         {
-            _state = state;
-            _cryptoProvider = state.SecureConnection.Listener.CryptoProvider;
             (_secretStore, _keyStore) = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
             _remainingStore = _secretStore.Buffer;
+            _state = state;
+            _cryptoProvider = state.SecureConnection.Listener.CryptoProvider;
             _hashSize = _cryptoProvider.HashProvider.HashSize(_state.CipherSuite.HashType);
             _secret = GetBufferSlice(_hashSize);
             _clientTraffic = GetBufferSlice(_hashSize);
@@ -38,7 +38,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             (_keySize, _ivSize) = _cryptoProvider.BulkCipherProvider.GetCipherSize(_state.CipherSuite.BulkCipherType);
         }
 
-        public (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateHandshakeKeys()
+        public virtual (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateHandshakeKeys()
         {
             _state.KeyExchange.DeriveSecret(_cryptoProvider.HashProvider, _state.CipherSuite.HashType, _secret.Span, _secret.Span);
             _state.KeyExchange.Dispose();
@@ -74,7 +74,7 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public bool ProcessClientFinished(Span<byte> clientBuffer)
         {
-            GenerateClientServerKey();
+            GenerateClientFinishedKey();
             var buffer = new byte[_hashSize];
             _state.HandshakeHash.InterimHash(buffer);
             _cryptoProvider.HashProvider.HmacData(_state.CipherSuite.HashType, _finishedKey.Span, buffer, buffer);
@@ -88,14 +88,14 @@ namespace Leto.ConnectionStates.SecretSchedules
             _cryptoProvider.HashProvider.HmacData(_state.CipherSuite.HashType, _finishedKey.Span, buffer, buffer);
         }
 
-        private void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Buffer<byte> output) =>
+        protected void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Buffer<byte> output) =>
             _cryptoProvider.HashProvider.HkdfExpandLabel(_state.CipherSuite.HashType, secret.Span, label, hash, output.Span);
 
-        private void GenerateClientServerKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
-            _state.CipherSuite.HashType, _clientTraffic.Span, Label_ServerFinishedKey, new Span<byte>(), _finishedKey.Span);
+        private void GenerateClientFinishedKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
+            _state.CipherSuite.HashType, _clientTraffic.Span, Label_FinishedKey, new Span<byte>(), _finishedKey.Span);
 
         private void GenerateServerFinishedKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
-            _state.CipherSuite.HashType, _serverTraffic.Span, Label_ServerFinishedKey, new Span<byte>(), _finishedKey.Span);
+            _state.CipherSuite.HashType, _serverTraffic.Span, Label_FinishedKey, new Span<byte>(), _finishedKey.Span);
 
         private Buffer<byte> GetBufferSlice(int size)
         {

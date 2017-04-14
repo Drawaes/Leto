@@ -11,10 +11,10 @@ using Leto.ConnectionStates.SecretSchedules;
 
 namespace Leto.ConnectionStates
 {
-    public sealed class Server13ConnectionState : ConnectionState, IConnectionState
+    public class Server13ConnectionState<T> : ConnectionState, IConnectionState where T : SecretSchedule13, new()
     {
         private PskExchangeMode _pskMode = PskExchangeMode.none;
-        private SecretSchedule13 _secretSchedule;
+        private T _secretSchedule;
 
         public Server13ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection)
         {
@@ -30,11 +30,12 @@ namespace Leto.ConnectionStates
             CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls13Draft18, clientHello.CipherSuites);
             HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
             HandshakeHash.HashData(clientHello.OriginalMessage);
+            _secretSchedule = new T();
+            _secretSchedule.Init(this, new Span<byte>());
             ParseExtensions(ref clientHello);
 
             if (KeyExchange.HasPeerKey)
             {
-                _secretSchedule = new SecretSchedule13(this, new Span<byte>());
                 SendServerFirstFlight();
             }
             else

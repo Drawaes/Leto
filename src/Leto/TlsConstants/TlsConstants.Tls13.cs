@@ -16,7 +16,8 @@ namespace Leto
             public static readonly byte[] Label_ServerApplicationTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "server application traffic secret");
             public static readonly byte[] Label_ClientEarlyTrafficSecret = Encoding.ASCII.GetBytes(Prefix + "client early traffic secret");
             public static readonly byte[] Label_ResumptionSecret = Encoding.ASCII.GetBytes(Prefix + "resumption master secret");
-            public static readonly byte[] Label_ServerFinishedKey = Encoding.ASCII.GetBytes(Prefix + "finished");
+            public static readonly byte[] Label_FinishedKey = Encoding.ASCII.GetBytes(Prefix + "finished");
+            public static readonly byte[] Label_DerivedSecret = Encoding.ASCII.GetBytes(Prefix + "derived secret");
             public static readonly byte[] Label_TrafficKey = Encoding.ASCII.GetBytes(Prefix + "key");
             public static readonly byte[] Label_TrafficIv = Encoding.ASCII.GetBytes(Prefix + "iv");
             public static readonly byte[] SignatureDigestPrefix = Enumerable.Repeat((byte)0x20, 64).ToArray();
