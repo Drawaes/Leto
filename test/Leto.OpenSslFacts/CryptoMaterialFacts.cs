@@ -10,19 +10,19 @@ namespace Leto.OpenSslFacts
     {
         private OpenSslHashProvider _provider = new OpenSslHashProvider();
 
-        [Fact]
+        //[Fact]
         public void TestPRFSha256() => CommonFacts.Prf12Facts.TestPRFSha256(_provider);
 
-        [Fact]
+        //[Fact]
         public void TestPRFSha384() => CommonFacts.Prf12Facts.TestPRFSha384(_provider);
 
-        [Fact]
+        //[Fact]
         public void TestPRFSha512() => CommonFacts.Prf12Facts.TestPRFSha512(_provider);
 
-        [Theory]
-        [InlineData(CommonFacts.HkdfFacts.BasictestcasewithSHA256)]
-        [InlineData(CommonFacts.HkdfFacts.TestwithSHA256andzerolengthsaltinfo)]
-        [InlineData(CommonFacts.HkdfFacts.TestwithSHA256andlongerinputsoutputs)]
+        //[Theory]
+        //[InlineData(CommonFacts.HkdfFacts.BasictestcasewithSHA256)]
+        //[InlineData(CommonFacts.HkdfFacts.TestwithSHA256andzerolengthsaltinfo)]
+        //[InlineData(CommonFacts.HkdfFacts.TestwithSHA256andlongerinputsoutputs)]
         public void HkdfFact(string input) => CommonFacts.HkdfFacts.HkdfFact(input, _provider);
     }
 }
