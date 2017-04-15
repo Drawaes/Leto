@@ -13,7 +13,6 @@ namespace Leto.OpenSsl11
     public sealed class OpenSslSecurePipeListener : SecurePipeListener
     {
         private ICryptoProvider _cryptoProvider;
-        private CertificateList _certificateList = new CertificateList();
 
         public OpenSslSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
             : base(certificate, pipeFactory) => _cryptoProvider = new OpenSslCryptoProvider();
