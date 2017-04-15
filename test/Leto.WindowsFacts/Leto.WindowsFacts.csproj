@@ -16,8 +16,8 @@
     <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170414-1" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
-    <PackageReference Include="xunit" Version="2.2.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="xunit" Version="2.3.0-beta1-build3642" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta1-build1309" />
     <PackageReference Include="coveralls.io" Version="1.3.4" />
     <PackageReference Include="OpenCover" Version="4.6.519" />
   </ItemGroup>
