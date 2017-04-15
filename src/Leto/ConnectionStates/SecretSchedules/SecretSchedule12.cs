@@ -162,8 +162,14 @@ namespace Leto.ConnectionStates.SecretSchedules
         {
             _secretStore?.Dispose();
             _secretStore = null;
-            _keyStore?.Dispose();
-            _keyStore = null;
+            try
+            {
+                _keyStore?.Dispose();
+            }
+            finally
+            {
+                _keyStore = null;
+            }
             GC.SuppressFinalize(this);
         }
 
