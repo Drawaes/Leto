@@ -10,6 +10,6 @@ namespace Leto.WindowsFacts.Data
 {
     public static class Certificates
     {
-        public static ICertificate RSACertificate = new ManagedCertificate(new X509Certificate2(Path.Combine(ApplicationEnvironment.ApplicationBasePath, @"Data/TestCert.pfx"), "Test123t"), null);
+        public static ICertificate RSACertificate() => new ManagedCertificate(new X509Certificate2(Path.Combine(ApplicationEnvironment.ApplicationBasePath, @"Data/TestCert.pfx"), "Test123t"), null);
     }
 }
