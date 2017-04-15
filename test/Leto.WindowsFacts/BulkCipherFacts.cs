@@ -15,14 +15,14 @@ namespace Leto.WindowsFacts
     {
         private WindowsBulkKeyProvider _provider = new WindowsBulkKeyProvider();
 
-        //[Fact]
-        //public async Task DecryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.DecryptClientMessage(_provider);
+        [Fact]
+        public async Task DecryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.DecryptClientMessage(_provider);
 
-        //[Fact]
-        //public async Task EncryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.EncryptClientMessage(_provider);
+        [Fact]
+        public async Task EncryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.EncryptClientMessage(_provider);
 
-        //[Fact]
-        //public async Task DecryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.DecryptClientMessage(_provider);
+        [Fact]
+        public async Task DecryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.DecryptClientMessage(_provider);
         
         public void Dispose() => _provider.Dispose();
     }

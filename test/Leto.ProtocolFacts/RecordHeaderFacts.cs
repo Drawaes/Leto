@@ -9,10 +9,10 @@ namespace Leto.ProtocolFacts
 {
     public class RecordHeaderFacts
     {
-        //[Theory]
-        //[InlineData(65_280U, 0xFF, 0x00)]
-        //[InlineData(255U, 0x00, 0xFF)]
-        //[InlineData(4080U, 0x0F,0xF0)]
+        [Theory]
+        [InlineData(65_280U, 0xFF, 0x00)]
+        [InlineData(255U, 0x00, 0xFF)]
+        [InlineData(4080U, 0x0F, 0xF0)]
         public void RecordHeaderSizeTests(ushort length, byte firstByte, byte secondByte)
         {
             var span = new Span<byte>(new byte[5]);
