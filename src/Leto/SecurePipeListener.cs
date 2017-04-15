@@ -31,7 +31,7 @@ namespace Leto
             }
             _secretPool = new SecretSchedulePool();
             _certificateList.AddCertificate(certificate);
-            _alpnProvider = new ApplicationLayerProtocolProvider();
+            _alpnProvider = new ApplicationLayerProtocolProvider(true, ApplicationLayerProtocolType.Http1_1);
             _secureRenegotiationProvider = new SecureRenegotiationProvider();
         }
 

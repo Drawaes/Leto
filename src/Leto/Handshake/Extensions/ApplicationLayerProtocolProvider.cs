@@ -27,10 +27,11 @@ namespace Leto.Handshake.Extensions
         };
 
         private (ApplicationLayerProtocolType, byte[])[] _supportedProtocols;
-        private bool _serverListTakesPriority = true;
+        private bool _serverListTakesPriority;
 
-        public ApplicationLayerProtocolProvider(params ApplicationLayerProtocolType[] supportedProtocols)
+        public ApplicationLayerProtocolProvider(bool serverListTakesPriority, params ApplicationLayerProtocolType[] supportedProtocols)
         {
+            _serverListTakesPriority = serverListTakesPriority;
             if (supportedProtocols?.Length > 0)
             {
                 _supportedProtocols = new(ApplicationLayerProtocolType, byte[])[supportedProtocols.Length];
@@ -38,6 +39,10 @@ namespace Leto.Handshake.Extensions
                 {
                     _supportedProtocols[i] = _protocols.First((protoType) => protoType.Item1 == supportedProtocols[i]);
                 }
+            }
+            else
+            {
+                _supportedProtocols = new(ApplicationLayerProtocolType, byte[])[0];
             }
         }
 
@@ -65,10 +70,6 @@ namespace Leto.Handshake.Extensions
 
         public ApplicationLayerProtocolType ProcessExtension(BigEndianAdvancingSpan span)
         {
-            if (_protocols == null)
-            {
-                return ApplicationLayerProtocolType.None;
-            }
             if (_serverListTakesPriority)
             {
                 return ProcessExtensionServerOrder(span);
@@ -103,9 +104,9 @@ namespace Leto.Handshake.Extensions
             span = span.ReadVector<ushort>();
             while (span.Length > 0)
             {
+                var protocol = span.ReadVector<byte>().ToSpan();
                 foreach (var (alpn, buffer) in _supportedProtocols)
                 {
-                    var protocol = span.ReadVector<byte>().ToSpan();
                     if (protocol.SequenceEqual(buffer))
                     {
                         return alpn;
