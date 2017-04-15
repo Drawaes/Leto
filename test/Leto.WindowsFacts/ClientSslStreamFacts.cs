@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using System.Diagnostics;
+using CommonFacts;
 
 namespace Leto.WindowsFacts
 {

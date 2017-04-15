@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using CommonFacts;
 
 namespace Leto.OpenSslFacts
 {
@@ -41,7 +42,7 @@ namespace Leto.OpenSslFacts
 
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
 
-        private async Task Echo(Task<Leto.SecurePipeConnection> connectionTask)
+        private async Task Echo(Task<SecurePipeConnection> connectionTask)
         {
             var connection = await connectionTask;
             var readResult = await connection.Input.ReadAsync();
@@ -50,7 +51,7 @@ namespace Leto.OpenSslFacts
             await writer.FlushAsync();
         }
 
-        [Fact]
+        //[Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())
