@@ -14,7 +14,8 @@ namespace Leto.Internal
         private readonly int _bufferSize;
         private readonly ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
         private readonly UIntPtr _totalAllocated;
-
+        private bool _disposed;
+        
         public EphemeralBufferPoolWindows(int bufferSize, int bufferCount)
         {
             if (bufferSize < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
@@ -70,7 +71,10 @@ namespace Leto.Internal
             internal bool Rented;
             protected unsafe override void Dispose(bool disposing)
             {
-                Unsafe.InitBlock((void*)Pointer, 0, (uint)Length);
+                if(! System.Threading.Volatile.Read(ref _pool._disposed))
+                {
+                    Unsafe.InitBlock((void*)Pointer, 0, (uint)Length);
+                }
                 _pool.Return(this);
                 base.Dispose(disposing);
             }
@@ -78,6 +82,11 @@ namespace Leto.Internal
 
         protected unsafe override void Dispose(bool disposing)
         {
+            if(System.Threading.Volatile.Read(ref _disposed))
+            {
+                return;
+            }
+            System.Threading.Volatile.Write(ref _disposed, true);
             Unsafe.InitBlock((void*)_memory, 0, (uint)_totalAllocated);
             VirtualFree(_memory, _totalAllocated, 0x8000);
             GC.SuppressFinalize(this);
