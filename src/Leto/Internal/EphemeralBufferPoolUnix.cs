@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Pools;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using static Leto.Interop.Sys;
 
 namespace Leto.Internal
@@ -60,9 +61,9 @@ namespace Leto.Internal
                 : base(null, 0, length, memory) => _pool = pool;
 
             internal bool Rented;
-            protected override void Dispose(bool disposing)
+            protected unsafe override void Dispose(bool disposing)
             {
-                MemSet(Pointer, 0, (UIntPtr)Length);
+                Unsafe.InitBlock((void*)Pointer, 0, (uint)Length);
                 _pool.Return(this);
                 base.Dispose();
             }
@@ -93,9 +94,9 @@ namespace Leto.Internal
             _buffers.Enqueue(emphemeralBuffer);
         }
 
-        protected override void Dispose(bool disposing)
+        protected unsafe override void Dispose(bool disposing)
         {
-            MemSet(_memory, 0, (UIntPtr)_totalAllocated);
+            Unsafe.InitBlock((void*)_memory, 0, (uint)_totalAllocated);
             if (MUnmap(_memory, (ulong)_totalAllocated) < 0)
             {
                 ///aggggggggg

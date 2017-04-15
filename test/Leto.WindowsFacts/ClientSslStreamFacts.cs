@@ -1,11 +1,7 @@
 ﻿using Leto.Windows;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -66,7 +62,7 @@ namespace Leto.WindowsFacts
                     var pipe = await secureListener.CreateConnection(conn);
                     Console.WriteLine("Handshake Done");
                     var reader = await pipe.Input.ReadAsync();
-                    System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
+                    Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
                 Console.ReadLine();

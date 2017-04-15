@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using static Leto.Interop.Kernel32;
 
 namespace Leto.Internal
@@ -67,17 +68,17 @@ namespace Leto.Internal
                 : base(null, 0, length, memory) => _pool = pool;
 
             internal bool Rented;
-            protected override void Dispose(bool disposing)
+            protected unsafe override void Dispose(bool disposing)
             {
-                RtlZeroMemory(Pointer, (UIntPtr)Length);
+                Unsafe.InitBlock((void*)Pointer, 0, (uint)Length);
                 _pool.Return(this);
                 base.Dispose(disposing);
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected unsafe override void Dispose(bool disposing)
         {
-            RtlZeroMemory(_memory, _totalAllocated);
+            Unsafe.InitBlock((void*)_memory, 0, (uint)_totalAllocated);
             VirtualFree(_memory, _totalAllocated, 0x8000);
             GC.SuppressFinalize(this);
         }
