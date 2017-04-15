@@ -18,7 +18,7 @@ namespace Leto.Windows
         public WindowsSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
             :base(certificate, pipeFactory)
         {
-            _sessionProvider = new Sessions.EphemeralSessionProvider();
+            //_sessionProvider = new Sessions.EphemeralSessionProvider();
             _cryptoProvider = new WindowsCryptoProvider();
         }
 
@@ -27,6 +27,7 @@ namespace Leto.Windows
 
         protected override void Dispose(bool disposing)
         {
+            _sessionProvider?.Dispose();
             _cryptoProvider.Dispose();
             base.Dispose(disposing);
         }
