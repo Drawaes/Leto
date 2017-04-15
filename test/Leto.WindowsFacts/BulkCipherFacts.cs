@@ -11,20 +11,19 @@ using Xunit;
 
 namespace Leto.WindowsFacts
 {
-    public class BulkCipherFacts
+    public class BulkCipherFacts : IDisposable
     {
-        [Fact]
-        public async Task EncryptClientMessage()
-        {
-            var provider = new WindowsBulkKeyProvider();
-            await CommonFacts.BulkCipher12Facts.EncryptClientMessage(provider);
-        }
+        private WindowsBulkKeyProvider _provider = new WindowsBulkKeyProvider();
 
         [Fact]
-        public async Task DecryptClientMessage()
-        {
-            var provider = new WindowsBulkKeyProvider();
-            await CommonFacts.BulkCipher12Facts.DecryptClientMessage(provider);
-        }
+        public async Task DecryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.DecryptClientMessage(_provider);
+
+        [Fact]
+        public async Task EncryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.EncryptClientMessage(_provider);
+
+        [Fact]
+        public async Task DecryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.DecryptClientMessage(_provider);
+        
+        public void Dispose() => _provider.Dispose();
     }
 }

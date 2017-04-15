@@ -9,20 +9,19 @@ using Xunit;
 
 namespace Leto.OpenSslFacts
 {
-    public class BulkCipherFacts
+    public class BulkCipherFacts : IDisposable
     {
-        [Fact]
-        public async Task EncryptClientMessage()
-        {
-            var provider = new OpenSslBulkKeyProvider();
-            await CommonFacts.BulkCipher12Facts.EncryptClientMessage(provider);
-        }
+        private OpenSslBulkKeyProvider _provider = new OpenSslBulkKeyProvider();
 
         [Fact]
-        public async Task DecryptClientMessage()
-        {
-            var provider = new OpenSslBulkKeyProvider();
-            await CommonFacts.BulkCipher12Facts.DecryptClientMessage(provider);
-        }
+        public async Task EncryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.EncryptClientMessage(_provider);
+
+        [Fact]
+        public async Task DecryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.DecryptClientMessage(_provider);
+
+        [Fact]
+        public async Task DecryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.DecryptClientMessage(_provider);
+
+        public void Dispose() => _provider.Dispose();
     }
 }
