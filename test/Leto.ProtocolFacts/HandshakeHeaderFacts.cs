@@ -19,6 +19,7 @@ namespace Leto.ProtocolFacts
             span[2] = secondByte;
             span[3] = thirdByte;
 
+
             var header = span.Read<HandshakeHeader>();
             Assert.Equal(length, header.Length);
             header.Length = length;
