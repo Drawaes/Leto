@@ -21,7 +21,7 @@ namespace Leto.WindowsFacts
         public async Task HandshakeCompletes(CipherSuites.PredefinedCipherSuites.PredefinedSuite suite)
         {
             using (var factory = new PipeFactory())
-            using (var listener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate, factory))
+            using (var listener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate(), factory))
             {
                 listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(suite) });
                 var loopback = new LoopbackPipeline(factory);
@@ -55,7 +55,7 @@ namespace Leto.WindowsFacts
         {
             using (var factory = new PipeFactory())
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
-            using (var secureListener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate))
+            using (var secureListener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate()))
             {
                 listener.OnConnection(async (conn) =>
                 {
