@@ -100,10 +100,7 @@ namespace Leto.Windows
             {
                 return BCryptEncrypt(_keyHandle, input, output, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
             }
-            else
-            {
-                return BCryptDecrypt(_keyHandle, input, output, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
-            }
+            throw new NotSupportedException();
         }
 
         public void SetTag(ReadOnlySpan<byte> tagSpan) => tagSpan.CopyTo(new Span<byte>(_pointerTag, _tagSize));

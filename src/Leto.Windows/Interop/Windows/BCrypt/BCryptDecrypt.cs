@@ -10,19 +10,7 @@ namespace Leto.Windows.Interop
     {
         [DllImport(Libraries.BCrypt, CharSet = CharSet.Unicode)]
         private static unsafe extern NTSTATUS BCryptDecrypt(SafeBCryptKeyHandle hKey, void* pbInput, int cbInput, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO pPaddingInfo, void* pbIV, int cbIV, void* pbOutput, int cbOutput, out int pcbResult, uint dwFlags);
-
-        internal static unsafe int BCryptDecrypt(SafeBCryptKeyHandle key, Span<byte> input,
-            Span<byte> output, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
-        {
-            fixed (void* inputPtr = &input.DangerousGetPinnableReference())
-            fixed (void* outputPtr = &output.DangerousGetPinnableReference())
-            {
-                var result = BCryptDecrypt(key, inputPtr, input.Length, ref info, ivBuffer, info.cbMacContext, outputPtr, output.Length, out int bytesWritten, 0);
-                ThrowOnErrorReturnCode(result);
-                return bytesWritten;
-            }
-        }
-
+                
         internal static unsafe int BCryptDecrypt(SafeBCryptKeyHandle key,
             Span<byte> inputOutput, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
         {
