@@ -58,6 +58,7 @@ namespace Leto.Windows.Sessions
         public DateTime GetCurrentExpiry() => DateTime.UtcNow.Add(_maxTicketAge);
         public void Dispose()
         {
+            _currentKey?.Dispose();
             _bufferPool.Dispose();
             GC.SuppressFinalize(this);
         }
