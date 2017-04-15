@@ -18,7 +18,7 @@ namespace Leto.Windows
         public WindowsSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
             :base(certificate, pipeFactory)
         {
-            //_sessionProvider = new Sessions.EphemeralSessionProvider();
+            _sessionProvider = new Sessions.EphemeralSessionProvider();
             _cryptoProvider = new WindowsCryptoProvider();
         }
 
