@@ -50,7 +50,7 @@ namespace Leto.Windows.Sessions
             var key = _currentKey;
             if (keyId != key.KeyId)
             {
-                throw new NotImplementedException();
+                return new BigEndianAdvancingSpan();
             }
             return new BigEndianAdvancingSpan(key.Decrypt(sessionTicket));
         }
