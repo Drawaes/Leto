@@ -50,7 +50,7 @@ namespace Leto.OpenSslFacts
             await writer.FlushAsync();
         }
 
-        //[Fact]
+        [Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())

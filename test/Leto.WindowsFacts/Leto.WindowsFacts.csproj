@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Leto.Windows\Leto.Windows.csproj" />
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
+    <ProjectReference Include="..\CommonFacts\CommonFacts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
