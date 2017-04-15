@@ -55,8 +55,15 @@ namespace Leto.Windows
 
         public void Dispose()
         {
-            _keyScratchSpace?.Dispose();
-            _keyScratchSpace = null;
+            try
+            {
+                _keyScratchSpace?.Dispose();
+                _keyScratchSpace = null;
+            }
+            catch
+            {
+                //Nom Nom
+            }
             GC.SuppressFinalize(this);
         }
 

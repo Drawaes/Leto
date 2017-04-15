@@ -107,13 +107,20 @@ namespace Leto.Windows
 
         public void Dispose()
         {
-            _scratchPin.Free();
-            _scratchSpace?.Dispose();
-            _scratchSpace = null;
-            _ivHandle.Free();
+            try
+            {
+                _scratchPin.Free();
+                _scratchSpace?.Dispose();
+                _scratchSpace = null;
+                _ivHandle.Free();
 
-            _keyHandle?.Dispose();
-            _keyHandle = null;
+                _keyHandle?.Dispose();
+                _keyHandle = null;
+            }
+            catch
+            { 
+                //Nom nom
+            }
             GC.SuppressFinalize(this);
         }
 

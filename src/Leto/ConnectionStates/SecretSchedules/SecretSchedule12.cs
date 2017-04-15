@@ -74,7 +74,7 @@ namespace Leto.ConnectionStates.SecretSchedules
         public bool ReadSessionTicket(Span<byte> buffer)
         {
             var advanceBuffer = Sessions.ProcessSessionTicket(new Internal.BigEndianAdvancingSpan(buffer));
-            if(advanceBuffer.Length == 0)
+            if (advanceBuffer.Length == 0)
             {
                 return false;
             }
@@ -87,7 +87,7 @@ namespace Leto.ConnectionStates.SecretSchedules
             buffer.CopyTo(_masterSecret.Span);
             return true;
         }
-        
+
         public void WriteSessionTicket()
         {
             if (_state.SecureConnection.Listener.SessionProvider == null) return;
@@ -160,10 +160,10 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public void Dispose()
         {
-            _secretStore?.Dispose();
-            _secretStore = null;
             try
             {
+                _secretStore?.Dispose();
+                _secretStore = null;
                 _keyStore?.Dispose();
             }
             finally

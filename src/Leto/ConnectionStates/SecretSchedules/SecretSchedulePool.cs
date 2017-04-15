@@ -48,10 +48,17 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public void Dispose()
         {
-            _ephemeralKeysPool?.Dispose();
-            _ephemeralKeysPool = null;
-            _ephemeralSessionPool?.Dispose();
-            _ephemeralSessionPool = null;
+            try
+            {
+                _ephemeralKeysPool?.Dispose();
+                _ephemeralKeysPool = null;
+                _ephemeralSessionPool?.Dispose();
+                _ephemeralSessionPool = null;
+            }
+            catch
+            {
+                //Nom nom
+            }
             GC.SuppressFinalize(this);
         }
 
