@@ -2,7 +2,7 @@
   <Import Project="version.props" />
 
   <PropertyGroup>
-    <Product>Condenser API Router</Product>
+    <Product>Leto Security Library</Product>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
     <PackageLicenseUrl>https://github.com/Drawaes/Leto/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

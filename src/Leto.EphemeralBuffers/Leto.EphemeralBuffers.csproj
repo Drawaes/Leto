@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard1.1</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170414-1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interop\" />
+  </ItemGroup>
+
+</Project>

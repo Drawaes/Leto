@@ -55,6 +55,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openssl", "openssl", "{F1BA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFacts", "test\CommonFacts\CommonFacts.csproj", "{D64590CC-7C22-476D-BA1A-3593D8887ECD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.EphemeralBuffers", "src\Leto.EphemeralBuffers\Leto.EphemeralBuffers.csproj", "{C92CE01B-58C8-44E1-A700-AEF5D156AB08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -107,5 +113,6 @@ Global
 		{0DC7CEA6-8721-47F8-A0A1-7C85FB819E74} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{4E69773F-D420-493B-899B-18EF1767BE14} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
+		{C92CE01B-58C8-44E1-A700-AEF5D156AB08} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 	EndGlobalSection
 EndGlobal

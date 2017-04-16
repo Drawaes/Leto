@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using static Leto.Windows.Interop.BCrypt;
+using Leto.EphemeralBuffers;
 
 namespace Leto.Windows
 {
@@ -22,7 +23,7 @@ namespace Leto.Windows
             _aesGcmHandle = BCryptOpenAlgorithmProvider("AES");
             SetBlockChainingMode(_aesGcmHandle, BCRYPT_CHAIN_MODE_GCM);
             //This param should be somewhere better and configured, but for now we will link it to one common place
-            _keyScratchSpace = new EphemeralBufferPoolWindows(_scratchSpaceSize, ConnectionStates.SecretSchedules.SecretSchedulePool.MaxInflightConnections * 2);
+            _keyScratchSpace = EphemeralBufferPool.CreateBufferPool(_scratchSpaceSize, ConnectionStates.SecretSchedules.SecretSchedulePool.MaxInflightConnections * 2);
         }
 
         private (int keySize, int ivSize, string chainingMode) GetCipher(BulkCipherType cipherType)

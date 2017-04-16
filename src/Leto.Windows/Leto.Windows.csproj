@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Leto.EphemeralBuffers\Leto.EphemeralBuffers.csproj" />
     <ProjectReference Include="..\Leto\Leto.csproj" />
   </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@ using static Leto.Windows.Interop.BCrypt;
 using static Leto.BufferExtensions;
 using System.Runtime.InteropServices;
 using Leto.Internal;
+using Leto.EphemeralBuffers;
 
 namespace Leto.Windows.Sessions
 {
@@ -19,7 +20,7 @@ namespace Leto.Windows.Sessions
         private EphemeralKey _currentKey;
         private SafeBCryptAlgorithmHandle _algo = BCryptOpenAlgorithmProvider("AES");
 
-        private EphemeralBufferPoolWindows _bufferPool = new EphemeralBufferPoolWindows(44, 100);
+        private EphemeralBufferPool _bufferPool = EphemeralBufferPool.CreateBufferPool(44, 100);
 
         public EphemeralSessionProvider()
         {
