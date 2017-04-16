@@ -19,6 +19,7 @@ namespace Leto.Windows
         private BufferHandle _ivHandle;
         private KeyMode _keyMode;
         private OwnedBuffer<byte> _scratchSpace;
+        private OwnedBuffer<byte> _keyStore;
         private BufferHandle _scratchPin;
         private byte* _pointerAuthData;
         private byte* _pointerTag;
@@ -26,12 +27,13 @@ namespace Leto.Windows
         private byte* _pointerIv;
         private byte* _pointerModeInfo;
 
-        internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
+        internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, OwnedBuffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
             _scratchSpace = scratchSpace;
             _scratchPin = _scratchSpace.Buffer.Pin();
             _tagSize = tagSize;
-            _iv = keyStore.Slice(keySize, ivSize);
+            _keyStore = keyStore;
+            _iv = _keyStore.Buffer.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
             
@@ -113,7 +115,7 @@ namespace Leto.Windows
                 _scratchSpace?.Dispose();
                 _scratchSpace = null;
                 _ivHandle.Free();
-
+                _keyStore.Dispose();
                 _keyHandle?.Dispose();
                 _keyHandle = null;
             }

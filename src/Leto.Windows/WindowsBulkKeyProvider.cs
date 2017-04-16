@@ -38,7 +38,7 @@ namespace Leto.Windows
             }
         }
 
-        public T GetCipher<T>(BulkCipherType cipherType, Buffer<byte> keyStorage) where T : AeadBulkCipher, new()
+        public T GetCipher<T>(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage) where T : AeadBulkCipher, new()
         {
             var (keySize, ivSize, chainingMode) = GetCipher(cipherType);
             var key = new WindowsBulkCipherKey(_aesGcmHandle, keyStorage, keySize, ivSize, 16, chainingMode, _keyScratchSpace.Rent(_scratchSpaceSize));

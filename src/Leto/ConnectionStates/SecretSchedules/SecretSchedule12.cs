@@ -15,12 +15,9 @@ namespace Leto.ConnectionStates.SecretSchedules
     public class SecretSchedule12 : IDisposable
     {
         private OwnedBuffer<byte> _secretStore;
-        private OwnedBuffer<byte> _keyStore;
         private Buffer<byte> _clientRandom;
         private Buffer<byte> _serverRandom;
         private Buffer<byte> _masterSecret;
-        private Buffer<byte> _clientKey;
-        private Buffer<byte> _serverKey;
         private Buffer<byte> _clientVerify;
         private Buffer<byte> _serverVerify;
         private Server12ConnectionState _state;
@@ -29,7 +26,7 @@ namespace Leto.ConnectionStates.SecretSchedules
         public SecretSchedule12(Server12ConnectionState state)
         {
             _state = state;
-            (_secretStore, _keyStore) = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
+            _secretStore = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
             var memory = _secretStore.Buffer;
             _clientRandom = SliceAndConsume(ref memory, RandomLength);
             _serverRandom = SliceAndConsume(ref memory, RandomLength);
@@ -37,7 +34,6 @@ namespace Leto.ConnectionStates.SecretSchedules
             _clientVerify = SliceAndConsume(ref memory, VerifyDataLength);
             _serverVerify = SliceAndConsume(ref memory, VerifyDataLength);
             _cryptoProvider = state.SecureConnection.Listener.CryptoProvider;
-            _clientKey = _keyStore.Buffer;
         }
 
         internal ReadOnlySpan<byte> ClientRandom => _clientRandom.Span;
@@ -138,38 +134,30 @@ namespace Leto.ConnectionStates.SecretSchedules
             _serverRandom.CopyTo((Span<byte>)seed);
             _clientRandom.CopyTo(seed.Slice(_serverRandom.Length));
             _cryptoProvider.HashProvider.Tls12Prf(_state.CipherSuite.HashType, _masterSecret.Span, Tls12.Label_KeyExpansion, seed, material);
-            _serverKey = _clientKey.Slice(keySize + ivSize, keySize + ivSize);
-            _clientKey = _clientKey.Slice(0, keySize + ivSize);
+            var clientBuffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
+            var serverBuffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
 
-            material.Slice(0, keySize).CopyTo(_clientKey.Span);
-            material.Slice(keySize * 2, 4).CopyTo(_clientKey.Span.Slice(keySize));
-            material.Slice(keySize, keySize).CopyTo(_serverKey.Span);
-            material.Slice(keySize * 2 + 4, 4).CopyTo(_serverKey.Span.Slice(keySize));
-            var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, _clientKey);
-            var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, _serverKey);
+            material.Slice(0, keySize).CopyTo(clientBuffer.Span);
+            material.Slice(keySize * 2, 4).CopyTo(clientBuffer.Span.Slice(keySize));
+            material.Slice(keySize, keySize).CopyTo(serverBuffer.Span);
+            material.Slice(keySize * 2 + 4, 4).CopyTo(serverBuffer.Span.Slice(keySize));
+            var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, clientBuffer);
+            var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, serverBuffer);
             return (clientKey, serverKey);
         }
 
         public void DisposeStore()
         {
-            _secretStore.Dispose();
+            _secretStore?.Dispose();
             _secretStore = null;
-            _state.HandshakeHash.Dispose();
+            _state.HandshakeHash?.Dispose();
             _state.HandshakeHash = null;
         }
 
         public void Dispose()
         {
-            try
-            {
-                _secretStore?.Dispose();
-                _secretStore = null;
-                _keyStore?.Dispose();
-            }
-            finally
-            {
-                _keyStore = null;
-            }
+            _secretStore?.Dispose();
+            _secretStore = null;
             GC.SuppressFinalize(this);
         }
 

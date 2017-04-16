@@ -22,7 +22,7 @@ namespace Leto.OpenSsl11
             }
         }
 
-        public T GetCipher<T>(BulkCipherType cipherType, Buffer<byte> keyStorage) where T : AeadBulkCipher, new()
+        public T GetCipher<T>(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage) where T : AeadBulkCipher, new()
         {
             var (keySize, ivSize, bulkCipher) = GetCipher(cipherType);
             var key = new OpenSslBulkCipherKey(bulkCipher, keyStorage, keySize, ivSize, 16);

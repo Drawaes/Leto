@@ -105,11 +105,14 @@ namespace Leto.ConnectionStates
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-            KeyExchange?.Dispose();
-            KeyExchange = null;
-            _secretSchedule?.Dispose();
-            _secretSchedule = null;
+            lock (this)
+            {
+                base.Dispose(disposing);
+                KeyExchange?.Dispose();
+                KeyExchange = null;
+                _secretSchedule?.Dispose();
+                _secretSchedule = null;
+            }
         }
 
         public bool ProcessHandshake()

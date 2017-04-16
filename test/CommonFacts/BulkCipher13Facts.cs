@@ -42,7 +42,7 @@ namespace CommonFacts
         {
             var tempIv = new byte[12];
             s_iv.CopyTo(tempIv);
-            return provider.GetCipher<AeadTls13BulkCipher>(BulkCipherType.AES_128_GCM, new System.Buffers.OwnedPinnedBuffer<byte>(s_key.Concat(tempIv).ToArray()).Buffer);
+            return provider.GetCipher<AeadTls13BulkCipher>(BulkCipherType.AES_128_GCM, new System.Buffers.OwnedPinnedBuffer<byte>(s_key.Concat(tempIv).ToArray()));
         }
     }
 }

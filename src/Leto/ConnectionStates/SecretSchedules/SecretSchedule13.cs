@@ -13,7 +13,6 @@ namespace Leto.ConnectionStates.SecretSchedules
         protected ConnectionState _state;
         private ICryptoProvider _cryptoProvider;
         private OwnedBuffer<byte> _secretStore;
-        private OwnedBuffer<byte> _keyStore;
         protected Buffer<byte> _secret;
         protected int _hashSize;
         private Buffer<byte> _remainingStore;
@@ -25,7 +24,7 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public void Init(ConnectionState state, Span<byte> presharedKey)
         {
-            (_secretStore, _keyStore) = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
+            _secretStore = state.SecureConnection.Listener.SecretSchedulePool.GetSecretBuffer();
             _remainingStore = _secretStore.Buffer;
             _state = state;
             _cryptoProvider = state.SecureConnection.Listener.CryptoProvider;
@@ -48,8 +47,8 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.HandshakeHash.InterimHash(hash);
             ExpandLabel(_secret, Label_ClientHandshakeTrafficSecret, hash, _clientTraffic);
             ExpandLabel(_secret, Label_ServerHandshakeTrafficSecret, hash, _serverTraffic);
-            var clientKey = GetKey(_clientTraffic, _keyStore.Buffer.Slice(0, _keySize + _ivSize));
-            var serverKey = GetKey(_serverTraffic, _keyStore.Buffer.Slice(_keySize + _ivSize, _keySize + _ivSize));
+            var clientKey = GetKey(_clientTraffic);
+            var serverKey = GetKey(_serverTraffic);
             return (clientKey, serverKey);
         }
 
@@ -60,16 +59,17 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.HandshakeHash.FinishHash(hash);
             ExpandLabel(_secret, Label_ClientApplicationTrafficSecret, hash, _clientTraffic);
             ExpandLabel(_secret, Label_ServerApplicationTrafficSecret, hash, _serverTraffic);
-            var clientKey = GetKey(_clientTraffic, _keyStore.Buffer.Slice(0, _keySize + _ivSize));
-            var serverKey = GetKey(_serverTraffic, _keyStore.Buffer.Slice(_keySize + _ivSize, _keySize + _ivSize));
+            var clientKey = GetKey(_clientTraffic);
+            var serverKey = GetKey(_serverTraffic);
             return (clientKey, serverKey);
         }
 
-        private AeadBulkCipher GetKey(Buffer<byte> secret, Buffer<byte> keyBuffer)
+        private AeadBulkCipher GetKey(Buffer<byte> secret)
         {
-            ExpandLabel(secret, Label_TrafficIv, new Span<byte>(), keyBuffer.Slice(_keySize));
-            ExpandLabel(secret, Label_TrafficKey, new Span<byte>(), keyBuffer.Slice(0, _keySize));
-            return _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, keyBuffer);
+            var buffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
+            ExpandLabel(secret, Label_TrafficIv, new Span<byte>(), buffer.Span.Slice(_keySize));
+            ExpandLabel(secret, Label_TrafficKey, new Span<byte>(), buffer.Span.Slice(0, _keySize));
+            return _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, buffer);
         }
 
         public bool ProcessClientFinished(Span<byte> clientBuffer)
@@ -91,6 +91,9 @@ namespace Leto.ConnectionStates.SecretSchedules
         protected void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Buffer<byte> output) =>
             _cryptoProvider.HashProvider.HkdfExpandLabel(_state.CipherSuite.HashType, secret.Span, label, hash, output.Span);
 
+        protected void ExpandLabel(Buffer<byte> secret, Span<byte> label, Span<byte> hash, Span<byte> output) =>
+            _cryptoProvider.HashProvider.HkdfExpandLabel(_state.CipherSuite.HashType, secret.Span, label, hash, output);
+
         private void GenerateClientFinishedKey() => _cryptoProvider.HashProvider.HkdfExpandLabel(
             _state.CipherSuite.HashType, _clientTraffic.Span, Label_FinishedKey, new Span<byte>(), _finishedKey.Span);
 
@@ -108,8 +111,6 @@ namespace Leto.ConnectionStates.SecretSchedules
         {
             _secretStore?.Dispose();
             _secretStore = null;
-            _keyStore?.Dispose();
-            _keyStore = null;
             GC.SuppressFinalize(this);
         }
 

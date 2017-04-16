@@ -9,7 +9,7 @@ namespace Leto.Internal
 {
     public sealed class EphemeralBufferPoolWindows : BufferPool
     {
-        private readonly IntPtr _memory;
+        private IntPtr _memory;
         private readonly int _bufferCount;
         private readonly int _bufferSize;
         private readonly ConcurrentQueue<EphemeralMemory> _buffers = new ConcurrentQueue<EphemeralMemory>();
@@ -47,36 +47,45 @@ namespace Leto.Internal
             {
                 ExceptionHelper.ThrowException(new OutOfMemoryException());
             }
-            returnValue.Rented = true;
+            returnValue.Lease();
             return returnValue;
         }
 
         private void Return(EphemeralMemory ephemeralBuffer)
         {
-            if (!ephemeralBuffer.Rented)
-            {
-                Debug.Fail("Returning a buffer that isn't rented!");
-                return;
-            }
-            ephemeralBuffer.Rented = false;
             _buffers.Enqueue(ephemeralBuffer);
         }
 
         sealed class EphemeralMemory : OwnedBuffer<byte>
         {
             private EphemeralBufferPoolWindows _pool;
-            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolWindows pool)
-                : base(null, 0, length, memory) => _pool = pool;
+            private IntPtr _pointer;
+            private int _length;
 
-            internal bool Rented;
+            public EphemeralMemory(IntPtr memory, int length, EphemeralBufferPoolWindows pool)
+                : base(null, 0, length, memory)
+            {
+                _pool = pool;
+                _pointer = memory;
+                _length = length;
+            }
+
+            internal void Lease()
+            {
+                if (IsDisposed)
+                {
+                    Initialize(null, 0, _length, _pointer);
+                }
+            }
+
             protected unsafe override void Dispose(bool disposing)
             {
-                if (!disposing && !System.Threading.Volatile.Read(ref _pool._disposed))
-                {
-                    Unsafe.InitBlock((void*)Pointer, 0, (uint)Length);
-                }
-                _pool.Return(this);
                 base.Dispose(disposing);
+                if (!System.Threading.Volatile.Read(ref _pool._disposed))
+                {
+                    Unsafe.InitBlock((void*)_pointer, 0, (uint)Length);
+                    _pool.Return(this);
+                }
             }
         }
 
@@ -88,7 +97,11 @@ namespace Leto.Internal
             }
             System.Threading.Volatile.Write(ref _disposed, true);
             Unsafe.InitBlock((void*)_memory, 0, (uint)_totalAllocated);
-            VirtualFree(_memory, _totalAllocated, 0x8000);
+            if (!VirtualFree(_memory, _totalAllocated, 0x8000))
+            {
+                throw new InvalidOperationException("Memory failed to free");
+            }
+            _memory = IntPtr.Zero;
             GC.SuppressFinalize(this);
         }
 

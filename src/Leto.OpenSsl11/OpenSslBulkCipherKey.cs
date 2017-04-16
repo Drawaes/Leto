@@ -13,14 +13,14 @@ namespace Leto.OpenSsl11
         private Buffer<byte> _iv;
         private readonly EVP_BulkCipher_Type _type;
         private readonly int _tagSize;
-        private Buffer<byte> _keyStore;
+        private OwnedBuffer<byte> _keyStore;
 
-        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, Buffer<byte> keyStore, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, OwnedBuffer<byte> keyStore, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _keyStore = keyStore;
-            _key = _keyStore.Slice(0, keySize);
-            _iv = _keyStore.Slice(keySize, ivSize);
+            _key = _keyStore.Buffer.Slice(0, keySize);
+            _iv = _keyStore.Buffer.Slice(keySize, ivSize);
             _type = type;
             _ctx = EVP_CIPHER_CTX_new();
         }
@@ -43,13 +43,11 @@ namespace Leto.OpenSsl11
             EVP_CIPHER_CTX_GetTag(_ctx, span);
         }
 
-        public void SetTag(ReadOnlySpan<byte> tagSpan)
-        {
-            EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
-        }
+        public void SetTag(ReadOnlySpan<byte> tagSpan) => EVP_CIPHER_CTX_SetTag(_ctx, tagSpan);
 
         public void Dispose()
         {
+            _keyStore.Dispose();
             _ctx.Free();
             GC.SuppressFinalize(this);
         }
@@ -57,7 +55,7 @@ namespace Leto.OpenSsl11
         public int Finish(Span<byte> inputAndOutput)
         {
             var bytesWritten = 0;
-            if(inputAndOutput.Length > 0)
+            if (inputAndOutput.Length > 0)
             {
                 bytesWritten = Update(inputAndOutput);
             }
@@ -68,7 +66,7 @@ namespace Leto.OpenSsl11
         public int Finish(Span<byte> input, Span<byte> output)
         {
             var bytesWritten = 0;
-            if(input.Length >0)
+            if (input.Length > 0)
             {
                 bytesWritten = Update(input, output);
             }

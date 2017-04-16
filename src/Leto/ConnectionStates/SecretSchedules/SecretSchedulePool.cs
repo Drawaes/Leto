@@ -26,12 +26,12 @@ namespace Leto.ConnectionStates.SecretSchedules
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 _ephemeralSessionPool = new EphemeralBufferPoolUnix(Session_Size, MaxInflightSessions);
-                _ephemeralKeysPool = new EphemeralBufferPoolUnix(MaxKeySize * 2, MaxInflightConnections);
+                _ephemeralKeysPool = new EphemeralBufferPoolUnix(MaxKeySize, MaxInflightConnections *2);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 _ephemeralSessionPool = new EphemeralBufferPoolWindows(Session_Size, MaxInflightSessions);
-                _ephemeralKeysPool = new EphemeralBufferPoolWindows(MaxKeySize * 2, MaxInflightConnections);
+                _ephemeralKeysPool = new EphemeralBufferPoolWindows(MaxKeySize, MaxInflightConnections * 2);
             }
             else
             {
@@ -39,11 +39,16 @@ namespace Leto.ConnectionStates.SecretSchedules
             }
         }
 
-        public (OwnedBuffer<byte> session, OwnedBuffer<byte> keys) GetSecretBuffer()
+        public OwnedBuffer<byte> GetSecretBuffer()
         {
             var session = _ephemeralSessionPool.Rent(Session_Size);
-            var keys = _ephemeralKeysPool.Rent(MaxKeySize * 2);
-            return (session, keys);
+            return session;
+        }
+
+        public OwnedBuffer<byte> GetKeyBuffer()
+        {
+            var key = _ephemeralKeysPool.Rent(MaxKeySize);
+            return key;
         }
 
         public void Dispose()
