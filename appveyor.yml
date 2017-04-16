@@ -26,8 +26,10 @@ after_test:
   - dotnet pack -c Release src/Leto.EphemeralBuffers --version-suffix %suffix%
 
 artifacts:
-  path: '**/*.nupkg'
-  path: 'log.txt'
+  - path: '**/*.nupkg'
+    name: nuget
+  - path: 'log.txt'
+    name: testlog
 
 deploy:  
 - provider: NuGet
