@@ -82,13 +82,21 @@ namespace Leto.ConnectionStates
 
         protected virtual void Dispose(bool disposing)
         {
-            HandshakeHash?.Dispose();
-            HandshakeHash = null;
-            _writeKey?.Dispose();
-            _writeKey = null;
-            _readKey?.Dispose();
-            _readKey = null;
-            GC.SuppressFinalize(this);
+            try
+            {
+                HandshakeHash?.Dispose();
+                HandshakeHash = null;
+                _writeKey?.Dispose();
+                _writeKey = null;
+                _readKey?.Dispose();
+                _readKey = null;
+                GC.SuppressFinalize(this);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception disposing key {ex}");
+                throw;
+            }
         }
 
         public void Dispose() => Dispose(true);

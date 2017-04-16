@@ -55,9 +55,17 @@ namespace Leto.BulkCiphers
                 
         public void Dispose()
         {
-            _key?.Dispose();
-            _key = null;
-            GC.SuppressFinalize(this);
+            try
+            {
+                _key?.Dispose();
+                _key = null;
+                GC.SuppressFinalize(this);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Exception disposing key {ex}");
+                throw;
+            }
         }
 
         ~AeadBulkCipher() => Dispose();

@@ -156,9 +156,17 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public void Dispose()
         {
-            _secretStore?.Dispose();
-            _secretStore = null;
-            GC.SuppressFinalize(this);
+            try
+            {
+                _secretStore?.Dispose();
+                _secretStore = null;
+                GC.SuppressFinalize(this);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception disposing key {ex}");
+                throw;
+            }
         }
 
         ~SecretSchedule12()
