@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Leto.EphemeralBuffers;
-using static Leto.Interop.Sys;
+using static Leto.EphemeralBuffers.Interop.Sys;
 
 namespace Leto.EphemeralBuffers
 {

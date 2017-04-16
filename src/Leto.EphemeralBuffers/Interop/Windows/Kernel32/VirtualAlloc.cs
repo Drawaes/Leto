@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Leto.Interop
+namespace Leto.EphemeralBuffers.Interop
 {
     internal static partial class Kernel32
     {

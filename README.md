@@ -1,3 +1,7 @@
+﻿[![Build status](https://ci.appveyor.com/api/projects/status/rvpu3vfrwdbm3vgg/branch/master?svg=true)](https://ci.appveyor.com/project/Drawaes/leto)
+[![Xplat Build status](https://travis-ci.org/Drawaes/Leto.svg?branch=master)](https://travis-ci.org/Drawaes/Leto)
+[![Coveralls](https://img.shields.io/coveralls/Drawaes/Leto.svg)](https://coveralls.io/github/Drawaes/Leto?branch=master)
+
 # Leto
 A interest learning exercise in producing a TLS 1.3 Library based off the experimental "Pipelines" from CoreFXLabs.
 

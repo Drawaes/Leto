@@ -7,8 +7,5 @@
   <ItemGroup>
     <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170414-1" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interop\" />
-  </ItemGroup>
 
 </Project>
