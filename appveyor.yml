@@ -14,9 +14,9 @@ before_test:
   - dotnet build -c Debug LETO.Sln
   
 test_script:
-  - dotnet test test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj
-  - dotnet test test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
-  - dotnet test test/Leto.WindowsFacts/Leto.WindowsFacts.csproj
+  - dotnet test -d:log.txt test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
+  - dotnet test -d:log.txt test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
+  - dotnet test -d:log.txt test/Leto.WindowsFacts/Leto.WindowsFacts.csproj
   
 after_test:
   # Build and pack source
@@ -27,6 +27,7 @@ after_test:
 
 artifacts:
   path: '**/*.nupkg'
+  path: 'log.txt'
 
 deploy:  
 - provider: NuGet
