@@ -57,10 +57,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFacts", "test\CommonF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.EphemeralBuffers", "src\Leto.EphemeralBuffers\Leto.EphemeralBuffers.csproj", "{C92CE01B-58C8-44E1-A700-AEF5D156AB08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinuxDockerSample", "Samples\LinuxDockerSample\LinuxDockerSample.csproj", "{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA}"
-EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{B0245ACC-E5B0-49E4-AC67-867625EFEC01}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,14 +99,6 @@ Global
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B0245ACC-E5B0-49E4-AC67-867625EFEC01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B0245ACC-E5B0-49E4-AC67-867625EFEC01}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B0245ACC-E5B0-49E4-AC67-867625EFEC01}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B0245ACC-E5B0-49E4-AC67-867625EFEC01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +114,5 @@ Global
 		{4E69773F-D420-493B-899B-18EF1767BE14} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08} = {9E09D9AE-D033-4226-9A46-2344877FF699}
-		{5EACCFD5-3C9F-4F36-9635-4C37D46F8BFA} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 	EndGlobalSection
 EndGlobal
