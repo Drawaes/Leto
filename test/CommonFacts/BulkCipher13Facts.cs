@@ -22,7 +22,7 @@ namespace CommonFacts
 
         public static async Task DecryptClientMessage(IBulkCipherKeyProvider provider)
         {
-            var cipher = SetIVAndKey(provider);
+            using (var cipher = SetIVAndKey(provider))
             using (var pipeFactory = new PipeFactory())
             {
                 var pipe = pipeFactory.Create();
@@ -33,14 +33,14 @@ namespace CommonFacts
                 var buffer = reader.Buffer;
                 cipher.Decrypt(ref buffer, RecordType.Handshake, TlsVersion.Tls13Draft18);
                 var readerSpan = buffer.ToSpan();
-                Assert.Equal(s_clientFinishedDecrypted, readerSpan.Slice(0,readerSpan.Length-1).ToArray());
+                Assert.Equal(s_clientFinishedDecrypted, readerSpan.Slice(0, readerSpan.Length - 1).ToArray());
                 Assert.Equal(RecordType.Handshake, readerSpan.Slice(readerSpan.Length - 1).Read<RecordType>());
             }
         }
 
         public static async Task EncryptClientMessage(IBulkCipherKeyProvider provider)
         {
-            var cipher = SetIVAndKey(provider);
+            using (var cipher = SetIVAndKey(provider))
             using (var pipeFactory = new PipeFactory())
             {
                 var pipe = pipeFactory.Create();

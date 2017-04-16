@@ -21,7 +21,7 @@ namespace CommonFacts
 
         public static async Task EncryptClientMessage(IBulkCipherKeyProvider provider)
         {
-            var cipher = SetIVAndKey(provider);
+            using (var cipher = SetIVAndKey(provider))
             using (var pipeFactory = new PipeFactory())
             {
                 var pipe = pipeFactory.Create();
@@ -44,7 +44,7 @@ namespace CommonFacts
 
         public static async Task DecryptClientMessage(IBulkCipherKeyProvider provider)
         {
-            var cipher = SetIVAndKey(provider);
+            using (var cipher = SetIVAndKey(provider))
             using (var pipeFactory = new PipeFactory())
             {
                 var pipe = pipeFactory.Create();
