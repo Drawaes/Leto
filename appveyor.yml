@@ -11,7 +11,7 @@ before_test:
   - VersionNumber.bat
   - Set Path=%Path%;C:\projects\leto\openssl
   - dotnet restore
-  - dotnet build -c Debug
+  - dotnet build -c Debug LETO.Sln
   
 test_script:
   - dotnet test test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj
