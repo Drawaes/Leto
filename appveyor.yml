@@ -10,7 +10,7 @@ before_test:
   - dotnet --info
   - VersionNumber.bat
   - Set Path=%Path%;C:\projects\leto\openssl
-  - dotnet restore
+  - dotnet restore Leto.sln
   - dotnet build -c Debug LETO.Sln
   
 test_script:
