@@ -11,9 +11,8 @@ namespace Leto.EphemeralBuffers
         private IntPtr _pointer;
         private readonly int _bufferCount;
         private readonly int _bufferSize;
-        private readonly ConcurrentQueue<EphemeralOwnedBuffer> _buffers = new ConcurrentQueue<EphemeralOwnedBuffer>();
+        private ConcurrentQueue<EphemeralOwnedBuffer> _buffers = new ConcurrentQueue<EphemeralOwnedBuffer>();
         private readonly uint _totalAllocated;
-        private bool _disposed;
         private int _currentAllocatedOffset;
 
         public EphemeralBufferPool(int bufferSize, int bufferCount)

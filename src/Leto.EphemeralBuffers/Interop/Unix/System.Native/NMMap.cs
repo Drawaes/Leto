@@ -19,14 +19,10 @@ namespace Leto.EphemeralBuffers.Interop
         {
             MAP_SHARED = 0x01,
             MAP_PRIVATE = 0x02,
-            MAP_ANONYMOUS = 0x10,
+            MAP_ANONYMOUS = 0x20,
         }
 
-        // NOTE: Shim returns null pointer on failure, not non-null MAP_FAILED sentinel.
-        [DllImport(Libraries.SystemNative, EntryPoint = "SystemNative_MMap", SetLastError = true)]
-        internal static extern IntPtr MMap(
-            IntPtr addr, ulong len,
-            MemoryMappedProtections prot, MemoryMappedFlags flags,
-            IntPtr fd, long offset);
+        [DllImport("libc.so.6", SetLastError =true, EntryPoint ="mmap")]
+        internal static extern IntPtr MMap(IntPtr addr, UIntPtr length, MemoryMappedProtections prot, MemoryMappedFlags flags, int fd, UIntPtr offset);
     }
 }

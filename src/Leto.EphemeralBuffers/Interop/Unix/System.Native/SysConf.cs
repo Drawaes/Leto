@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Leto.EphemeralBuffers.Interop
 {
@@ -11,7 +12,7 @@ namespace Leto.EphemeralBuffers.Interop
             _SC_NPROCESSORS_ONLN = 3,
         }
 
-        [DllImport(Libraries.SystemNative, EntryPoint = "SystemNative_SysConf", SetLastError = true)]
-        internal static extern long SysConf(SysConfName name);
+        [DllImport("libc.so.6", EntryPoint = "sysconf")]
+        internal static extern IntPtr SysConf(SysConfName name);
     }
 }

@@ -102,6 +102,7 @@ namespace Leto
                         {
                             await RecordHandler.WriteAlert(alert);
                         }
+                        throw;
                     }
                     finally
                     {
@@ -152,6 +153,7 @@ namespace Leto
             _connection.Output.Complete();
             _connection?.Dispose();
             _connection = null;
+            _state.Dispose();
         }
     }
 }

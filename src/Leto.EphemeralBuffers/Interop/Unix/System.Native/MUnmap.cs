@@ -5,7 +5,7 @@ namespace Leto.EphemeralBuffers.Interop
 {
     internal static partial class Sys
     {
-        [DllImport(Libraries.SystemNative, EntryPoint = "SystemNative_MUnmap", SetLastError = true)]
-        internal static extern int MUnmap(IntPtr addr, ulong len);
+        [DllImport("libc.so.6")]
+        internal static extern int munmap(IntPtr addr, UIntPtr len);
     }
 }

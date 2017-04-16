@@ -11,7 +11,7 @@
     <Copyright>Tim Seaward</Copyright>
     <Authors>Tim Seaward</Authors>
     <PackageProjectUrl>https://github.com/Drawaes/Leto</PackageProjectUrl>
-    <DebugType>full</DebugType>
+    <DebugType>Full</DebugType>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework' AND '$(OutputType)'=='library'">

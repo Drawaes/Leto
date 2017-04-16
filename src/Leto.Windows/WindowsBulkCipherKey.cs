@@ -36,7 +36,7 @@ namespace Leto.Windows
             _iv = _keyStore.Buffer.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
-            
+
             _pointerAuthData = (byte*)_scratchPin.PinnedPointer;
             _pointerTag = _pointerAuthData + sizeof(AdditionalInfo);
             _pointerMac = _pointerTag + _tagSize;
@@ -46,7 +46,7 @@ namespace Leto.Windows
 
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
-        
+
         public void AddAdditionalInfo(ref AdditionalInfo addInfo)
         {
             ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
@@ -58,7 +58,7 @@ namespace Leto.Windows
         public void Init(KeyMode mode)
         {
             _keyMode = mode;
-            Unsafe.InitBlock(_scratchPin.PinnedPointer, 0,(uint) _scratchSpace.Length);
+            Unsafe.InitBlock(_scratchPin.PinnedPointer, 0, (uint)_scratchSpace.Length);
             ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
             context.dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls;
             context.cbMacContext = _tagSize;
@@ -109,20 +109,13 @@ namespace Leto.Windows
 
         public void Dispose()
         {
-            try
-            {
-                _scratchPin.Free();
-                _scratchSpace?.Dispose();
-                _scratchSpace = null;
-                _ivHandle.Free();
-                _keyStore.Dispose();
-                _keyHandle?.Dispose();
-                _keyHandle = null;
-            }
-            catch
-            { 
-                //Nom nom
-            }
+            _scratchPin.Free();
+            _scratchSpace?.Dispose();
+            _scratchSpace = null;
+            _ivHandle.Free();
+            _keyHandle?.Dispose();
+            _keyStore.Dispose();
+            _keyHandle = null;
             GC.SuppressFinalize(this);
         }
 

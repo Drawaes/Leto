@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  linuxdockersample:
+    image: linuxdockersample
+    build:
+      context: ./Samples/LinuxDockerSample
+      dockerfile: Dockerfile
