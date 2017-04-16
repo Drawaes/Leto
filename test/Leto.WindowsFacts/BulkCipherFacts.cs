@@ -23,6 +23,9 @@ namespace Leto.WindowsFacts
 
         [Fact]
         public async Task DecryptClientMessageTls12() => await CommonFacts.BulkCipher12Facts.DecryptClientMessage(_provider);
+
+        [Fact]
+        public async Task EncryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.EncryptClientMessage(_provider);
         
         public void Dispose() => _provider.Dispose();
     }

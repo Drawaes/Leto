@@ -38,6 +38,29 @@ namespace CommonFacts
             }
         }
 
+        public static async Task EncryptClientMessage(IBulkCipherKeyProvider provider)
+        {
+            var cipher = SetIVAndKey(provider);
+            using (var pipeFactory = new PipeFactory())
+            {
+                var pipe = pipeFactory.Create();
+                var writer = pipe.Writer.Alloc();
+                writer.Write(s_clientFinishedDecrypted);
+                await writer.FlushAsync();
+
+                var reader = await pipe.Reader.ReadAsync();
+                writer = pipe.Writer.Alloc();
+                var buffer = reader.Buffer;
+                cipher.Encrypt(ref writer, buffer, RecordType.Handshake, TlsVersion.Tls13Draft18);
+                pipe.Reader.Advance(buffer.End);
+                await writer.FlushAsync();
+
+                reader = await pipe.Reader.ReadAsync();
+                buffer = reader.Buffer;
+                Assert.Equal(s_clientFinishedEncrypted, buffer.ToArray());
+            }
+        }
+
         private static AeadBulkCipher SetIVAndKey(IBulkCipherKeyProvider provider)
         {
             var tempIv = new byte[12];
