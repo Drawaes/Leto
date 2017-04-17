@@ -46,7 +46,7 @@ namespace Leto.BulkCiphers
             {
                 if (b.Length == 0) continue;
                 totalBytes -= b.Length;
-                writer.Ensure(b.Length);
+                writer.Ensure(MinimumWriteSize(b.Length));
                 int bytesWritten;
                 if (totalBytes == 0)
                 {

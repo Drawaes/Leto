@@ -4,6 +4,9 @@
     <TargetFramework>netstandard1.6</TargetFramework>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Binary" Version="0.1.0-e170414-1" />

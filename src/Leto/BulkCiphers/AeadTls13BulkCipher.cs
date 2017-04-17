@@ -26,11 +26,11 @@ namespace Leto.BulkCiphers
             foreach (var b in plainText)
             {
                 if (b.Length == 0) continue;
-                writer.Ensure(b.Length);
+                writer.Ensure(MinimumWriteSize(b.Length));
                 bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
                 writer.Advance(bytesWritten);
             }
-            writer.Ensure(sizeof(RecordType));
+            writer.Ensure(MinimumWriteSize(sizeof(RecordType)));
             bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
             IncrementSequence();

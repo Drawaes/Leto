@@ -26,6 +26,8 @@ namespace Leto.Windows
         private byte* _pointerMac;
         private byte* _pointerIv;
         private byte* _pointerModeInfo;
+        private byte[] _tempBlock = new byte[16];
+        private int _tempBlockBytes = 0;
 
         internal WindowsBulkCipherKey(SafeBCryptAlgorithmHandle type, OwnedBuffer<byte> keyStore, int keySize, int ivSize, int tagSize, string chainingMode, OwnedBuffer<byte> scratchSpace)
         {
@@ -36,7 +38,6 @@ namespace Leto.Windows
             _iv = _keyStore.Buffer.Slice(keySize, ivSize);
             _ivHandle = _iv.Pin();
             _keyHandle = BCryptImportKey(type, keyStore.Span.Slice(0, keySize));
-
             _pointerAuthData = (byte*)_scratchPin.PinnedPointer;
             _pointerTag = _pointerAuthData + sizeof(AdditionalInfo);
             _pointerMac = _pointerTag + _tagSize;
@@ -59,7 +60,7 @@ namespace Leto.Windows
         {
             _keyMode = mode;
             Unsafe.InitBlock(_scratchPin.PinnedPointer, 0, (uint)_scratchSpace.Length);
-            ref var context = ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo);
+            var context =  new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO();
             context.dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls;
             context.cbMacContext = _tagSize;
             context.pbMacContext = _pointerMac;
@@ -68,9 +69,10 @@ namespace Leto.Windows
             context.cbAuthData = 0;
             context.pbAuthData = null;
             context.cbTag = _tagSize;
-            context.cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO);
+            context.cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>();
             context.pbTag = _pointerTag;
             context.dwInfoVersion = 1;
+            Unsafe.Write(_pointerModeInfo, context);
         }
 
         public void GetTag(Span<byte> span)
@@ -88,11 +90,12 @@ namespace Leto.Windows
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                return BCryptEncrypt(_keyHandle, inputOutput, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
+
+                throw new NotSupportedException();
             }
             else
             {
-                return BCryptDecrypt(_keyHandle, inputOutput, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
+                return BCryptDecrypt(_keyHandle, inputOutput, (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO*) _pointerModeInfo, _pointerIv);
             }
         }
 
@@ -100,7 +103,7 @@ namespace Leto.Windows
         {
             if (_keyMode == KeyMode.Encryption)
             {
-                return BCryptEncrypt(_keyHandle, input, output, ref Unsafe.AsRef<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(_pointerModeInfo), _pointerIv);
+                return BCryptEncrypt(_keyHandle, input, output, (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO*)_pointerModeInfo, _pointerIv);
             }
             throw new NotSupportedException();
         }

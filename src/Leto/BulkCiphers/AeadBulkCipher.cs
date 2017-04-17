@@ -16,12 +16,13 @@ namespace Leto.BulkCiphers
 
         public int Overhead => _key.TagSize;
         public int IVSize => _key.IV.Length;
-
+        
         public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion);
         public void SetKey(IBulkCipherKey key) => _key = key;
         public virtual void IncrementSequence() => _sequenceNumber++;
+        protected int MinimumWriteSize(int size) => Math.Min(1, size % _key.TagSize) * _key.TagSize;
 
         protected void WriteTag(ref WritableBuffer writer)
         {

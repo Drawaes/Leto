@@ -9,24 +9,24 @@ namespace Leto.Windows.Interop
     internal partial class BCrypt
     {
         [DllImport(Libraries.BCrypt, CharSet = CharSet.Unicode)]
-        private static unsafe extern NTSTATUS BCryptDecrypt(SafeBCryptKeyHandle hKey, void* pbInput, int cbInput, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO pPaddingInfo, void* pbIV, int cbIV, void* pbOutput, int cbOutput, out int pcbResult, uint dwFlags);
+        private static unsafe extern NTSTATUS BCryptDecrypt(SafeBCryptKeyHandle hKey, void* pbInput, int cbInput, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* pPaddingInfo, void* pbIV, int cbIV, void* pbOutput, int cbOutput, out int pcbResult, uint dwFlags);
                 
         internal static unsafe int BCryptDecrypt(SafeBCryptKeyHandle key,
-            Span<byte> inputOutput, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info, void* ivBuffer)
+            Span<byte> inputOutput, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* info, void* ivBuffer)
         {
             fixed (void* ioPtr = &inputOutput.DangerousGetPinnableReference())
             {
-                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, ref info, ivBuffer, info.cbMacContext, ioPtr, inputOutput.Length, out int bytesWritten, 0);
+                var result = BCryptDecrypt(key, ioPtr, inputOutput.Length, info, ivBuffer, info[0].cbMacContext, ioPtr, inputOutput.Length, out int bytesWritten, 0);
                 ThrowOnErrorReturnCode(result);
                 return bytesWritten;
             }
         }
 
         internal static unsafe void BCryptDecryptSetTag(SafeBCryptKeyHandle key,
-            ReadOnlySpan<byte> tag, ref BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO context, void* ivBuffer)
+            ReadOnlySpan<byte> tag, BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* context, void* ivBuffer)
         {
-            context.dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
-            var result = BCryptDecrypt(key, null, 0, ref context, ivBuffer, context.cbMacContext, null, 0, out int size, 0);
+            context[0].dwFlags &= ~AuthenticatedCipherModeInfoFlags.ChainCalls;
+            var result = BCryptDecrypt(key, null, 0, context, ivBuffer, context[0].cbMacContext, null, 0, out int size, 0);
             ThrowOnErrorReturnCode(result);
         }
 
@@ -50,7 +50,7 @@ namespace Leto.Windows.Interop
                     cbTag = tag.Length,
                     pbTag = tagPtr
                 };
-                var result = BCryptDecrypt(key, inputOutputPtr, inputOutput.Length, ref encryptInfo, null, 0, inputOutputPtr, inputOutput.Length, out int bytesWritten, 0);
+                var result = BCryptDecrypt(key, inputOutputPtr, inputOutput.Length, &encryptInfo, null, 0, inputOutputPtr, inputOutput.Length, out int bytesWritten, 0);
                 ThrowOnErrorReturnCode(result);
                 return bytesWritten;
             }

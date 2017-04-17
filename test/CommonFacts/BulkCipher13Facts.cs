@@ -14,7 +14,7 @@ namespace CommonFacts
 {
     public static class BulkCipher13Facts
     {
-        private static readonly byte[] s_clientFinishedDecrypted = "08 00 00 02 00 00".HexToByteArray();
+        private static readonly byte[] s_clientFinishedDecrypted = Enumerable.Repeat<byte>(0, 100).ToArray(); //"08 00 00 02 00 00".HexToByteArray();
         private static readonly byte[] s_clientFinishedEncrypted = "f6 67 54 fb f5 02 31 3e 62 7f 1b 00 e9 a2 31 e0 4a 53 51 20 27 4e 6c".HexToByteArray();
         private static readonly byte[] s_key = "ad 19 00 5e 7f 4b 77 b6 78 26 6e 0e 2c ed 60 2d".HexToByteArray();
         private static readonly byte[] s_iv = "41 6c 48 f2 2c 0c 25 e1 bd 6a 53 0d".HexToByteArray();

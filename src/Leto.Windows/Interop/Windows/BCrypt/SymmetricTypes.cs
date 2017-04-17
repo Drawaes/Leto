@@ -19,7 +19,7 @@ namespace Leto.Windows.Interop
         internal unsafe struct BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO
         {
             internal int cbSize;               // 4
-            internal int dwInfoVersion;        // 8
+            internal uint dwInfoVersion;        // 8
             internal void* pbNonce;            // byte * //16
             internal int cbNonce;              // 20
             internal void* pbAuthData;         // byte * //28
@@ -32,13 +32,13 @@ namespace Leto.Windows.Interop
             internal long cbData;              // 68
             internal AuthenticatedCipherModeInfoFlags dwFlags; // 72
         }
-
+        
         [Flags]
         internal enum AuthenticatedCipherModeInfoFlags : uint
         {
             None = 0x00000000,
             ChainCalls = 0x00000001,                           // BCRYPT_AUTH_MODE_CHAIN_CALLS_FLAG
-            InProgress = 0x00000002,                           // BCRYPT_AUTH_MODE_IN_PROGRESS_FLAG
+            InProgress = 0x00000002,                         // BCRYPT_AUTH_MODE_IN_PROGRESS_FLAG
         }
 
         [StructLayout(LayoutKind.Sequential)]

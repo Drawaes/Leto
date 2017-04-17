@@ -25,6 +25,7 @@ namespace Leto.Windows.Sessions
             BCryptGenRandom(keyAndIvStore.Span.Slice(0, _keySize + _ivRandomSize));
             _keyHandle = BCryptImportKey(algoHandle, _keyAndIvStore.Span.Slice(0, _keySize));
             SetBlockChainingMode(_keyHandle, BCRYPT_CHAIN_MODE_GCM);
+            var mode = GetBlockChainingMode(_keyHandle);
         }
 
         public Guid KeyId => _currentKeyId;
