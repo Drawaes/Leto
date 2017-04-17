@@ -12,8 +12,8 @@ namespace Leto.EphemeralBuffers
         private int _offset;
         private int _length;
 
-        public EphemeralOwnedBuffer(int offset, int length, EphemeralBufferPool pool) 
-            : base(null, 0, length, IntPtr.Add(pool.Pointer,offset))
+        public EphemeralOwnedBuffer(int offset, int length, EphemeralBufferPool pool)
+            : base(null, 0, length, IntPtr.Add(pool.Pointer, offset))
         {
             _pool = pool;
             _offset = offset;
@@ -32,10 +32,13 @@ namespace Leto.EphemeralBuffers
 
         protected unsafe override void Dispose(bool disposing)
         {
-            Unsafe.InitBlock((void*)PoolPointer, 0, (uint)Length);
             base.Dispose(disposing);
             //Run the dispose logic before we return to the pool to stop a race
-            _pool.Return(this);
+            if (System.Threading.Volatile.Read(ref _pool._isDisposed) == 0)
+            {
+                Unsafe.InitBlock((void*)PoolPointer, 0, (uint)Length);
+                _pool.Return(this);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Leto.EphemeralBuffers
 {
@@ -14,6 +15,7 @@ namespace Leto.EphemeralBuffers
         private ConcurrentQueue<EphemeralOwnedBuffer> _buffers = new ConcurrentQueue<EphemeralOwnedBuffer>();
         private readonly uint _totalAllocated;
         private int _currentAllocatedOffset;
+        internal int _isDisposed;
 
         public EphemeralBufferPool(int bufferSize, int bufferCount)
         {
@@ -81,9 +83,14 @@ namespace Leto.EphemeralBuffers
 
         protected unsafe override void Dispose(bool disposing)
         {
-            Unsafe.InitBlock((void*)_pointer, 0, _totalAllocated);
-            FreeMemory(_pointer, _totalAllocated);
-            GC.SuppressFinalize(this);
+            var disposed = 1;
+            Interlocked.Exchange(ref _isDisposed, disposed);
+            if (disposed == 0)
+            {
+                Unsafe.InitBlock((void*)_pointer, 0, _totalAllocated);
+                FreeMemory(_pointer, _totalAllocated);
+                GC.SuppressFinalize(this);
+            }
         }
 
         ~EphemeralBufferPool()
