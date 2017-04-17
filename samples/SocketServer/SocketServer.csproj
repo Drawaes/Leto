@@ -13,10 +13,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Leto.OpenSsl11\Leto.OpenSsl11.csproj" />
-    <ProjectReference Include="..\..\src\Leto.Windows\Leto.Windows.csproj" />
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
     <ProjectReference Include="..\..\test\CommonFacts\CommonFacts.csproj" />
-    <ProjectReference Include="..\..\test\Leto.WindowsFacts\Leto.WindowsFacts.csproj" />
+    <ProjectReference Include="..\..\test\Leto.OpenSslFacts\Leto.OpenSslFacts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

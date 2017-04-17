@@ -1,5 +1,4 @@
-﻿using Leto.Windows;
-using System;
+﻿using System;
 using System.IO.Pipelines;
 using System.Net;
 using System.Text;
@@ -13,14 +12,14 @@ namespace SocketServer
         {
             for (var i = 0; i < 100; i++)
             {
-                var streamFacts = new Leto.WindowsFacts.ClientSslStreamFacts();
+                var streamFacts = new Leto.OpenSslFacts.ClientSslStreamFacts();
                 streamFacts
                     .HandshakeCompletes(Leto.CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)
                     .Wait();
             }
             using (var factory = new PipeFactory())
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
-            using (var secureListener = new WindowsSecurePipeListener(Data.Certificates.RSACertificate))
+            using (var secureListener = new Leto.OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
             {
                 listener.OnConnection(async (conn) =>
                 {

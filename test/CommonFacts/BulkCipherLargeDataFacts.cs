@@ -33,6 +33,7 @@ namespace CommonFacts
                 var readerSpan = buffer.ToSpan();
                 Assert.Equal(s_largeBuffer, readerSpan.Slice(0, readerSpan.Length - 1).ToArray());
                 Assert.Equal(RecordType.Handshake, readerSpan.Slice(readerSpan.Length - 1).Read<RecordType>());
+                pipe.Reader.Advance(buffer.End);
             }
         }
 
@@ -55,8 +56,9 @@ namespace CommonFacts
 
                 reader = await pipe.Reader.ReadAsync();
                 buffer = reader.Buffer;
-                await DecryptClientMessage(provider, buffer.ToArray());
+                var array = buffer.ToArray();
                 pipe.Reader.Advance(buffer.End);
+                await DecryptClientMessage(provider, array);
             }
         }
 

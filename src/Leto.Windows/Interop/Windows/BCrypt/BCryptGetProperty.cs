@@ -11,15 +11,9 @@ namespace Leto.Windows.Interop
         [DllImport(Libraries.BCrypt, CharSet = CharSet.Unicode)]
         private static extern unsafe NTSTATUS BCryptGetProperty(SafeBCryptHandle hObject, string pszProperty, void* pbOutput, int cbOutput, out int pcbResult, int dwFlags);
 
-        internal static int GetBlockLength(SafeBCryptHandle provider)
-        {
-            return GetIntProperty(provider, BCryptPropertyStrings.BCRYPT_BLOCK_LENGTH);
-        }
+        internal static int GetBlockLength(SafeBCryptHandle provider) => GetIntProperty(provider, BCryptPropertyStrings.BCRYPT_BLOCK_LENGTH);
 
-        internal static int GetObjectLength(SafeBCryptHandle provider)
-        {
-            return GetIntProperty(provider, BCryptPropertyStrings.BCRYPT_OBJECT_LENGTH);
-        }
+        internal static int GetObjectLength(SafeBCryptHandle provider) => GetIntProperty(provider, BCryptPropertyStrings.BCRYPT_OBJECT_LENGTH);
 
         internal unsafe static BCRYPT_AUTH_TAG_LENGTHS_STRUCT GetAuthTagLengths(SafeBCryptHandle provider)
         {
@@ -29,10 +23,7 @@ namespace Leto.Windows.Interop
             return output;
         }
 
-        internal static string GetBlockChainingMode(SafeBCryptHandle provider)
-        {
-            return GetStringProperty(provider, BCryptPropertyStrings.BCRYPT_CHAINING_MODE);
-        }
+        internal static string GetBlockChainingMode(SafeBCryptHandle provider) => GetStringProperty(provider, BCryptPropertyStrings.BCRYPT_CHAINING_MODE);
 
         private unsafe static string GetStringProperty(SafeBCryptHandle provider, string property)
         {

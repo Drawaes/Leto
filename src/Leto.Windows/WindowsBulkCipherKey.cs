@@ -60,18 +60,20 @@ namespace Leto.Windows
         {
             _keyMode = mode;
             Unsafe.InitBlock(_scratchPin.PinnedPointer, 0, (uint)_scratchSpace.Length);
-            var context =  new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO();
-            context.dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls;
-            context.cbMacContext = _tagSize;
-            context.pbMacContext = _pointerMac;
-            context.cbNonce = _iv.Length;
-            context.pbNonce = _ivHandle.PinnedPointer;
-            context.cbAuthData = 0;
-            context.pbAuthData = null;
-            context.cbTag = _tagSize;
-            context.cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>();
-            context.pbTag = _pointerTag;
-            context.dwInfoVersion = 1;
+            var context = new BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO()
+            {
+                dwFlags = AuthenticatedCipherModeInfoFlags.ChainCalls,
+                cbMacContext = _tagSize,
+                pbMacContext = _pointerMac,
+                cbNonce = _iv.Length,
+                pbNonce = _ivHandle.PinnedPointer,
+                cbAuthData = 0,
+                pbAuthData = null,
+                cbTag = _tagSize,
+                cbSize = Marshal.SizeOf<BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO>(),
+                pbTag = _pointerTag,
+                dwInfoVersion = 1
+            };
             Unsafe.Write(_pointerModeInfo, context);
         }
 
