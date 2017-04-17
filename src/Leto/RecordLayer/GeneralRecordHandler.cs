@@ -19,7 +19,7 @@ namespace Leto.RecordLayer
             var header = buffer.Slice(0, _minimumMessageSize).ToSpan().Read<RecordHeader>();
             if (buffer.Length < header.Length + _minimumMessageSize) return RecordState.Incomplete;
             _currentRecordType = header.RecordType;
-            if (_connection.ReadKey == null)
+            if (_connection?.ReadKey == null)
             {
                 messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
@@ -45,14 +45,14 @@ namespace Leto.RecordLayer
                 Length = (ushort)span.Length,
                 Version = _recordVersion
             };
-            if(_connection.WriteKey != null)
+            if(_connection?.WriteKey != null)
             {
                 recordHeader.Length += (ushort)(8 + _connection.WriteKey.Overhead);
             }
             var writer = _output.Alloc(sizeof(RecordHeader));
             writer.Buffer.Span.Write(recordHeader);
             writer.Advance(sizeof(RecordHeader));
-            if (_connection.WriteKey != null)
+            if (_connection?.WriteKey != null)
             {
                 _connection.WriteKey.Encrypt(ref writer, span, RecordType.Alert, _recordVersion);
             }
@@ -77,13 +77,13 @@ namespace Leto.RecordLayer
                     Version = _recordVersion
                 };
                 writer.Ensure(_minimumMessageSize);
-                if (_connection.WriteKey != null)
+                if (_connection?.WriteKey != null)
                 {
                     recordHeader.Length += (ushort)(8 + _connection.WriteKey.Overhead);
                 }
                 writer.Buffer.Span.Write(recordHeader);
                 writer.Advance(_minimumMessageSize);
-                if (_connection.WriteKey != null)
+                if (_connection?.WriteKey != null)
                 {
                     _connection.WriteKey.Encrypt(ref writer, append, recordType, _recordVersion);
                 }

@@ -18,7 +18,6 @@ namespace Leto.ConnectionStates
     {
         protected AeadBulkCipher _readKey;
         protected AeadBulkCipher _writeKey;
-        protected RecordHandler _recordHandler;
         protected ICryptoProvider _cryptoProvider;
         protected bool _secureRenegotiation;
         protected HandshakeState _state;
@@ -31,7 +30,6 @@ namespace Leto.ConnectionStates
         public ConnectionState(SecurePipeConnection secureConnection)
         {
             _secureConnection = secureConnection;
-            _recordHandler = _secureConnection.RecordHandler;
             _cryptoProvider = _secureConnection.Listener.CryptoProvider;
         }
 
@@ -42,6 +40,7 @@ namespace Leto.ConnectionStates
         public CipherSuite CipherSuite { get; set; }
         public IKeyExchange KeyExchange { get; internal set; }
         public bool HandshakeComplete => _state == HandshakeState.HandshakeCompleted;
+        internal RecordHandler RecordHandler => SecureConnection.RecordHandler;
 
         protected void ParseExtensions(ref ClientHelloParser clientHello)
         {

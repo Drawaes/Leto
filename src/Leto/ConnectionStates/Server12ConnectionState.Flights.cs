@@ -16,13 +16,13 @@ namespace Leto.ConnectionStates
         {
             WriteServerHello(clientHello.SessionId);
             _secretSchedule.WriteSessionTicket();
-            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             _requiresTicket = false;
             WriteChangeCipherSpec();
             (_storedKey, _writeKey) = _secretSchedule.GenerateKeys();
             _secretSchedule.GenerateAndWriteServerVerify();
             _state = HandshakeState.WaitingForClientFinishedAbbreviated;
-            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         private void SendFirstFlightFull()
@@ -33,7 +33,7 @@ namespace Leto.ConnectionStates
             }
             SendSecondFlight();
             _state = HandshakeState.WaitingForClientKeyExchange;
-            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         private void SendSecondFlight()

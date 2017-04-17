@@ -47,6 +47,7 @@ namespace Leto.ConnectionStates
             _certificate = SecureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             ParseExtensions(ref clientHello);
+            SecureConnection.RecordHandler = new GeneralRecordHandler(this, TlsVersion.Tls12, SecureConnection.Connection.Output);
             if (_abbreviatedHandshake)
             {
                 SendFirstFlightAbbreviated(clientHello);
@@ -83,15 +84,15 @@ namespace Leto.ConnectionStates
             var writer = SecureConnection.HandshakeOutput.Writer.Alloc();
             writer.WriteBigEndian<byte>(1);
             writer.Commit();
-            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.ChangeCipherSpec);
         }
-        
+
         private void WriteCertificates() => this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
                 CertificateWriter.WriteCertificates(buffer, _certificate, false), HandshakeType.certificate);
 
         private void ProcessSessionTicket(Span<byte> buffer)
         {
-            if(SecureConnection.Listener.SessionProvider == null)
+            if (SecureConnection.Listener.SessionProvider == null)
             {
                 return;
             }
@@ -146,12 +147,12 @@ namespace Leto.ConnectionStates
                             {
                                 _secretSchedule.WriteSessionTicket();
                                 hasWritten = true;
-                                _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                                RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                             }
                             WriteChangeCipherSpec();
                             _writeKey = _storedKey;
                             _secretSchedule.GenerateAndWriteServerVerify();
-                            _recordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+                            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
                             hasWritten = true;
                             _secretSchedule.DisposeStore();
                             break;
@@ -173,6 +174,6 @@ namespace Leto.ConnectionStates
                 SecureConnection.HandshakeInput.Reader.Advance(buffer.Start, buffer.End);
             }
             return hasWritten;
-        } 
+        }
     }
 }
