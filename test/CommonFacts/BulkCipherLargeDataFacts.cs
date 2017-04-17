@@ -31,7 +31,7 @@ namespace CommonFacts
                 var buffer = reader.Buffer;
                 cipher.Decrypt(ref buffer, RecordType.Handshake, TlsVersion.Tls13Draft18);
                 var readerSpan = buffer.ToSpan();
-                Assert.Equal(encryptedMessage, readerSpan.Slice(0, readerSpan.Length - 1).ToArray());
+                Assert.Equal(s_largeBuffer, readerSpan.Slice(0, readerSpan.Length - 1).ToArray());
                 Assert.Equal(RecordType.Handshake, readerSpan.Slice(readerSpan.Length - 1).Read<RecordType>());
             }
         }

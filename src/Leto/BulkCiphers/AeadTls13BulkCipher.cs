@@ -26,7 +26,7 @@ namespace Leto.BulkCiphers
             foreach (var b in plainText)
             {
                 if (b.Length == 0) continue;
-                writer.Ensure(MinimumWriteSize(b.Length));
+                writer.Ensure(b.Length);
                 bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
                 writer.Advance(bytesWritten);
             }
