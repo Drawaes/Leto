@@ -25,6 +25,9 @@ namespace Leto.OpenSslFacts
         [Fact]
         public async Task EncryptClientMessageTls13() => await CommonFacts.BulkCipher13Facts.EncryptClientMessage(_provider);
 
+        [Fact]
+        public async Task EncryptLargeMessage() => await CommonFacts.BulkCipherLargeDataFacts.EncryptLargeMessage(_provider);
+
         public void Dispose() => _provider.Dispose();
     }
 }
