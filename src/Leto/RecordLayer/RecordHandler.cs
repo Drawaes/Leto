@@ -2,6 +2,7 @@
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using Leto.Alerts;
+using Leto.BulkCiphers;
 
 namespace Leto.RecordLayer
 {
@@ -10,10 +11,17 @@ namespace Leto.RecordLayer
         protected static readonly int _maxMessageSize = 16 * 1024 - _minimumMessageSize;
         protected static readonly int _minimumMessageSize = Marshal.SizeOf<RecordHeader>();
         protected RecordType _currentRecordType;
-        protected SecurePipeConnection _connection;
+        protected IKeyPair _connection;
         protected object _connectionOutputLock = new object();
+        protected TlsVersion _recordVersion;
+        protected IPipeWriter _output;
 
-        public RecordHandler(SecurePipeConnection secureConnection) => _connection = secureConnection;
+        public RecordHandler(IKeyPair secureConnection, TlsVersion recordVersion, IPipeWriter output)
+        {
+            _recordVersion = recordVersion;
+            _connection = secureConnection;
+            _output = output;
+        }
 
         public RecordType CurrentRecordType => _currentRecordType;
 
@@ -26,7 +34,7 @@ namespace Leto.RecordLayer
                     return;
                 }
                 var buffer = reader.Buffer;
-                var output = _connection.Connection.Output.Alloc();
+                var output = _output.Alloc();
                 try
                 {
                     WriteRecords(ref buffer, ref output, recordType);
@@ -43,7 +51,7 @@ namespace Leto.RecordLayer
         {
             lock (_connectionOutputLock)
             {
-                var output = _connection.Connection.Output.Alloc();
+                var output = _output.Alloc();
                 WriteRecords(ref readableBuffer, ref output, recordType);
                 return output.FlushAsync();
             }
@@ -51,7 +59,6 @@ namespace Leto.RecordLayer
 
         protected abstract void WriteRecords(ref ReadableBuffer buffer, ref WritableBuffer writer, RecordType recordType);
         public abstract RecordState ReadRecord(ref ReadableBuffer buffer, out ReadableBuffer messageBuffer);
-        public void WriteHandshakeRecords() => WriteRecords(_connection.HandshakeOutput.Reader, RecordType.Handshake);
         public abstract WritableBufferAwaitable WriteAlert(AlertException alert);
     }
 }

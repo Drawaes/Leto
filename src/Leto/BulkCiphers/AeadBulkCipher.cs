@@ -22,8 +22,7 @@ namespace Leto.BulkCiphers
         public abstract void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion);
         public void SetKey(IBulkCipherKey key) => _key = key;
         public virtual void IncrementSequence() => _sequenceNumber++;
-        protected int MinimumWriteSize(int size) => Math.Min(1, size % _key.TagSize) * _key.TagSize;
-
+        
         protected void WriteTag(ref WritableBuffer writer)
         {
             writer.Ensure(_key.TagSize);

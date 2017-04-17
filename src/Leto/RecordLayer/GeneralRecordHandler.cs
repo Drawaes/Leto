@@ -2,12 +2,13 @@
 using System.Binary;
 using System.IO.Pipelines;
 using Leto.Alerts;
+using Leto.BulkCiphers;
 
 namespace Leto.RecordLayer
 {
     public sealed class GeneralRecordHandler : RecordHandler
     {
-        public GeneralRecordHandler(SecurePipeConnection secureConnection) : base(secureConnection)
+        public GeneralRecordHandler(IKeyPair secureConnection, TlsVersion recordVersion, IPipeWriter output) : base(secureConnection, recordVersion, output)
         {
         }
 
@@ -18,7 +19,7 @@ namespace Leto.RecordLayer
             var header = buffer.Slice(0, _minimumMessageSize).ToSpan().Read<RecordHeader>();
             if (buffer.Length < header.Length + _minimumMessageSize) return RecordState.Incomplete;
             _currentRecordType = header.RecordType;
-            if (_connection.State.ReadKey == null)
+            if (_connection.ReadKey == null)
             {
                 messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
@@ -27,7 +28,7 @@ namespace Leto.RecordLayer
             {
                 messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
-                _connection.State.ReadKey.Decrypt(ref messageBuffer, header.RecordType, header.Version);
+                _connection.ReadKey.Decrypt(ref messageBuffer, header.RecordType, header.Version);
             }
             return RecordState.Record;
         }
@@ -42,18 +43,18 @@ namespace Leto.RecordLayer
             {
                 RecordType = RecordType.Alert,
                 Length = (ushort)span.Length,
-                Version = _connection.State.RecordVersion
+                Version = _recordVersion
             };
-            if(_connection.State.WriteKey != null)
+            if(_connection.WriteKey != null)
             {
-                recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
+                recordHeader.Length += (ushort)(8 + _connection.WriteKey.Overhead);
             }
-            var writer = _connection.Connection.Output.Alloc(sizeof(RecordHeader));
+            var writer = _output.Alloc(sizeof(RecordHeader));
             writer.Buffer.Span.Write(recordHeader);
             writer.Advance(sizeof(RecordHeader));
-            if (_connection.State.WriteKey != null)
+            if (_connection.WriteKey != null)
             {
-                _connection.State.WriteKey.Encrypt(ref writer, span, RecordType.Alert, _connection.State.RecordVersion);
+                _connection.WriteKey.Encrypt(ref writer, span, RecordType.Alert, _recordVersion);
             }
             else
             {
@@ -73,18 +74,18 @@ namespace Leto.RecordLayer
                 {
                     RecordType = recordType,
                     Length = (ushort)append.Length,
-                    Version = _connection.State.RecordVersion
+                    Version = _recordVersion
                 };
                 writer.Ensure(_minimumMessageSize);
-                if (_connection.State.WriteKey != null)
+                if (_connection.WriteKey != null)
                 {
-                    recordHeader.Length += (ushort)(8 + _connection.State.WriteKey.Overhead);
+                    recordHeader.Length += (ushort)(8 + _connection.WriteKey.Overhead);
                 }
                 writer.Buffer.Span.Write(recordHeader);
                 writer.Advance(_minimumMessageSize);
-                if (_connection.State.WriteKey != null)
+                if (_connection.WriteKey != null)
                 {
-                    _connection.State.WriteKey.Encrypt(ref writer, append, recordType, _connection.State.RecordVersion);
+                    _connection.WriteKey.Encrypt(ref writer, append, recordType, _recordVersion);
                 }
                 else
                 {

@@ -14,7 +14,7 @@ using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {
-    public abstract class ConnectionState : IDisposable
+    public abstract class ConnectionState : IKeyPair, IDisposable
     {
         protected AeadBulkCipher _readKey;
         protected AeadBulkCipher _writeKey;

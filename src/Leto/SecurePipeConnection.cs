@@ -21,7 +21,7 @@ namespace Leto
 
         internal SecurePipeConnection(PipeFactory pipeFactory, IPipeConnection connection, SecurePipeListener listener)
         {
-            RecordHandler = new GeneralRecordHandler(this);
+            RecordHandler = new GeneralRecordHandler(null, TlsVersion.Tls1, connection.Output);
             _listener = listener;
             _inputPipe = pipeFactory.Create();
             _outputPipe = pipeFactory.Create();

@@ -30,7 +30,7 @@ namespace Leto.BulkCiphers
                 bytesWritten = _key.Update(b.Span, writer.Buffer.Span);
                 writer.Advance(bytesWritten);
             }
-            writer.Ensure(MinimumWriteSize(sizeof(RecordType)));
+            writer.Ensure(sizeof(RecordType));
             bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
             IncrementSequence();

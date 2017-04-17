@@ -95,19 +95,18 @@ namespace Leto.ConnectionStates
         private void SendServerFirstFlight()
         {
             HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
-            SecureConnection.RecordHandler.WriteHandshakeRecords();
-            SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            SecureConnection.RecordHandler = new Tls13RecordHandler(this, _protocolVersion, SecureConnection.Connection.Output);
             (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeKeys();
-            SecureConnection.RecordHandler = new Tls13RecordHandler(SecureConnection);
             HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
-            SecureConnection.RecordHandler.WriteHandshakeRecords();
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             if (PskIdentity == -1)
             {
                 HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
                 HandshakeFraming.WriteHandshakeFrame(this, SendCertificateVerify, HandshakeType.certificate_verify);
             }
             HandshakeFraming.WriteHandshakeFrame(this, ServerFinished, HandshakeType.finished);
-            SecureConnection.RecordHandler.WriteHandshakeRecords();
+            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             _state = HandshakeState.WaitingForClientFinished;
         }
 
