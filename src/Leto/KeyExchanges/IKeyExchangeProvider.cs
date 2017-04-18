@@ -10,5 +10,6 @@ namespace Leto.KeyExchanges
         IKeyExchange GetKeyExchange(KeyExchangeType keyExchange, BigEndianAdvancingSpan supportedGroups);
         IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare);
         IKeyExchange GetKeyExchangeFromSupportedGroups(BigEndianAdvancingSpan buffer);
+        void SetSupportedNamedGroups(params NamedGroup[] namedGroups);
     }
 }

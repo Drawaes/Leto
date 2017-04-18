@@ -10,21 +10,28 @@ using System.Threading.Tasks;
 using Xunit;
 using CommonFacts;
 using System.Diagnostics;
+using Leto.KeyExchanges;
 
 namespace Leto.OpenSslFacts
 {
     public class ClientSslStreamFacts
     {
         [Theory]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_128_GCM_SHA256)]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_256_GCM_SHA384)]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)]
-        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)]
-        public async Task HandshakeCompletes(CipherSuites.PredefinedCipherSuites.PredefinedSuite suite)
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_128_GCM_SHA256, null)]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.RSA_AES_256_GCM_SHA384, null)]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, new NamedGroup[] { NamedGroup.secp256r1 })]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, new NamedGroup[] { NamedGroup.secp384r1 })]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, new NamedGroup[] { NamedGroup.x25519 })]
+        [InlineData(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, null)]
+        public async Task HandshakeCompletes(CipherSuites.PredefinedCipherSuites.PredefinedSuite suite, NamedGroup[] supportedNamedGroups)
         {
             using (var factory = new PipeFactory())
             using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
+                if (supportedNamedGroups != null)
+                {
+                    listener.CryptoProvider.KeyExchangeProvider.SetSupportedNamedGroups(supportedNamedGroups);
+                }
                 listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(suite) });
                 var loopback = new LoopbackPipeline(factory);
                 var stream = loopback.ClientPipeline.GetStream();
