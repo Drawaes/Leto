@@ -45,7 +45,7 @@ namespace Leto.RecordLayer
             {
                 RecordType = RecordType.Application,
                 Length = (ushort)span.Length,
-                Version = _recordVersion
+                Version = TlsVersion.Tls1
             };
             var writer = _output.Alloc((ushort)(sizeof(RecordType) + _connection.WriteKey.Overhead));
             writer.Ensure(_minimumMessageSize);
@@ -67,7 +67,7 @@ namespace Leto.RecordLayer
                 {
                     RecordType = RecordType.Application,
                     Length = (ushort)append.Length,
-                    Version = _recordVersion
+                    Version = TlsVersion.Tls1
                 };
                 writer.Ensure(_minimumMessageSize);
                 recordHeader.Length += (ushort)(sizeof(RecordType) + _connection.WriteKey.Overhead);

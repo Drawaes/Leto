@@ -13,6 +13,7 @@ using Leto.BulkCiphers;
 using Leto.Certificates;
 using Leto.KeyExchanges;
 using Leto.Internal;
+using Leto.Alerts;
 
 namespace Leto.ConnectionStates
 {
@@ -58,7 +59,7 @@ namespace Leto.ConnectionStates
                     {
                         return false;
                     }
-                    Alerts.AlertException.ThrowUnexpectedMessage(recordType);
+                    AlertException.ThrowUnexpectedMessage(recordType);
                 }
                 helloParser = new ClientHelloParser(handshake);
                 var version = GetVersion(ref helloParser);
@@ -68,10 +69,7 @@ namespace Leto.ConnectionStates
                         connectionState = new Server12ConnectionState(_securePipe);
                         break;
                     case TlsVersion.Tls13Draft18:
-                        connectionState = new Server13ConnectionStateDraft18(_securePipe);
-                        break;
-                    case TlsVersion.Tls13Draft19:
-                        connectionState = new Server13ConnectionStateDraft19(_securePipe);
+                        connectionState = new Server13ConnectionState(_securePipe);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -123,13 +121,13 @@ namespace Leto.ConnectionStates
         {
             if (!MatchVersion(tlsVersion))
             {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal,
-                    Alerts.AlertDescription.protocol_version, $"Could not match {tlsVersion} to any supported version");
+                AlertException.ThrowAlert(AlertLevel.Fatal,
+                    AlertDescription.protocol_version, $"Could not match {tlsVersion} to any supported version");
             }
             return tlsVersion;
         }
 
-        public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
+        public void ChangeCipherSpec() => AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
 
         public bool HandleClientHello(ref ClientHelloParser clientHelloParser) => throw new NotSupportedException();
 

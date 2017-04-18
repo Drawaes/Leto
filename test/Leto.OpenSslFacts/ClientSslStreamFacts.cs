@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using CommonFacts;
+using System.Diagnostics;
 
 namespace Leto.OpenSslFacts
 {
@@ -24,7 +25,7 @@ namespace Leto.OpenSslFacts
             using (var factory = new PipeFactory())
             using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
-                listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName( suite) });
+                listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(suite) });
                 var loopback = new LoopbackPipeline(factory);
                 var stream = loopback.ClientPipeline.GetStream();
                 var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
@@ -51,7 +52,7 @@ namespace Leto.OpenSslFacts
             await writer.FlushAsync();
         }
 
-        //[Fact]
+        [Fact]
         public void SocketTest()
         {
             using (var factory = new PipeFactory())
@@ -63,12 +64,18 @@ namespace Leto.OpenSslFacts
                     var pipe = await secureListener.CreateConnection(conn);
                     Console.WriteLine("Handshake Done");
                     var reader = await pipe.Input.ReadAsync();
-                    System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
+                    Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
                     var writer = pipe.Output.Alloc();
                     writer.Append(reader.Buffer);
                     await writer.FlushAsync();
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
+
+                //var process = new Process();
+                //process.StartInfo.FileName = @"C:\code\nssclean\TestClient\RunTest.bat";
+                //process.Start();
+                //process.BeginOutputReadLine();
+                
                 Console.ReadLine();
             }
         }

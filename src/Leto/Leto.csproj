@@ -7,6 +7,10 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_6;TRACETLS</DefineConstants>
+  </PropertyGroup>
   
   <ItemGroup>
     <PackageReference Include="System.Binary" Version="0.1.0-e170414-1" />

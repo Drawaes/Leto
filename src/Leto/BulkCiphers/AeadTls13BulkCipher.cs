@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Binary;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Leto.RecordLayer;
 
 namespace Leto.BulkCiphers
@@ -33,8 +30,8 @@ namespace Leto.BulkCiphers
             writer.Ensure(sizeof(RecordType));
             bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
-            IncrementSequence();
             WriteTag(ref writer);
+            IncrementSequence();
         }
 
         public unsafe override void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion)
@@ -47,8 +44,8 @@ namespace Leto.BulkCiphers
             writer.Ensure(sizeof(RecordType));
             bytesWritten = _key.Finish(new Span<byte>(&recordType, sizeof(RecordType)), writer.Buffer.Span);
             writer.Advance(bytesWritten);
-            IncrementSequence();
             WriteTag(ref writer);
+            IncrementSequence();
         }
 
         public override unsafe void IncrementSequence()

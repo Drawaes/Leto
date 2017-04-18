@@ -112,6 +112,8 @@ namespace Leto
             }
             finally
             {
+                _inputPipe.Reader.Complete();
+                CloseHandshakePipes();
                 Dispose();
             }
         }
@@ -123,6 +125,11 @@ namespace Leto
                 while (true)
                 {
                     var result = await _inputPipe.Reader.ReadAsync();
+                    if(result.Buffer.IsEmpty && result.IsCompleted)
+                    {
+                        await RecordHandler.WriteAlert(new Alerts.AlertException(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.close_notify, "Application closed connection"));
+                        return;
+                    }
                     var buffer = result.Buffer;
                     try
                     {
@@ -136,21 +143,22 @@ namespace Leto
             }
             finally
             {
+                _outputPipe.Writer.Complete();
+                CloseHandshakePipes();
                 Dispose();
             }
         }
 
-        public void Dispose()
+        private void CloseHandshakePipes()
         {
             _handshakeInput.Reader.Complete();
             _handshakeInput.Writer.Complete();
             _handshakeOutput.Reader.Complete();
             _handshakeOutput.Writer.Complete();
-            _outputPipe.Writer.Complete();
-            _outputPipe.Reader.Complete();
-            _inputPipe.Reader.Complete();
-            _connection.Input.Complete();
-            _connection.Output.Complete();
+        }
+
+        public void Dispose()
+        {
             _connection?.Dispose();
             _connection = null;
             _state.Dispose();

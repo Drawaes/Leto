@@ -34,12 +34,18 @@ namespace Leto.ConnectionStates.SecretSchedules
             _serverTraffic = GetBufferSlice(_hashSize);
             _finishedKey = GetBufferSlice(_hashSize);
             _cryptoProvider.HashProvider.HkdfExtract(state.CipherSuite.HashType, new Span<byte>(), presharedKey, _secret.Span);
+#if TRACETLS
+            Console.WriteLine($"Early Secret {BitConverter.ToString(_secret.Span.ToArray())}");
+#endif
             (_keySize, _ivSize) = _cryptoProvider.BulkCipherProvider.GetCipherSize(_state.CipherSuite.BulkCipherType);
         }
 
         public virtual (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateHandshakeKeys()
         {
             _state.KeyExchange.DeriveSecret(_cryptoProvider.HashProvider, _state.CipherSuite.HashType, _secret.Span, _secret.Span);
+#if TRACETLS
+            Console.WriteLine($"Handshake Secret {BitConverter.ToString(_secret.Span.ToArray())}");
+#endif
             _state.KeyExchange.Dispose();
             _state.KeyExchange = null;
 
@@ -47,7 +53,14 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.HandshakeHash.InterimHash(hash);
             ExpandLabel(_secret, Label_ClientHandshakeTrafficSecret, hash, _clientTraffic);
             ExpandLabel(_secret, Label_ServerHandshakeTrafficSecret, hash, _serverTraffic);
+
+#if TRACETLS
+            Console.WriteLine($"Handshake Client keys");
+#endif
             var clientKey = GetKey(_clientTraffic);
+#if TRACETLS
+            Console.WriteLine($"Handshake Server keys");
+#endif
             var serverKey = GetKey(_serverTraffic);
             return (clientKey, serverKey);
         }
@@ -55,6 +68,9 @@ namespace Leto.ConnectionStates.SecretSchedules
         public (AeadBulkCipher clientKey, AeadBulkCipher serverKey) GenerateApplicationKeys()
         {
             _cryptoProvider.HashProvider.HkdfExtract(_state.CipherSuite.HashType, _secret.Span, new Span<byte>(), _secret.Span);
+#if TRACETLS
+            Console.WriteLine($"Application Secret {BitConverter.ToString(_secret.Span.ToArray())}");
+#endif
             var hash = new byte[_hashSize];
             _state.HandshakeHash.FinishHash(hash);
             ExpandLabel(_secret, Label_ClientApplicationTrafficSecret, hash, _clientTraffic);
@@ -67,8 +83,12 @@ namespace Leto.ConnectionStates.SecretSchedules
         private AeadBulkCipher GetKey(Buffer<byte> secret)
         {
             var buffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
-            ExpandLabel(secret, Label_TrafficIv, new Span<byte>(), buffer.Span.Slice(_keySize));
             ExpandLabel(secret, Label_TrafficKey, new Span<byte>(), buffer.Span.Slice(0, _keySize));
+            ExpandLabel(secret, Label_TrafficIv, new Span<byte>(), buffer.Span.Slice(_keySize, _ivSize));
+#if TRACETLS
+            Console.WriteLine($"Key {BitConverter.ToString(buffer.Span.Slice(0, _keySize).ToArray())}");
+            Console.WriteLine($"IV {BitConverter.ToString(buffer.Span.Slice(_keySize, _ivSize).ToArray())}");
+#endif
             return _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls13BulkCipher>(_state.CipherSuite.BulkCipherType, buffer);
         }
 

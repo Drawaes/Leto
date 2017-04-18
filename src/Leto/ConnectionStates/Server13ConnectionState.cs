@@ -11,11 +11,11 @@ using Leto.ConnectionStates.SecretSchedules;
 
 namespace Leto.ConnectionStates
 {
-    public abstract class Server13ConnectionState<T> : ConnectionState, IConnectionState where T : SecretSchedule13, new()
+    public class Server13ConnectionState : ConnectionState, IConnectionState
     {
         private PskExchangeMode _pskMode = PskExchangeMode.none;
-        private T _secretSchedule;
-        protected TlsVersion _protocolVersion;
+        private SecretSchedule13 _secretSchedule;
+        protected TlsVersion _protocolVersion = TlsVersion.Tls13Draft18;
 
         public Server13ConnectionState(SecurePipeConnection secureConnection) : base(secureConnection)
         {
@@ -31,7 +31,7 @@ namespace Leto.ConnectionStates
             CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(TlsVersion.Tls13Draft18, clientHello.CipherSuites);
             HandshakeHash = _cryptoProvider.HashProvider.GetHash(CipherSuite.HashType);
             HandshakeHash.HashData(clientHello.OriginalMessage);
-            _secretSchedule = new T();
+            _secretSchedule = new SecretSchedule13();
             _secretSchedule.Init(this, new Span<byte>());
             ParseExtensions(ref clientHello);
 
@@ -99,7 +99,6 @@ namespace Leto.ConnectionStates
             SecureConnection.RecordHandler = new Tls13RecordHandler(this, _protocolVersion, SecureConnection.Connection.Output);
             (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeKeys();
             HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             if (PskIdentity == -1)
             {
                 HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
