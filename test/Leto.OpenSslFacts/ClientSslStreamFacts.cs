@@ -52,9 +52,11 @@ namespace Leto.OpenSslFacts
             await writer.FlushAsync();
         }
 
-        [Fact]
+        //[Fact]
         public void SocketTest()
         {
+            var readData = string.Empty;
+            var wait = new System.Threading.ManualResetEvent(false);
             using (var factory = new PipeFactory())
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
             using (var secureListener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
@@ -64,19 +66,25 @@ namespace Leto.OpenSslFacts
                     var pipe = await secureListener.CreateConnection(conn);
                     Console.WriteLine("Handshake Done");
                     var reader = await pipe.Input.ReadAsync();
-                    Debug.WriteLine(Encoding.UTF8.GetString(reader.Buffer.ToArray()));
+                    readData = Encoding.UTF8.GetString(reader.Buffer.ToArray());
                     var writer = pipe.Output.Alloc();
                     writer.Append(reader.Buffer);
                     await writer.FlushAsync();
+                    wait.Set();
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
 
-                //var process = new Process();
-                //process.StartInfo.FileName = @"C:\code\nssclean\TestClient\RunTest.bat";
-                //process.Start();
-                //process.BeginOutputReadLine();
-                
-                Console.ReadLine();
+                var process = new Process();
+                process.StartInfo.WorkingDirectory = @"..\..\..\..\..\external\nss\";
+                process.StartInfo.FileName = @"..\..\..\..\..\external\nss\RunTest.bat";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+                var output = process.StandardOutput.ReadToEnd();
+                var out2 = process.StandardError.ReadToEnd();
+                wait.WaitOne();
+                process.Kill();
+                Assert.Equal("", readData);
             }
         }
     }
