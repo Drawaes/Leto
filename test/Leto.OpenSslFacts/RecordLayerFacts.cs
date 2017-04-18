@@ -12,6 +12,9 @@ namespace Leto.OpenSslFacts
         private OpenSslBulkKeyProvider _provider = new OpenSslBulkKeyProvider();
 
         [Fact]
-        public async Task WriteHandshakeRecord() => await CommonFacts.Tls13RecordHandling.WriteHandshakeRecord(_provider);
+        public async Task Tls13WriteHandshakeRecord() => await CommonFacts.Tls13RecordHandling.WriteHandshakeRecord(_provider);
+
+        [Fact]
+        public async Task Tls13WriteMultiFrameHandshakeRecord() => await CommonFacts.Tls13RecordHandling.WriteMultiFrameHandshakeRecord(_provider);
     }
 }
