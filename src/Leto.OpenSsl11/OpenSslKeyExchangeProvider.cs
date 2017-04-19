@@ -22,6 +22,7 @@ namespace Leto.OpenSsl11
             NamedGroup.x25519,
             NamedGroup.x448
         };
+        private NamedGroup _defaultDheNamedGroup = NamedGroup.ffdhe2048;
 
         public void SetSupportedNamedGroups(params NamedGroup[] namedGroups) => _supportedNamedGroups = namedGroups.ToList();
 
@@ -67,7 +68,7 @@ namespace Leto.OpenSsl11
         }
 
         /// <summary>
-        /// Heritagae KeyExchange selection (pre tls 1.3)
+        /// Heritage KeyExchange selection (pre tls 1.3)
         /// </summary>
         /// <param name="keyExchange"></param>
         /// <param name="supportedGroups"></param>
@@ -79,9 +80,6 @@ namespace Leto.OpenSsl11
                 case KeyExchangeType.Rsa:
                     return new RsaKeyExchange();
                 case KeyExchangeType.Ecdhe:
-                case KeyExchangeType.Dhe:
-                    //need to check the supported groups to check if we are going to use
-                    //a named curve function or a named curve
                     return EcdheKeyExchange(supportedGroups);
                 default:
                     Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
@@ -95,13 +93,25 @@ namespace Leto.OpenSsl11
             while (supportedGroups.Length > 0)
             {
                 var namedGroup = supportedGroups.Read<NamedGroup>();
-                var keyExchange = GetKeyExchange(namedGroup);
-                if (keyExchange != null) return keyExchange;
+                if (!_supportedNamedGroups.Contains(namedGroup))
+                {
+                    continue;
+                }
+                switch (namedGroup)
+                {
+                    case NamedGroup.secp256r1:
+                    case NamedGroup.secp384r1:
+                    case NamedGroup.secp521r1:
+                        return new OpenSslECCurveKeyExchange(namedGroup);
+                    case NamedGroup.x25519:
+                    case NamedGroup.x448:
+                        return new OpenSslECFunctionKeyExchange(namedGroup);
+                }
             }
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
             return null;
         }
-
+        
         public void Dispose()
         {
             //No resources currently to clean up
@@ -122,7 +132,5 @@ namespace Leto.OpenSsl11
             }
             return null;
         }
-
-
     }
 }

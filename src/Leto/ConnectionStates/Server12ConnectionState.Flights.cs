@@ -3,9 +3,7 @@ using Leto.KeyExchanges;
 using Leto.RecordLayer;
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Threading.Tasks;
 using Leto.Internal;
 
 namespace Leto.ConnectionStates
@@ -46,7 +44,7 @@ namespace Leto.ConnectionStates
 
         private void WriteServerHelloDone() =>
             this.WriteHandshakeFrame((ref WritableBuffer buffer) => { return; }, HandshakeType.server_hello_done);
-        
+
         private void WriteServerKeyExchange()
         {
             if (KeyExchange.RequiresServerKeyExchange)
@@ -56,9 +54,9 @@ namespace Leto.ConnectionStates
         }
 
         private void WriteServerHello(Span<byte> sessionId) =>
-            this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerContent(ref buffer, sessionId), HandshakeType.server_hello);
+            this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerHelloContent(ref buffer, sessionId), HandshakeType.server_hello);
 
-        private void WriteServerContent(ref WritableBuffer writer, Span<byte> sessionId)
+        private void WriteServerHelloContent(ref WritableBuffer writer, Span<byte> sessionId)
         {
             var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + sessionId.Length;
             writer.Ensure(fixedSize);
@@ -99,7 +97,6 @@ namespace Leto.ConnectionStates
 
         private void SendKeyExchange(ref WritableBuffer writer)
         {
-            var keyExchange = KeyExchange;
             var messageLength = 4 + KeyExchange.KeyExchangeSize;
             writer.Ensure(messageLength);
             var bookMark = writer.Buffer;

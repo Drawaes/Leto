@@ -7,10 +7,7 @@ using Leto.Hashes;
 using Leto.KeyExchanges;
 using Leto.RecordLayer;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Leto.Internal;
-using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {

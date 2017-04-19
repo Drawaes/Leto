@@ -25,6 +25,7 @@ namespace Leto.ConnectionStates
         public int PskIdentity { get; set; } = -1;
 
         public void ChangeCipherSpec() => Alerts.AlertException.ThrowUnexpectedMessage(RecordType.ChangeCipherSpec);
+        private void WriteEncryptedExtensions(ref WritableBuffer writer) => writer.WriteBigEndian<ushort>(0);
 
         public bool HandleClientHello(ref ClientHelloParser clientHello)
         {
@@ -94,18 +95,17 @@ namespace Leto.ConnectionStates
 
         private void SendServerFirstFlight()
         {
-            HandshakeFraming.WriteHandshakeFrame(this, WriteServerHelloContent, HandshakeType.server_hello);
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
-            SecureConnection.RecordHandler = new Tls13RecordHandler(this, _protocolVersion, SecureConnection.Connection.Output);
+            this.WriteHandshakeFrame(WriteServerHelloContent, HandshakeType.server_hello);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             (_readKey, _writeKey) = _secretSchedule.GenerateHandshakeKeys();
-            HandshakeFraming.WriteHandshakeFrame(this, WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
+            this.WriteHandshakeFrame(WriteEncryptedExtensions, HandshakeType.encrypted_extensions);
             if (PskIdentity == -1)
             {
-                HandshakeFraming.WriteHandshakeFrame(this, WriteCertificates, HandshakeType.certificate);
-                HandshakeFraming.WriteHandshakeFrame(this, SendCertificateVerify, HandshakeType.certificate_verify);
+                this.WriteHandshakeFrame(WriteCertificates, HandshakeType.certificate);
+                this.WriteHandshakeFrame(SendCertificateVerify, HandshakeType.certificate_verify);
             }
-            HandshakeFraming.WriteHandshakeFrame(this, ServerFinished, HandshakeType.finished);
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            this.WriteHandshakeFrame(ServerFinished, HandshakeType.finished);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
             _state = HandshakeState.WaitingForClientFinished;
         }
 
@@ -114,8 +114,6 @@ namespace Leto.ConnectionStates
             buffer.WriteBigEndian<byte>(0);
             buffer = CertificateWriter.WriteCertificates(buffer, _certificate, true);
         }
-
-        private void WriteEncryptedExtensions(ref WritableBuffer writer) => writer.WriteBigEndian<ushort>(0);
 
         public unsafe void SendCertificateVerify(ref WritableBuffer writer)
         {
@@ -223,7 +221,7 @@ namespace Leto.ConnectionStates
                 BufferExtensions.WriteVector<ushort>(ref w, WriteRetryKeyshare);
             }, HandshakeType.hello_retry_request);
             _state = HandshakeState.WaitingHelloRetry;
-            SecureConnection.RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
+            RecordHandler.WriteRecords(SecureConnection.HandshakeOutput.Reader, RecordType.Handshake);
         }
 
         protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
@@ -246,7 +244,5 @@ namespace Leto.ConnectionStates
                     throw new NotSupportedException();
             }
         }
-
-        protected override void Dispose(bool disposing) => base.Dispose(disposing);
     }
 }

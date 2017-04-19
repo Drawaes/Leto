@@ -82,6 +82,7 @@ namespace Leto.OpenSsl11
 
         public unsafe int WritePublicKey(Span<byte> buffer)
         {
+            GenerateKeys(null, null);
             DH_get0_key(_localKey, out BIGNUM pub, out BIGNUM priv);
             if (buffer.Length < _keyExchangeSize) throw new InvalidOperationException();
             return BN_bn2binpad(pub, buffer);

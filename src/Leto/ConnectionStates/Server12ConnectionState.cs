@@ -3,7 +3,6 @@ using System.IO.Pipelines;
 using Leto.Handshake;
 using Leto.RecordLayer;
 using Leto.CipherSuites;
-using System.Threading.Tasks;
 using Leto.BulkCiphers;
 using Leto.ConnectionStates.SecretSchedules;
 using System.Binary;
