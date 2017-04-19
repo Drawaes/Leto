@@ -9,7 +9,7 @@ namespace CommonFacts
     {
         public static byte[] HexToByteArray(this string hex)
         {
-            hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c)));
+            hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c) && c != '-'));
             var NumberChars = hex.Length;
             var bytes = new byte[NumberChars / 2];
             for (var i = 0; i < NumberChars; i += 2)

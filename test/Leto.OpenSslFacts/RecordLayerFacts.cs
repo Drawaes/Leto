@@ -15,6 +15,9 @@ namespace Leto.OpenSslFacts
         public async Task Tls13WriteHandshakeRecord() => await CommonFacts.Tls13RecordHandling.WriteHandshakeRecord(_provider);
 
         [Fact]
+        public async Task Tls13ReadHandshakeRecord() => await CommonFacts.Tls13RecordHandling.ReadHandshakeRecord(_provider);
+
+        [Fact]
         public async Task Tls13WriteMultiFrameHandshakeRecord() => await CommonFacts.Tls13RecordHandling.WriteMultiFrameHandshakeRecord(_provider);
     }
 }
