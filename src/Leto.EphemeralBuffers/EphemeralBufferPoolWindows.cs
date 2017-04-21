@@ -10,7 +10,6 @@ namespace Leto.EphemeralBuffers
 {
     public sealed class EphemeralBufferPoolWindows : EphemeralBufferPool
     {
-        private static bool _allowWorkingSetOverride = true;
         private static object _lock = new object();
 
         public EphemeralBufferPoolWindows(int bufferSize, int bufferCount) : base(bufferSize, bufferCount)

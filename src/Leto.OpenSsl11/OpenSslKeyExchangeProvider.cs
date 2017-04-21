@@ -22,8 +22,7 @@ namespace Leto.OpenSsl11
             NamedGroup.x25519,
             NamedGroup.x448
         };
-        private NamedGroup _defaultDheNamedGroup = NamedGroup.ffdhe2048;
-
+        
         public void SetSupportedNamedGroups(params NamedGroup[] namedGroups) => _supportedNamedGroups = namedGroups.ToList();
 
         public IKeyExchange GetKeyExchangeFromSupportedGroups(BigEndianAdvancingSpan supportedGroups)

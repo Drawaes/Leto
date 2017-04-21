@@ -16,6 +16,7 @@ namespace Leto.EphemeralBuffers
         private readonly uint _totalAllocated;
         private int _currentAllocatedOffset;
         internal int _isDisposed;
+        protected static bool _allowWorkingSetOverride = true;
 
         public EphemeralBufferPool(int bufferSize, int bufferCount)
         {
