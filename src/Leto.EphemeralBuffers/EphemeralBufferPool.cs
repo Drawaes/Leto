@@ -86,7 +86,7 @@ namespace Leto.EphemeralBuffers
         protected unsafe override void Dispose(bool disposing)
         {
             var disposed = 1;
-            Interlocked.Exchange(ref _isDisposed, disposed);
+            disposed = Interlocked.Exchange(ref _isDisposed, disposed);
             if (disposed == 0)
             {
                 Unsafe.InitBlock((void*)_pointer, 0, _totalAllocated);
