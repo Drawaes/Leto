@@ -24,7 +24,7 @@ namespace Leto.ConnectionStates.SecretSchedules
         public SecretSchedulePool()
         {
             _ephemeralSessionPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(Session_Size, MaxInflightSessions);
-            _ephemeralKeysPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(MaxKeySize, MaxInflightConnections *2);
+            _ephemeralKeysPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(MaxKeySize, MaxInflightConnections * 2);
         }
 
         public OwnedBuffer<byte> GetSecretBuffer()
@@ -41,18 +41,10 @@ namespace Leto.ConnectionStates.SecretSchedules
 
         public void Dispose()
         {
-            try
-            {
-                _ephemeralKeysPool?.Dispose();
-                _ephemeralKeysPool = null;
-                _ephemeralSessionPool?.Dispose();
-                _ephemeralSessionPool = null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception disposing key {ex}");
-                throw;
-            }
+            _ephemeralKeysPool?.Dispose();
+            _ephemeralKeysPool = null;
+            _ephemeralSessionPool?.Dispose();
+            _ephemeralSessionPool = null;
             GC.SuppressFinalize(this);
         }
 

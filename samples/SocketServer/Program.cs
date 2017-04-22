@@ -10,6 +10,8 @@ namespace SocketServer
     {
         static void Main(string[] args)
         {
+            var bytes = Encoding.ASCII.GetBytes("pHYs");
+
             //for (var i = 0; i < 100; i++)
             //{
             //    var streamFacts = new Leto.OpenSslFacts.ClientSslStreamFacts();

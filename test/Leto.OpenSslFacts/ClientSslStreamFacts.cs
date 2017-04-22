@@ -48,6 +48,34 @@ namespace Leto.OpenSslFacts
             }
         }
 
+        [Fact]
+        public async Task EphemeralSessionProvider()
+        {
+            using (var factory = new PipeFactory())
+            using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
+            {
+                listener.UseEphemeralSessionProvider();
+                await ConnectWithSslStream(factory, listener);
+                await ConnectWithSslStream(factory, listener);
+            }
+        }
+
+        private async Task ConnectWithSslStream(PipeFactory factory, OpenSslSecurePipeListener listener)
+        {
+            var loopback = new LoopbackPipeline(factory);
+            var stream = loopback.ClientPipeline.GetStream();
+            var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
+            var ignore = Echo(secureConnection);
+            using (var sslStream = new SslStream(stream, false, CertVal))
+            {
+                await sslStream.AuthenticateAsClientAsync("localhost");
+                var bytes = Encoding.UTF8.GetBytes("Hello World");
+
+                await sslStream.WriteAsync(bytes, 0, bytes.Length);
+                var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
+            }
+        }
+
         private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
 
         private async Task Echo(Task<SecurePipeConnection> connectionTask)

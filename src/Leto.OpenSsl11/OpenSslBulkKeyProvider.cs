@@ -24,8 +24,7 @@ namespace Leto.OpenSsl11
 
         public T GetCipher<T>(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage) where T : AeadBulkCipher, new()
         {
-            var (keySize, ivSize, bulkCipher) = GetCipher(cipherType);
-            var key = new OpenSslBulkCipherKey(bulkCipher, keyStorage, keySize, ivSize, 16);
+            var key = GetCipherKey(cipherType, keyStorage);
             var returnValue = new T();
             returnValue.SetKey(key);
             return returnValue;
@@ -40,6 +39,13 @@ namespace Leto.OpenSsl11
         {
             var (keySize, ivSize, cipher) = GetCipher(cipherType);
             return (keySize, ivSize);
+        }
+
+        public IBulkCipherKey GetCipherKey(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage)
+        {
+            var (keySize, ivSize, bulkCipher) = GetCipher(cipherType);
+            var key = new OpenSslBulkCipherKey(bulkCipher, keyStorage, keySize, ivSize, 16);
+            return key;
         }
     }
 }

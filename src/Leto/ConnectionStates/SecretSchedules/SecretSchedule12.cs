@@ -80,7 +80,7 @@ namespace Leto.ConnectionStates.SecretSchedules
                 return false;
             }
             _state.CipherSuite = _cryptoProvider.CipherSuites.GetCipherSuite(info.CipherSuite);
-            buffer.CopyTo(_masterSecret.Span);
+            advanceBuffer.ToSpan().CopyTo(_masterSecret.Span);
             return true;
         }
 

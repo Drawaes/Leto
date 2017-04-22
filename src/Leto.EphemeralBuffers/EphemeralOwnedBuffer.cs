@@ -36,10 +36,7 @@ namespace Leto.EphemeralBuffers
 
         public unsafe override Span<byte> Span => new Span<byte>((void*)PoolPointer, _length);
 
-        internal void Lease()
-        {
-            _disposed = false;
-        }
+        internal void Lease() => _disposed = false;
 
         protected unsafe override void Dispose(bool disposing)
         {

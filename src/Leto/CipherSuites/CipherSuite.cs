@@ -3,6 +3,7 @@ using Leto.Hashes;
 using Leto.KeyExchanges;
 using System;
 using System.Linq;
+using Leto.BulkCiphers;
 
 namespace Leto.CipherSuites
 {
@@ -16,7 +17,7 @@ namespace Leto.CipherSuites
         private BulkCipherType _bulkCipherType;
         private CertificateType? _certificateType;
 
-        public CipherSuite(ushort code, string name,BulkCipherType cipherType, HashType hashType, KeyExchangeType? keyExchange, CertificateType? certificateType, params TlsVersion[] supportedVersions)
+        public CipherSuite(ushort code, string name, BulkCipherType cipherType, HashType hashType, KeyExchangeType? keyExchange, CertificateType? certificateType, params TlsVersion[] supportedVersions)
         {
             _bulkCipherType = cipherType;
             _certificateType = certificateType;
