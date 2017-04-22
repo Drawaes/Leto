@@ -14,9 +14,6 @@ namespace Leto.EphemeralBuffers
         internal static void ThrowException(Exception ex) => throw ex;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void MemoryBufferNotEphemeral() => ThrowException(new InvalidOperationException("The buffer was not ephemeral"));
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void RequestedBufferTooLarge() => ThrowException(new InvalidOperationException("The requested buffer size is too large"));
 
         [MethodImpl(MethodImplOptions.NoInlining)]

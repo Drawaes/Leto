@@ -11,9 +11,11 @@ namespace Leto.EphemeralBuffers
     public sealed class EphemeralBufferPoolWindows : EphemeralBufferPool
     {
         private static object _lock = new object();
+        private bool _allowWorkingSetIncrease;
 
-        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount) : base(bufferSize, bufferCount)
+        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount)
         {
+            _allowWorkingSetIncrease = allowWorkingSetIncrease;
         }
 
         protected override IntPtr AllocateMemory(uint amountToAllocate)
@@ -25,7 +27,7 @@ namespace Leto.EphemeralBuffers
                 {
                     //We couldn't lock the memory
                     var error = (ExceptionHelper.WinErrors)Marshal.GetLastWin32Error();
-                    if (_allowWorkingSetOverride && error == ExceptionHelper.WinErrors.ERROR_WORKING_SET_QUOTA)
+                    if (_allowWorkingSetIncrease && error == ExceptionHelper.WinErrors.ERROR_WORKING_SET_QUOTA)
                     {
                         //We are going to try to increase the working set to allow us to lock the memory
                         lock (_lock)

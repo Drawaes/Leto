@@ -49,13 +49,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketServer", "samples\Soc
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openssl", "openssl", "{F1BAF62E-6879-4C0B-B5E2-70BA7BDCF8E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFacts", "test\CommonFacts\CommonFacts.csproj", "{D64590CC-7C22-476D-BA1A-3593D8887ECD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonFacts", "test\CommonFacts\CommonFacts.csproj", "{D64590CC-7C22-476D-BA1A-3593D8887ECD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.EphemeralBuffers", "src\Leto.EphemeralBuffers\Leto.EphemeralBuffers.csproj", "{C92CE01B-58C8-44E1-A700-AEF5D156AB08}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.EphemeralBuffers", "src\Leto.EphemeralBuffers\Leto.EphemeralBuffers.csproj", "{C92CE01B-58C8-44E1-A700-AEF5D156AB08}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "script", "script", "{89720F36-FD40-4521-BD48-33136F445D02}"
+	ProjectSection(SolutionItems) = preProject
+		script\runtests.bat = script\runtests.bat
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Leto.CryptoFacts", "test\Leto.CryptoFacts\Leto.CryptoFacts.csproj", "{406875E8-97CC-4389-8B34-51AD72D141D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.EphemeralBufferFacts", "test\Leto.EphemeralBufferFacts\Leto.EphemeralBufferFacts.csproj", "{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,10 +94,10 @@ Global
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08}.Release|Any CPU.Build.0 = Release|Any CPU
-		{406875E8-97CC-4389-8B34-51AD72D141D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{406875E8-97CC-4389-8B34-51AD72D141D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{406875E8-97CC-4389-8B34-51AD72D141D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{406875E8-97CC-4389-8B34-51AD72D141D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,6 +111,6 @@ Global
 		{4E69773F-D420-493B-899B-18EF1767BE14} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{D64590CC-7C22-476D-BA1A-3593D8887ECD} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08} = {9E09D9AE-D033-4226-9A46-2344877FF699}
-		{406875E8-97CC-4389-8B34-51AD72D141D9} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
+		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 	EndGlobalSection
 EndGlobal

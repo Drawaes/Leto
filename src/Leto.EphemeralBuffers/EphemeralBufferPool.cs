@@ -16,8 +16,7 @@ namespace Leto.EphemeralBuffers
         private readonly uint _totalAllocated;
         private int _currentAllocatedOffset;
         internal int _isDisposed;
-        protected static bool _allowWorkingSetOverride = true;
-
+                
         public EphemeralBufferPool(int bufferSize, int bufferCount)
         {
             if (bufferSize < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
@@ -36,7 +35,7 @@ namespace Leto.EphemeralBuffers
 
         internal IntPtr Pointer => _pointer;
 
-        public static EphemeralBufferPool CreateBufferPool(int bufferSize, int bufferCount)
+        public static EphemeralBufferPool CreateBufferPool(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -44,7 +43,7 @@ namespace Leto.EphemeralBuffers
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new EphemeralBufferPoolWindows(bufferSize, bufferCount);
+                return new EphemeralBufferPoolWindows(bufferSize, bufferCount, allowWorkingSetIncrease);
             }
             else
             {
