@@ -11,7 +11,7 @@ namespace Leto.EphemeralBuffers
 {
     public sealed class EphemeralBufferPoolUnix : EphemeralBufferPool
     {
-        public EphemeralBufferPoolUnix(int bufferSize, int bufferCount) : base(bufferSize, bufferCount)
+        public EphemeralBufferPoolUnix(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount, allowWorkingSetIncrease)
         {
         }
 

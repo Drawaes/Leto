@@ -16,9 +16,11 @@ namespace Leto.EphemeralBuffers
         private readonly uint _totalAllocated;
         private int _currentAllocatedOffset;
         internal int _isDisposed;
-                
-        public EphemeralBufferPool(int bufferSize, int bufferCount)
+        protected bool _allowWorkingSetIncrease;
+
+        public EphemeralBufferPool(int bufferSize, int bufferCount, bool allowWorkingSetIncrease)
         {
+            _allowWorkingSetIncrease = allowWorkingSetIncrease;
             if (bufferSize < 1) throw new ArgumentOutOfRangeException(nameof(bufferSize));
             if (bufferCount < 1) throw new ArgumentOutOfRangeException(nameof(bufferCount));
 

@@ -11,11 +11,9 @@ namespace Leto.EphemeralBuffers
     public sealed class EphemeralBufferPoolWindows : EphemeralBufferPool
     {
         private static object _lock = new object();
-        private bool _allowWorkingSetIncrease;
-
-        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount)
+        
+        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount,allowWorkingSetIncrease)
         {
-            _allowWorkingSetIncrease = allowWorkingSetIncrease;
         }
 
         protected override IntPtr AllocateMemory(uint amountToAllocate)
