@@ -71,12 +71,12 @@ namespace Leto.EphemeralBuffers
             }
             lock (_buffers)
             {
-                if (_currentAllocatedOffset >= (_totalAllocated - _bufferSize))
+                if (_currentAllocatedOffset >= _totalAllocated)
                 {
                     ExceptionHelper.OutOfAvailableBuffers();
                 }
-                _currentAllocatedOffset += _bufferSize;
                 var buffer = new EphemeralOwnedBuffer(_currentAllocatedOffset, _bufferSize, this);
+                _currentAllocatedOffset += _bufferSize;
                 return buffer;
             }
         }
