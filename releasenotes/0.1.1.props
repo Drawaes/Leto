@@ -1,0 +1,8 @@
+﻿<Project>
+  <PropertyGroup>
+    <PackageReleaseNotes>
+      * Initial Release
+      * Working set increase for windows working
+    </PackageReleaseNotes>
+  </PropertyGroup>
+</Project>

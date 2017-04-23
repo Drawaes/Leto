@@ -60,6 +60,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "script", "script", "{89720F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.EphemeralBufferFacts", "test\Leto.EphemeralBufferFacts\Leto.EphemeralBufferFacts.csproj", "{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "releasenotes", "releasenotes", "{7291308A-68A4-4CC0-92EA-B8090302D799}"
+	ProjectSection(SolutionItems) = preProject
+		releasenotes\0.1.1.props = releasenotes\0.1.1.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
