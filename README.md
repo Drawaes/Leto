@@ -3,6 +3,17 @@
 [![Coveralls](https://img.shields.io/coveralls/Drawaes/Leto.svg)](https://coveralls.io/github/Drawaes/Leto?branch=master)
 
 # Leto
+A series of libraries and packages that provide security and crypto functions.
+
+## Ephemeral Buffers
+
+1. Provide memory buffers that do not get paged to disk
+2. Memory is zeroed when returned to the pool, disposed or finialized
+3. Memory is zeroed when the pool is disposed or finialized
+4. Working set can be increased automatically (on windows only at the moment) as the virtual lock size on windows per process is my default only 2mb in size.
+
+## Managed TLS for Pipelines
+
 A interest learning exercise in producing a TLS 1.3 Library based off the experimental "Pipelines" from CoreFXLabs.
 
 Currently supports TLS 1.2 and TLS 1.3 Draft 18, Draft 19 is a WIP.
