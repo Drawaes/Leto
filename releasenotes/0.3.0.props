@@ -1,0 +1,7 @@
+﻿<Project>
+  <PropertyGroup>
+    <PackageReleaseNotes>
+      * Added NTLM/Negotiate/Kerberos Authentication
+    </PackageReleaseNotes>
+  </PropertyGroup>
+</Project>
