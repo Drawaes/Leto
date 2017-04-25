@@ -1,6 +1,5 @@
-﻿[![Build status](https://ci.appveyor.com/api/projects/status/rvpu3vfrwdbm3vgg/branch/master?svg=true)](https://ci.appveyor.com/project/Drawaes/leto)
-[![Xplat Build status](https://travis-ci.org/Drawaes/Leto.svg?branch=master)](https://travis-ci.org/Drawaes/Leto)
-[![Coveralls](https://img.shields.io/coveralls/Drawaes/Leto.svg)](https://coveralls.io/github/Drawaes/Leto?branch=master)
+[![Build status](https://ci.appveyor.com/api/projects/status/rvpu3vfrwdbm3vgg/branch/master?svg=true)](https://ci.appveyor.com/project/Drawaes/leto)
+[![codecov](https://codecov.io/gh/Drawaes/Leto/branch/master/graph/badge.svg)](https://codecov.io/gh/Drawaes/Leto)
 
 # Leto
 A series of libraries and packages that provide security and crypto functions.
