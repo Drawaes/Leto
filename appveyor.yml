@@ -32,9 +32,9 @@ after_test:
   - pip install codecov
   - codecov -f "coverage.xml"
   - dotnet build -c Release src/Leto.EphemeralBuffers
-  - dotnet build -c Release src/Leto.MiddlewareFacts
+  - dotnet build -c Release src/Leto.WindowsAuthentication
   - dotnet pack -c Release src/Leto.EphemeralBuffers --version-suffix %suffix%
-  - dotnet pack -c Release src/Leto.MiddlewareFacts --version-suffix %suffix%
+  - dotnet pack -c Release src/Leto.WindowsAuthentication --version-suffix %suffix%
 
 artifacts:
   - path: '**/*.nupkg'
