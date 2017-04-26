@@ -68,11 +68,8 @@ namespace Leto.ConnectionStates
                     case TlsVersion.Tls12:
                         connectionState = new Server12ConnectionState(_securePipe);
                         break;
-                    case TlsVersion.Tls13Draft18:
-                        connectionState = new Server13ConnectionState(_securePipe);
-                        break;
                     default:
-                        throw new NotImplementedException();
+                        throw new NotSupportedException();
                 }
                 _replaceConnectionState(connectionState);
             }
