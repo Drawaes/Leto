@@ -43,7 +43,7 @@ namespace Leto.MiddlewareFacts
         {
             public void Configure(IApplicationBuilder app)
             {
-                app.UseMiddleware<WindowsAuthenticationMiddleware>();
+                app.UseWindowsAuthentication();
                 app.Use(async (context, next) =>
                 {
                     await context.Response.WriteAsync(context.User.Identity.Name);
