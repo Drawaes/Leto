@@ -22,50 +22,9 @@ namespace Leto.OpenSsl11
             NamedGroup.x25519,
             NamedGroup.x448
         };
-        
+
         public void SetSupportedNamedGroups(params NamedGroup[] namedGroups) => _supportedNamedGroups = namedGroups.ToList();
-
-        public IKeyExchange GetKeyExchangeFromSupportedGroups(BigEndianAdvancingSpan supportedGroups)
-        {
-            supportedGroups = supportedGroups.ReadVector<ushort>();
-            while (supportedGroups.Length > 0)
-            {
-                var namedGroup = supportedGroups.Read<NamedGroup>();
-                var keyExchange = GetKeyExchange(namedGroup);
-                if (keyExchange != null) return keyExchange;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Tls 1.3 and onwards KeyExchange selection
-        /// </summary>
-        public IKeyExchange GetKeyExchange(NamedGroup namedGroup)
-        {
-            if(!_supportedNamedGroups.Contains(namedGroup))
-            {
-                return null;
-            }
-            switch (namedGroup)
-            {
-                case NamedGroup.secp256r1:
-                case NamedGroup.secp384r1:
-                case NamedGroup.secp521r1:
-                    return new OpenSslECCurveKeyExchange(namedGroup);
-                case NamedGroup.x25519:
-                case NamedGroup.x448:
-                    return new OpenSslECFunctionKeyExchange(namedGroup);
-                case NamedGroup.ffdhe2048:
-                case NamedGroup.ffdhe3072:
-                case NamedGroup.ffdhe4096:
-                case NamedGroup.ffdhe6144:
-                case NamedGroup.ffdhe8192:
-                    return new OpenSslFiniteFieldKeyExchange(namedGroup);
-                default:
-                    return null;
-            }
-        }
-
+        
         /// <summary>
         /// Heritage KeyExchange selection (pre tls 1.3)
         /// </summary>
@@ -110,26 +69,10 @@ namespace Leto.OpenSsl11
             Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.handshake_failure, "Unable to match key exchange");
             return null;
         }
-        
+
         public void Dispose()
         {
             //No resources currently to clean up
-        }
-
-        public IKeyExchange GetKeyExchange(BigEndianAdvancingSpan keyshare)
-        {
-            while (keyshare.Length > 0)
-            {
-                var key = keyshare.ReadVector<ushort>();
-                var namedGroup = key.Read<NamedGroup>();
-                var instance = GetKeyExchange(namedGroup);
-                if (instance != null)
-                {
-                    instance.SetPeerKey(key);
-                    return instance;
-                }
-            }
-            return null;
         }
     }
 }
