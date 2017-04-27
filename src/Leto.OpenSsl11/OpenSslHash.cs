@@ -18,7 +18,6 @@ namespace Leto.OpenSsl11
         }
 
         public int HashSize => _size;
-        public HashType HashType => _hashType;
 
         public void HashData(ReadOnlySpan<byte> data) => EVP_DigestUpdate(_ctx, data);
 
