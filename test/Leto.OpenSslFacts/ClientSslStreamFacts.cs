@@ -45,6 +45,7 @@ namespace Leto.OpenSslFacts
                     await sslStream.WriteAsync(bytes, 0, bytes.Length);
                     var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
                 }
+                secureConnection.Result.Dispose();
             }
         }
 
