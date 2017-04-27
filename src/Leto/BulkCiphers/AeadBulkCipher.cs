@@ -15,7 +15,6 @@ namespace Leto.BulkCiphers
         }
 
         public int Overhead => _key.TagSize;
-        public int IVSize => _key.IV.Length;
         
         public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);

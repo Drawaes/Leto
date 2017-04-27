@@ -10,7 +10,6 @@ namespace Leto.KeyExchanges
         bool HasPeerKey { get; }
         bool RequiresServerKeyExchange { get; }
         void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme);
-        void SetPeerKey(BigEndianAdvancingSpan peerKey);
         int KeyExchangeSize { get; }
         int WritePublicKey(Span<byte> keyBuffer);
         NamedGroup NamedGroup { get; }

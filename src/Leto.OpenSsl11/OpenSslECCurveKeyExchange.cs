@@ -60,16 +60,6 @@ namespace Leto.OpenSsl11
             hashProvider.HmacData(hashType, salt, secretSpan, output);
         }
         
-        public void SetPeerKey(BigEndianAdvancingSpan peerKey)
-        {
-            peerKey = peerKey.ReadVector<ushort>();
-            if (peerKey.Length != _keyExchangeSize)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
-            }
-            InternalSetPeerKey(peerKey.ToSpan());
-        }
-
         public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
             peerKey = peerKey.ReadVector<byte>();
