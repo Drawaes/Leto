@@ -14,6 +14,7 @@
     <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170420-1" />
     <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170420-1" />
     <PackageReference Include="System.IO.Pipelines.Networking.Sockets" Version="0.1.0-e170420-1" />
+    <PackageReference Include="System.Net.Security" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.3.0-beta1-build3642" />

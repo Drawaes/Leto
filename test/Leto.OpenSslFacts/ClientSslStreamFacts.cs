@@ -33,19 +33,7 @@ namespace Leto.OpenSslFacts
                     listener.CryptoProvider.KeyExchangeProvider.SetSupportedNamedGroups(supportedNamedGroups);
                 }
                 listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(suite) });
-                var loopback = new LoopbackPipeline(factory);
-                var stream = loopback.ClientPipeline.GetStream();
-                var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
-                var ignore = Echo(secureConnection);
-                using (var sslStream = new SslStream(stream, false, CertVal))
-                {
-                    await sslStream.AuthenticateAsClientAsync("localhost");
-                    var bytes = Encoding.UTF8.GetBytes("Hello World");
-
-                    await sslStream.WriteAsync(bytes, 0, bytes.Length);
-                    var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
-                }
-                secureConnection.Result.Dispose();
+                await FullConnectionSSlStreamFacts.SmallMessageFact(factory, listener);
             }
         }
 
@@ -56,36 +44,19 @@ namespace Leto.OpenSslFacts
             using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
                 listener.UseEphemeralSessionProvider();
-                await ConnectWithSslStream(factory, listener);
-                await ConnectWithSslStream(factory, listener);
+                await FullConnectionSSlStreamFacts.SmallMessageFact(factory, listener);
+                await FullConnectionSSlStreamFacts.SmallMessageFact(factory, listener);
             }
         }
-
-        private async Task ConnectWithSslStream(PipeFactory factory, OpenSslSecurePipeListener listener)
+        
+        [Fact]
+        public async Task MultiBuffer()
         {
-            var loopback = new LoopbackPipeline(factory);
-            var stream = loopback.ClientPipeline.GetStream();
-            var secureConnection = listener.CreateConnection(loopback.ServerPipeline);
-            var ignore = Echo(secureConnection);
-            using (var sslStream = new SslStream(stream, false, CertVal))
+            using (var factory = new PipeFactory())
+            using (var listener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate, factory))
             {
-                await sslStream.AuthenticateAsClientAsync("localhost");
-                var bytes = Encoding.UTF8.GetBytes("Hello World");
-
-                await sslStream.WriteAsync(bytes, 0, bytes.Length);
-                var byteCount = await sslStream.ReadAsync(bytes, 0, bytes.Length);
+                await FullConnectionSSlStreamFacts.MultiBufferFact(factory, listener);
             }
-        }
-
-        private bool CertVal(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyError) => true;
-
-        private async Task Echo(Task<SecurePipeConnection> connectionTask)
-        {
-            var connection = await connectionTask;
-            var readResult = await connection.Input.ReadAsync();
-            var writer = connection.Output.Alloc();
-            writer.Append(readResult.Buffer);
-            await writer.FlushAsync();
         }
 
         //[Fact]
