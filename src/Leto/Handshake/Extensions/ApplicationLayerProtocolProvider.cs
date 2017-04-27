@@ -49,13 +49,13 @@ namespace Leto.Handshake.Extensions
         public void WriteExtension(ref WritableBuffer writer, ApplicationLayerProtocolType negotiatedAlpn)
         {
             var buffer = GetBufferForProtocol(negotiatedAlpn);
-            writer.WriteBigEndian(negotiatedAlpn);
+            writer.WriteBigEndian(ExtensionType.application_layer_protocol_negotiation);
             writer.WriteBigEndian((byte)(buffer.Length + 1));
             writer.WriteBigEndian((byte)buffer.Length);
             writer.Write(buffer);
         }
 
-        public Span<byte> GetBufferForProtocol(ApplicationLayerProtocolType protocolType)
+        private Span<byte> GetBufferForProtocol(ApplicationLayerProtocolType protocolType)
         {
             foreach (var (proto, buffer) in _supportedProtocols)
             {
