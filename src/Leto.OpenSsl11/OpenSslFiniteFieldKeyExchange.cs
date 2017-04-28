@@ -13,7 +13,6 @@ namespace Leto.OpenSsl11
 {
     public class OpenSslFiniteFieldKeyExchange : IKeyExchange
     {
-        private bool _hasPeerKey;
         private int _keyExchangeSize;
         private NamedGroup _namedGroup;
         private DH _localKey;
@@ -52,7 +51,7 @@ namespace Leto.OpenSsl11
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
             }
             GenerateKeys(null, null);
-            InternalSetPeerKey(peerKey.ToSpan());
+            _clientBN = BN_bin2bn(peerKey.ToSpan());
         }
 
         public void SetPeerKey(BigEndianAdvancingSpan peerKey)
@@ -63,15 +62,9 @@ namespace Leto.OpenSsl11
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
             }
             GenerateKeys(null, null);
-            InternalSetPeerKey(peerKey.ToSpan());
+            _clientBN = BN_bin2bn(peerKey.ToSpan());
         }
-
-        private unsafe void InternalSetPeerKey(Span<byte> peerKey)
-        {
-            _clientBN = BN_bin2bn(peerKey);
-            _hasPeerKey = true;
-        }
-
+        
         public unsafe int WritePublicKey(Span<byte> buffer)
         {
             GenerateKeys(null, null);

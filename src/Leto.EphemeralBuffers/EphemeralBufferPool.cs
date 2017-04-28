@@ -91,6 +91,9 @@ namespace Leto.EphemeralBuffers
             {
                 Unsafe.InitBlock((void*)_pointer, 0, _totalAllocated);
                 FreeMemory(_pointer, _totalAllocated);
+            }
+            if(disposing)
+            {
                 GC.SuppressFinalize(this);
             }
         }

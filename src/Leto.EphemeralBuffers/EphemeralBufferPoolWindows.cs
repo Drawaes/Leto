@@ -54,7 +54,7 @@ namespace Leto.EphemeralBuffers
             catch
             {
                 //Attempt to free the memory we couldn't lock
-                VirtualFree(result, (UIntPtr)amountToAllocate, 0x8000);
+                VirtualFree(result, UIntPtr.Zero, 0x8000);
                 throw;
             }
         }

@@ -16,18 +16,12 @@ namespace Leto.OpenSsl11
         private ISessionProvider _sessionProvider;
 
         public OpenSslSecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
-            : base(certificate, pipeFactory)
-        {
-            _cryptoProvider = new OpenSslCryptoProvider();
-        }
-                
+            : base(certificate, pipeFactory) => _cryptoProvider = new OpenSslCryptoProvider();
+
         public override ICryptoProvider CryptoProvider => _cryptoProvider;
         public override ISessionProvider SessionProvider => _sessionProvider;
 
-        public void UseSessionProvider(ISessionProvider sessionProvider)
-        {
-            _sessionProvider = sessionProvider;
-        }
+        public void UseSessionProvider(ISessionProvider sessionProvider) => _sessionProvider = sessionProvider;
 
         public void UseEphemeralSessionProvider()
         {
