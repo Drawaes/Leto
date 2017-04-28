@@ -32,13 +32,6 @@ namespace Leto.OpenSsl11
             hashProvider.Tls12Prf(hashType, buffer.Slice(0, written), TlsConstants.Tls12.Label_MasterSecret, seed, output);
         }
 
-        public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
-        {
-            var buffer = new byte[_keyExchangeSize];
-            var written = DeriveSecret(buffer);
-            hashProvider.HmacData(hashType, salt, buffer.Slice(0, written), output);
-        }
-
         public int DeriveSecret(Span<byte> buffer)
         {
             try

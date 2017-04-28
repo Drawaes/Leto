@@ -50,15 +50,7 @@ namespace Leto.OpenSsl11
             var secretSpan = tempBuffer.Slice(0, secretSize);
             hashProvider.Tls12Prf(hashType, secretSpan, TlsConstants.Tls12.Label_MasterSecret, seed, output);
         }
-
-        public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output)
-        {
-            var tempBuffer = new byte[(_keyExchangeSize - 1) / 2];
-            var secretSize = EVP_PKEY_derive(_keyPair, _peerKey, tempBuffer);
-            var secretSpan = tempBuffer.Slice(0, secretSize);
-            hashProvider.HmacData(hashType, salt, secretSpan, output);
-        }
-        
+                
         public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
             peerKey = peerKey.ReadVector<byte>();
