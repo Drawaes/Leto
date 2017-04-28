@@ -87,10 +87,11 @@ namespace Leto.EphemeralBuffers
         {
             var disposed = 1;
             disposed = Interlocked.Exchange(ref _isDisposed, disposed);
-            if (disposed == 0)
+            if (disposed == 0 && _pointer != IntPtr.Zero)
             {
                 Unsafe.InitBlock((void*)_pointer, 0, _totalAllocated);
                 FreeMemory(_pointer, _totalAllocated);
+                _pointer = IntPtr.Zero;
             }
             if(disposing)
             {

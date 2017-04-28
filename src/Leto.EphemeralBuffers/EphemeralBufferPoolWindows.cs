@@ -7,14 +7,14 @@ namespace Leto.EphemeralBuffers
     public sealed class EphemeralBufferPoolWindows : EphemeralBufferPool
     {
         private static object _lock = new object();
-        
-        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount,allowWorkingSetIncrease)
+
+        public EphemeralBufferPoolWindows(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true) : base(bufferSize, bufferCount, allowWorkingSetIncrease)
         {
         }
 
         protected override IntPtr AllocateMemory(uint amountToAllocate)
         {
-            var result = VirtualAlloc(IntPtr.Zero,(UIntPtr) amountToAllocate, MemOptions.MEM_COMMIT | MemOptions.MEM_RESERVE, PageOptions.PAGE_READWRITE);
+            var result = VirtualAlloc(IntPtr.Zero, (UIntPtr)amountToAllocate, MemOptions.MEM_COMMIT | MemOptions.MEM_RESERVE, PageOptions.PAGE_READWRITE);
             try
             {
                 if (!VirtualLock(result, (UIntPtr)amountToAllocate))
@@ -54,7 +54,7 @@ namespace Leto.EphemeralBuffers
             catch
             {
                 //Attempt to free the memory we couldn't lock
-                VirtualFree(result, UIntPtr.Zero, 0x8000);
+                VirtualFree(result, (UIntPtr)0, 0x8000);
                 throw;
             }
         }
@@ -67,9 +67,9 @@ namespace Leto.EphemeralBuffers
 
         protected override void FreeMemory(IntPtr pointer, uint amountToAllocate)
         {
-            if (!VirtualFree(pointer, UIntPtr.Zero, 0x8000))
+            if (!VirtualFree(pointer, (UIntPtr)0, 0x8000))
             {
-                var error = (ExceptionHelper.WinErrors) Marshal.GetLastWin32Error();
+                var error = (ExceptionHelper.WinErrors)Marshal.GetLastWin32Error();
                 ExceptionHelper.UnableToFreeMemory(error);
             }
         }
