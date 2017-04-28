@@ -34,7 +34,7 @@ namespace Leto.ConnectionStates
         public TlsVersion RecordVersion => TlsVersion.Tls1;
         public AeadBulkCipher ReadKey => null;
         public AeadBulkCipher WriteKey => null;
-        public bool HandshakeComplete => throw new NotImplementedException();
+        public bool HandshakeComplete => false;
 
         public ServerUnknownVersionState(Action<IConnectionState> replaceConnectionState, SecurePipeConnection securePipe)
         {

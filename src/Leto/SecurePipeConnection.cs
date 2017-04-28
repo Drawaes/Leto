@@ -98,6 +98,7 @@ namespace Leto
                         if(!alert.ReceivedFromPeer)
                         {
                             await RecordHandler.WriteAlert(alert);
+                            _handshakeComplete.TrySetResult(this);
                         }
                         throw;
                     }

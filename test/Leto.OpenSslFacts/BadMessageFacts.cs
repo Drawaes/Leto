@@ -16,5 +16,14 @@ namespace Leto.OpenSslFacts
                 await CommonFacts.BadHelloFacts.SendHelloWithExtraTrailingBytes(listener);
             }
         }
+
+        [Fact]
+        public async Task StartWithApplicationRecord()
+        {
+            using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            {
+                await CommonFacts.BadHelloFacts.StartWithApplicationRecord(listener);
+            }
+        }
     }
 }
