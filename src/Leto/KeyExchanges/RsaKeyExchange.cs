@@ -21,7 +21,7 @@ namespace Leto.KeyExchanges
             hashProvider.Tls12Prf(hashType, _premasterSecret, TlsConstants.Tls12.Label_MasterSecret, seed, output);
 
         public void DeriveSecret(IHashProvider hashProvider, HashType hashType, ReadOnlySpan<byte> salt, Span<byte> output) =>
-            throw new NotImplementedException();
+            throw new NotSupportedException();
 
         public void Dispose()
         {
@@ -36,6 +36,6 @@ namespace Leto.KeyExchanges
             _premasterSecret = peerKey.ToArray();
         }
         public void SetPeerKey(BigEndianAdvancingSpan peerKey) => throw new NotSupportedException();
-        public int WritePublicKey(Span<byte> keyBuffer) => throw new NotImplementedException();
+        public int WritePublicKey(Span<byte> keyBuffer) => throw new NotSupportedException();
     }
 }

@@ -7,7 +7,6 @@ namespace Leto.KeyExchanges
 {
     public interface IKeyExchange : IDisposable
     {
-        bool HasPeerKey { get; }
         bool RequiresServerKeyExchange { get; }
         void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme);
         int KeyExchangeSize { get; }

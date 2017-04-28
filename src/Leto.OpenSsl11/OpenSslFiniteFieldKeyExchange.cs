@@ -21,7 +21,6 @@ namespace Leto.OpenSsl11
 
         public OpenSslFiniteFieldKeyExchange(NamedGroup namedGroup) => _namedGroup = namedGroup;
 
-        public bool HasPeerKey => _hasPeerKey;
         public bool RequiresServerKeyExchange => true;
         public int KeyExchangeSize => _keyExchangeSize;
         public NamedGroup NamedGroup => _namedGroup;

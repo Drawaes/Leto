@@ -25,7 +25,6 @@ namespace Leto.OpenSsl11
             _ctx = EVP_CIPHER_CTX_new();
         }
 
-        public Buffer<byte> Key => _key;
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
 

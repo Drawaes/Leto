@@ -39,7 +39,6 @@ namespace Leto.OpenSsl11
             }
         }
 
-        public bool HasPeerKey => _peerKey.IsValid;
         public int KeyExchangeSize => _keyExchangeSize;
         public NamedGroup NamedGroup => _namedGroup;
         public bool RequiresServerKeyExchange => true;
