@@ -18,8 +18,9 @@ namespace Leto
         private PipeFactory _pipeFactory;
         private bool _factoryOwned;
 
-        protected SecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null)
+        protected SecurePipeListener(ICertificate certificate, PipeFactory pipeFactory = null, SecurePipeListenerConfig config = null)
         {
+            config = config ?? new SecurePipeListenerConfig();
             if (pipeFactory == null)
             {
                 _factoryOwned = true;
@@ -29,7 +30,7 @@ namespace Leto
             {
                 _pipeFactory = pipeFactory;
             }
-            _secretPool = new SecretSchedulePool();
+            _secretPool = new SecretSchedulePool(config.MaxInFightHandshakes, config.MaxInFlightConnections);
             _certificateList.AddCertificate(certificate);
             _alpnProvider = new ApplicationLayerProtocolProvider(true, ApplicationLayerProtocolType.Http1_1);
             _secureRenegotiationProvider = new SecureRenegotiationProvider();

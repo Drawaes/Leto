@@ -170,7 +170,8 @@ namespace Leto.ConnectionStates
                             _secretSchedule.DisposeStore();
                             break;
                         default:
-                            throw new NotImplementedException();
+                            Alerts.AlertException.ThrowUnexpectedMessage(messageType);
+                            return false;
                     }
                 }
             }

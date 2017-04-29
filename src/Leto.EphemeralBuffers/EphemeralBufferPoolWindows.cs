@@ -42,6 +42,7 @@ namespace Leto.EphemeralBuffers
                             //We should have increase the working set so we can attempt to lock again
                             if (VirtualLock(result, (UIntPtr)amountToAllocate))
                             {
+                                _workingSetIncreased = true;
                                 return result;
                             }
                             error = (ExceptionHelper.WinErrors)Marshal.GetLastWin32Error();

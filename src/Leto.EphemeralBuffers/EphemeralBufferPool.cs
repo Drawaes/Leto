@@ -17,6 +17,7 @@ namespace Leto.EphemeralBuffers
         private int _currentAllocatedOffset;
         internal int _isDisposed;
         protected bool _allowWorkingSetIncrease;
+        protected bool _workingSetIncreased;
 
         public EphemeralBufferPool(int bufferSize, int bufferCount, bool allowWorkingSetIncrease)
         {
@@ -36,6 +37,7 @@ namespace Leto.EphemeralBuffers
         }
 
         internal IntPtr Pointer => _pointer;
+        public bool WorkingSetIncreased => _workingSetIncreased;
 
         public static EphemeralBufferPool CreateBufferPool(int bufferSize, int bufferCount, bool allowWorkingSetIncrease = true)
         {

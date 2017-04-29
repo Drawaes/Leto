@@ -14,17 +14,15 @@ namespace Leto.ConnectionStates.SecretSchedules
         const int MaxKeySize = 32 + 12;
         const int Session_MaxHashBlocks = 6;
         const int Session_MaxKeys = 2;
-        const int MaxInflightSessions = 5000;
-        public const int MaxInflightConnections = 20000;
         const int Session_Size = MaxHashSize * Session_MaxHashBlocks;
 
         private BufferPool _ephemeralSessionPool;
         private BufferPool _ephemeralKeysPool;
 
-        public SecretSchedulePool()
+        public SecretSchedulePool(int maxInflightHandshakes, int maxInflightConnections)
         {
-            _ephemeralSessionPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(Session_Size, MaxInflightSessions);
-            _ephemeralKeysPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(MaxKeySize, MaxInflightConnections * 2);
+            _ephemeralSessionPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(Session_Size, maxInflightHandshakes);
+            _ephemeralKeysPool = EphemeralBuffers.EphemeralBufferPool.CreateBufferPool(MaxKeySize, maxInflightConnections * 2);
         }
 
         public OwnedBuffer<byte> GetSecretBuffer()
