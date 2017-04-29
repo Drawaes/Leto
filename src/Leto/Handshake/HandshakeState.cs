@@ -2,6 +2,7 @@
 {
     public enum HandshakeState
     {
+        WaitingForClientHello,
         WaitingForClientKeyExchange,
         WaitingForChangeCipherSpec,
         WaitingForClientFinished,

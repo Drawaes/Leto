@@ -8,6 +8,8 @@ using Leto.KeyExchanges;
 using Leto.RecordLayer;
 using System;
 using Leto.Internal;
+using Leto.Alerts;
+using System.Linq;
 
 namespace Leto.ConnectionStates
 {
@@ -17,11 +19,15 @@ namespace Leto.ConnectionStates
         protected AeadBulkCipher _writeKey;
         protected ICryptoProvider _cryptoProvider;
         protected bool _secureRenegotiation;
-        protected HandshakeState _state;
+        protected HandshakeState _state = HandshakeState.WaitingForClientHello;
         protected ICertificate _certificate;
         protected SignatureScheme _signatureScheme;
         protected ApplicationLayerProtocolType _negotiatedAlpn;
         protected string _hostName;
+        private static TlsVersion[] s_supportedVersions =
+        {
+            TlsVersion.Tls12,
+        };
         private SecurePipeConnection _secureConnection;
 
         public ConnectionState(SecurePipeConnection secureConnection)
@@ -93,6 +99,50 @@ namespace Leto.ConnectionStates
                 Console.WriteLine($"Exception disposing key {ex}");
                 throw;
             }
+        }
+
+        protected TlsVersion GetVersion(ref ClientHelloParser helloParser)
+        {
+            if (helloParser.Extensions == null)
+            {
+                return MatchVersionOrThrow(helloParser.TlsVersion);
+            }
+            var (ext, extBuffer) = helloParser.Extensions.SingleOrDefault((ex) => ex.Item1 == ExtensionType.supported_versions);
+            if (extBuffer.Length > 0)
+            {
+                var versionVector = extBuffer.ReadVector<byte>();
+                while (versionVector.Length > 0)
+                {
+                    var foundVersion = versionVector.Read<TlsVersion>();
+                    if (MatchVersion(foundVersion))
+                    {
+                        return foundVersion;
+                    }
+                }
+            }
+            return MatchVersionOrThrow(helloParser.TlsVersion);
+        }
+
+        private TlsVersion MatchVersionOrThrow(TlsVersion tlsVersion)
+        {
+            if (!MatchVersion(tlsVersion))
+            {
+                AlertException.ThrowAlert(AlertLevel.Fatal,
+                    AlertDescription.protocol_version, $"Could not match {tlsVersion} to any supported version");
+            }
+            return tlsVersion;
+        }
+
+        protected bool MatchVersion(TlsVersion tlsVersion)
+        {
+            foreach (var version in s_supportedVersions)
+            {
+                if (version == tlsVersion)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void Dispose() => Dispose(true);

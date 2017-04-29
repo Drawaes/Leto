@@ -25,7 +25,8 @@ namespace Leto
             _connection = connection;
             _handshakeInput = pipeFactory.Create();
             _handshakeOutput = pipeFactory.Create();
-            _state = new ServerUnknownVersionState((state) => _state = state, this);
+            _state = new Server12ConnectionState(this);
+            RecordHandler = new GeneralRecordHandler(_state, TlsVersion.Tls12, _connection.Output);
             var ignore = ReadingLoop();
         }
 
@@ -93,9 +94,9 @@ namespace Leto
                             }
                         }
                     }
-                    catch(Alerts.AlertException alert)
+                    catch (Alerts.AlertException alert)
                     {
-                        if(!alert.ReceivedFromPeer)
+                        if (!alert.ReceivedFromPeer)
                         {
                             await RecordHandler.WriteAlert(alert);
                             _handshakeComplete.TrySetResult(this);
@@ -123,7 +124,7 @@ namespace Leto
                 while (true)
                 {
                     var result = await _inputPipe.Reader.ReadAsync();
-                    if(result.Buffer.IsEmpty && result.IsCompleted)
+                    if (result.Buffer.IsEmpty && result.IsCompleted)
                     {
                         await RecordHandler.WriteAlert(new Alerts.AlertException(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.close_notify, "Application closed connection"));
                         return;

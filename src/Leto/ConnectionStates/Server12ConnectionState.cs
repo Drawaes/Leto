@@ -46,7 +46,6 @@ namespace Leto.ConnectionStates
             _certificate = SecureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
             ParseExtensions(ref clientHello);
-            SecureConnection.RecordHandler = new GeneralRecordHandler(this, TlsVersion.Tls12, SecureConnection.Connection.Output);
             if (_abbreviatedHandshake)
             {
                 SendFirstFlightAbbreviated(clientHello);
@@ -55,7 +54,6 @@ namespace Leto.ConnectionStates
             {
                 SendFirstFlightFull();
             }
-            ProcessHandshake();
             return true;
         }
 
@@ -128,6 +126,14 @@ namespace Leto.ConnectionStates
                     Span<byte> span;
                     switch (messageType)
                     {
+                        case HandshakeType.client_hello when _state == HandshakeState.WaitingForClientHello:
+                            var helloParser = new ClientHelloParser(messageBuffer);
+                            var version = GetVersion(ref helloParser);
+                            if(version != TlsVersion.Tls12)
+                            {
+                                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.protocol_version, "Invalid protocol version");
+                            }
+                            return HandleClientHello(ref helloParser);
                         case HandshakeType.client_key_exchange when _state == HandshakeState.WaitingForClientKeyExchange:
                             span = messageBuffer.ToSpan();
                             HandshakeHash.HashData(span);

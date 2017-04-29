@@ -7,16 +7,13 @@ using System.IO.Pipelines;
 
 namespace Leto.ConnectionStates
 {
-    public interface IConnectionState : IDisposable
+    public interface IConnectionState : IDisposable, IKeyPair
     {
         CipherSuite CipherSuite { get; }
         void ChangeCipherSpec();
-        bool HandleClientHello(ref ClientHelloParser clientHelloParser);
         bool ProcessHandshake();
         IHash HandshakeHash { get; }
         TlsVersion RecordVersion { get; }
-        AeadBulkCipher ReadKey { get; }
-        AeadBulkCipher WriteKey { get; }
         bool HandshakeComplete { get; }
     }
 }
