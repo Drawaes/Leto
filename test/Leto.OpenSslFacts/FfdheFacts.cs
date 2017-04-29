@@ -104,13 +104,13 @@ namespace Leto.OpenSslFacts
             {
                 var pipe = factory.Create();
                 var write = pipe.Writer.Alloc();
-                write.WriteBigEndian((ushort)peerKey.Length);
+                write.WriteBigEndian((byte)peerKey.Length);
                 write.Write(peerKey);
                 await write.FlushAsync();
                 var reader = await pipe.Reader.ReadAsync();
                 var instance = new OpenSsl11.OpenSslFiniteFieldKeyExchange(group);
                 instance.GenerateKeys(privKey, publicKey);
-                instance.SetPeerKey(new Internal.BigEndianAdvancingSpan(reader.Buffer.ToSpan()));
+                instance.SetPeerKey(new Internal.BigEndianAdvancingSpan(reader.Buffer.ToSpan()), null, Certificates.SignatureScheme.none);
                 var buffer = new byte[instance.KeyExchangeSize];
                 var size = instance.DeriveSecret(buffer);
                 var derived = buffer.Slice(0, size);

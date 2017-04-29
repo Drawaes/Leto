@@ -53,18 +53,7 @@ namespace Leto.OpenSsl11
             GenerateKeys(null, null);
             _clientBN = BN_bin2bn(peerKey.ToSpan());
         }
-
-        public void SetPeerKey(BigEndianAdvancingSpan peerKey)
-        {
-            peerKey = peerKey.ReadVector<ushort>();
-            if (peerKey.Length != _keyExchangeSize)
-            {
-                Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
-            }
-            GenerateKeys(null, null);
-            _clientBN = BN_bin2bn(peerKey.ToSpan());
-        }
-        
+                
         public unsafe int WritePublicKey(Span<byte> buffer)
         {
             GenerateKeys(null, null);
