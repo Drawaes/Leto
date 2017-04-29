@@ -18,7 +18,7 @@ before_test:
   - dotnet build -c Debug LETO.Sln
   
 test_script:
-  - xunit.console test\Leto.OpenSslFacts\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1\Leto.OpenSslFacts.dll
+  - xunit.console test\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1\Leto.OpenSslFacts.dll
 #  - dotnet test -d:log.txt test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
 #  - dotnet test -d:log.txt test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
 #  - dotnet test -d:log.txt test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj
