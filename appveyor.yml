@@ -5,14 +5,15 @@ environment:
   COVERALLS_REPO_TOKEN:
     secure: Vr7nMCBV2ywKPHGfXVodS22SWHbkqGJJHMeEAEskFMTZ4Q+P0XFxJlmToEwfvxsv   
 
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 before_test:
   - ECHO %APPVEYOR_REPO_COMMIT_MESSAGE%
   - dotnet --info
   - VersionNumber.bat
   - Set Path=%Path%;C:\projects\leto\openssl
+  - Set MSBUILDDISABLENODEREUSE=1
   - dotnet restore Leto.sln
   - dotnet build -c Debug LETO.Sln
   
