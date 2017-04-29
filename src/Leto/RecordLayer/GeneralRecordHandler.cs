@@ -21,10 +21,6 @@ namespace Leto.RecordLayer
             _currentRecordType = header.RecordType;
             if (_connection?.ReadKey == null)
             {
-#if TRACE
-                var output = buffer.Slice(0, header.Length + _minimumMessageSize).ToArray();
-                System.IO.File.WriteAllText("C:\\code\\messageDump.txt", BitConverter.ToString(output));
-#endif
                 messageBuffer = buffer.Slice(_minimumMessageSize, header.Length);
                 buffer = buffer.Slice(messageBuffer.End);
             }
