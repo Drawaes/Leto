@@ -43,6 +43,10 @@ namespace Leto.Internal
 
         public BigEndianAdvancingSpan TakeSlice(int length)
         {
+            if(length > _internalSpan.Length)
+            {
+                Alerts.AlertException.ThrowInvalidLength(length, _internalSpan.Length);
+            }
             var returnValue = _internalSpan.Slice(0, length);
             _internalSpan = _internalSpan.Slice(length);
             return new BigEndianAdvancingSpan(returnValue);

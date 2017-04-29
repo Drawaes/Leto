@@ -27,6 +27,15 @@ namespace Leto.OpenSslFacts
         }
 
         [Fact]
+        public async Task InvalidVectorSizeForExtensions()
+        {
+            using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            {
+                await CommonFacts.BadHelloFacts.InvalidVectorSizeForExtensions(listener);
+            }
+        }
+
+        [Fact]
         public async Task StartWithApplicationRecord()
         {
             using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))

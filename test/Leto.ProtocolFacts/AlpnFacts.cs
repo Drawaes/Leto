@@ -45,7 +45,7 @@ namespace Leto.ProtocolFacts
         public void InvalidVectorLength()
         {
             var provider = new ApplicationLayerProtocolProvider(false, ApplicationLayerProtocolType.Spdy2);
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Assert.Throws<Alerts.AlertException>(() =>
             {
                 var selectedProtocol = provider.ProcessExtension(new BigEndianAdvancingSpan(_badVectorLength));
             });
