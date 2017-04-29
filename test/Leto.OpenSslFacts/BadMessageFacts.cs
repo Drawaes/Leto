@@ -8,14 +8,14 @@ namespace Leto.OpenSslFacts
 {
     public class BadMessageFacts
     {
-        //[Fact]
-        //public async Task ClientHelloWithExtraBytes()
-        //{
-        //    using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
-        //    {
-        //        await CommonFacts.BadHelloFacts.SendHelloWithExtraTrailingBytes(listener);
-        //    }
-        //}
+        [Fact]
+        public async Task ClientHelloWithExtraBytes()
+        {
+            using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            {
+                await CommonFacts.BadHelloFacts.SendHelloWithExtraTrailingBytes(listener);
+            }
+        }
 
         [Fact]
         public async Task StartWithApplicationRecord()
