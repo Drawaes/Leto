@@ -38,5 +38,6 @@
         bad_certificate_hash_value = 114,
         unknown_psk_identity = 115,
         certificate_required = 116,
+        no_application_protocol = 120,
     }
 }

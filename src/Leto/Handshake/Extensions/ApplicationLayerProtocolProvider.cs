@@ -82,6 +82,7 @@ namespace Leto.Handshake.Extensions
 
         private ApplicationLayerProtocolType ProcessExtensionServerOrder(BigEndianAdvancingSpan span)
         {
+            var originalSpan = span.ToSpan();
             span = span.ReadVector<ushort>();
             foreach (var (alpn, buffer) in _supportedProtocols)
             {
@@ -95,7 +96,7 @@ namespace Leto.Handshake.Extensions
                     }
                 }
             }
-            Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Unable to negotiate a protocol");
+            Alerts.AlertException.ThrowApplicationProtocol(originalSpan.ToArray());
             return ApplicationLayerProtocolType.None;
         }
 

@@ -15,6 +15,7 @@ namespace Leto.OpenSsl11
     {
         private CipherSuiteProvider _cipherSuites = new CipherSuiteProvider(new CipherSuite[]
         {
+            PredefinedCipherSuites.TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256,
             PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
             PredefinedCipherSuites.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             PredefinedCipherSuites.RSA_AES_128_GCM_SHA256,
@@ -38,6 +39,6 @@ namespace Leto.OpenSsl11
         public CipherSuiteProvider CipherSuites => _cipherSuites;
         public IHashProvider HashProvider => _hashProvider;
         public IBulkCipherKeyProvider BulkCipherProvider => _bulkCipherProvider;
-        public void FillWithRandom(Span<byte> span) => RAND_bytes(span);
+        public virtual void FillWithRandom(Span<byte> span) => RAND_bytes(span);
     }
 }

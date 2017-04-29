@@ -68,6 +68,7 @@ namespace Leto.OpenSslFacts
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
             using (var secureListener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
             {
+                secureListener.CryptoProvider = new TestingCryptoProvider();
                 listener.OnConnection(async (conn) =>
                 {
                     var pipe = await secureListener.CreateConnection(conn);

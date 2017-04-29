@@ -101,7 +101,7 @@ namespace Leto
                             await RecordHandler.WriteAlert(alert);
                             _handshakeComplete.TrySetResult(this);
                         }
-                        throw;
+                        return;
                     }
                     finally
                     {

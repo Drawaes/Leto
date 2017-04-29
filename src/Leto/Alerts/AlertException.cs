@@ -42,5 +42,7 @@ namespace Leto.Alerts
             ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, $"Invalid vector length expected {expected} actual {actual}");
         public static void ThrowDecode(string message) =>
             ThrowAlert(AlertLevel.Fatal, AlertDescription.decode_error, message);
+        public static void ThrowApplicationProtocol(byte[] protocol) =>
+            ThrowAlert(AlertLevel.Fatal, AlertDescription.no_application_protocol, $"Invalid protocol detected {BitConverter.ToString(protocol)}");
     }
 }

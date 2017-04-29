@@ -35,7 +35,7 @@ namespace Leto
             _secureRenegotiationProvider = new SecureRenegotiationProvider();
         }
 
-        public abstract ICryptoProvider CryptoProvider { get; }
+        public abstract ICryptoProvider CryptoProvider { get; set; }
         public abstract ISessionProvider SessionProvider { get; }
         public ApplicationLayerProtocolProvider AlpnProvider => _alpnProvider;
         public SecureRenegotiationProvider SecureRenegotiationProvider => _secureRenegotiationProvider;

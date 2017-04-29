@@ -25,5 +25,14 @@ namespace Leto.OpenSslFacts
                 await CommonFacts.BadHelloFacts.StartWithApplicationRecord(listener);
             }
         }
+
+        [Fact]
+        public async Task UnknownAlpn()
+        {
+            using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            {
+                await CommonFacts.BadHelloFacts.UnknownALPN(listener);
+            }
+        }
     }
 }
