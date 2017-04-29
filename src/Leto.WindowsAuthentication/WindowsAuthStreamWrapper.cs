@@ -17,7 +17,7 @@ namespace Leto.WindowsAuthentication
         }
 
         public override bool CanRead => _innerStream.CanRead;
-        public override bool CanSeek => _innerStream.CanSeek;
+        public override bool CanSeek => false;
         public override bool CanWrite => _innerStream.CanWrite;
         public override long Length => _innerStream.Length;
         public override long Position { get => _innerStream.Position; set => _innerStream.Position = value; }
