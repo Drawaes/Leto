@@ -18,10 +18,11 @@ before_test:
   - dotnet build -c Debug LETO.Sln
   
 test_script:
-  - dotnet test -d:log.txt test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
-  - dotnet test -d:log.txt test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
-  - dotnet test -d:log.txt test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj
-  - dotnet test -d:log.txt test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj
+  - xunit.console test\Leto.OpenSslFacts\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1\Leto.OpenSslFacts.dll
+#  - dotnet test -d:log.txt test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
+#  - dotnet test -d:log.txt test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
+#  - dotnet test -d:log.txt test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj
+#  - dotnet test -d:log.txt test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj
   
 after_test:
   # Build and pack source
