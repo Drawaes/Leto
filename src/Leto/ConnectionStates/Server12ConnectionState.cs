@@ -87,7 +87,7 @@ namespace Leto.ConnectionStates
         }
 
         private void WriteCertificates() => this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
-                CertificateWriter.WriteCertificates(buffer, _certificate, false), HandshakeType.certificate);
+                CertificateWriter.WriteCertificates(buffer, _certificate), HandshakeType.certificate);
 
         private void ProcessSessionTicket(Span<byte> buffer)
         {

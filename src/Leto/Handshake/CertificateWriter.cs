@@ -7,17 +7,13 @@ namespace Leto.Handshake
 {
     public static class CertificateWriter
     {
-        public static WritableBuffer WriteCertificates(WritableBuffer buffer, ICertificate certificate, bool includeExtension)
+        public static WritableBuffer WriteCertificates(WritableBuffer buffer, ICertificate certificate)
         {
             void WriteCertificate(ref WritableBuffer writer, Span<byte> certData)
             {
                 writer.Ensure(3);
                 writer.WriteBigEndian((UInt24)certData.Length);
                 writer.Write(certData);
-                if(includeExtension)
-                {
-                    writer.WriteBigEndian<ushort>(0);
-                }
             }
             BufferExtensions.WriteVector<UInt24>(ref buffer, (ref WritableBuffer writer) =>
             {
