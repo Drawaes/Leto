@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170420-1" />
     <PackageReference Include="xunit" Version="2.3.0-beta1-build3642" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta1-build3642" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta1-build1309" />
     <PackageReference Include="coveralls.io" Version="1.3.4" />
     <PackageReference Include="OpenCover" Version="4.6.519" />

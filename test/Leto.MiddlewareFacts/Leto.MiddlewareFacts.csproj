@@ -14,10 +14,11 @@
   <PackageReference Include="System.Net.Http" Version="4.3.1" />
   <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0-rc2-build1249" />
   <PackageReference Include="OpenCover" Version="4.6.519" />
-  <PackageReference Include="xunit" Version="2.2.0-rc2-build3523" />
+  <PackageReference Include="xunit" Version="2.3.0-beta1-build3642" />
   <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.1.1" />
   <PackageReference Include="Microsoft.AspNetCore.Http" Version="1.1.0" />
   <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="1.1.0" />
+  <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta1-build3642" />
   </ItemGroup>
   
   <ItemGroup>
