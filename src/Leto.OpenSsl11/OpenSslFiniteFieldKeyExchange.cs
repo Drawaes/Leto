@@ -45,7 +45,7 @@ namespace Leto.OpenSsl11
 
         public void SetPeerKey(BigEndianAdvancingSpan peerKey, ICertificate certificate, SignatureScheme scheme)
         {
-            peerKey = peerKey.ReadVector<byte>();
+            var throwaway = peerKey.Read<byte>();
             if (peerKey.Length != _keyExchangeSize)
             {
                 Alerts.AlertException.ThrowAlert(Alerts.AlertLevel.Fatal, Alerts.AlertDescription.decode_error, "Peer key is bad");
