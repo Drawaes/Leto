@@ -18,6 +18,15 @@ namespace Leto.OpenSslFacts
         }
 
         [Fact]
+        public async Task WrongInitialHandshakeMessage()
+        {
+            using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            {
+                await CommonFacts.BadHelloFacts.WrongInitialHandshakeMessage(listener);
+            }
+        }
+
+        [Fact]
         public async Task StartWithApplicationRecord()
         {
             using (var listener = new OpenSsl11.OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
