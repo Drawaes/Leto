@@ -18,17 +18,17 @@ before_test:
   - dotnet build -c Debug LETO.Sln
   
 test_script:
-  - dotnet xunit test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
-  - dotnet xunit test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
-  - dotnet xunit test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj
-  - dotnet xunit test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj
+  - dotnet test test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj 
+  - dotnet test test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj
+  - dotnet test test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj
+  - dotnet test test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj
   
 after_test:
   # Build and pack source
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:xunit -c Debug test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.ProtocolFacts\bin\Debug\netcoreapp1.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]*"')
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:xunit -c Debug test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:xunit -c Debug test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.EphemeralBufferFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:xunit -c Debug test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.MiddlewareFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:test -c Debug test/Leto.ProtocolFacts/Leto.ProtocolFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.ProtocolFacts\bin\Debug\netcoreapp1.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]*"')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:test -c Debug test/Leto.OpenSslFacts/Leto.OpenSslFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.OpenSslFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:test -c Debug test/Leto.EphemeralBufferFacts/Leto.EphemeralBufferFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.EphemeralBufferFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:"dotnet.exe" "-targetargs:test -c Debug test/Leto.MiddlewareFacts/Leto.MiddlewareFacts.csproj" -mergeoutput -mergebyhash -hideskipped:All -searchdirs:"..\test\Leto.MiddlewareFacts\bin\Debug\netcoreapp1.1;" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Leto*]* -[*Facts*]* "')
   - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\coveralls.io'))[0].FullName + '\tools\coveralls.net.exe' + ' --opencover coverage.xml')
   - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
   - pip install codecov
