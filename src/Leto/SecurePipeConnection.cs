@@ -1,4 +1,4 @@
-﻿using Leto.ConnectionStates;
+using Leto.ConnectionStates;
 using Leto.RecordLayer;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
@@ -82,12 +82,11 @@ namespace Leto
                                     _state.ChangeCipherSpec();
                                     break;
                                 case RecordType.Alert:
-                                    var alertSpan = messageBuffer.ToSpan();
-                                    if (alertSpan[1] == 0)
+                                    if (buffer.ReadBigEndian<byte>() == 0)
                                     {
                                         return;
                                     }
-                                    throw new Alerts.AlertException(alertSpan);
+                                    throw new Alerts.AlertException(buffer);
                                 default:
                                     Alerts.AlertException.ThrowUnexpectedMessage(RecordHandler.CurrentRecordType);
                                     break;

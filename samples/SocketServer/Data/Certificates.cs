@@ -1,5 +1,4 @@
-﻿using Leto.Certificates;
-using Microsoft.DotNet.PlatformAbstractions;
+using Leto.Certificates;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,6 @@ namespace SocketServer.Data
 {
     public static class Certificates
     {
-        public static ICertificate RSACertificate = new ManagedCertificate(new X509Certificate2(Path.Combine(ApplicationEnvironment.ApplicationBasePath, @"Data/TestCert.pfx"), "Test123t"), null);
+        public static ICertificate RSACertificate = new ManagedCertificate(new X509Certificate2(@"./Data/TestCert.pfx", "Test123t"), null);
     }
 }

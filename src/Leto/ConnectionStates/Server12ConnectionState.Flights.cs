@@ -1,4 +1,4 @@
-﻿using Leto.Handshake;
+using Leto.Handshake;
 using Leto.KeyExchanges;
 using Leto.RecordLayer;
 using System;
@@ -36,7 +36,7 @@ namespace Leto.ConnectionStates
 
         private void SendSecondFlight()
         {
-            WriteServerHello(new Span<byte>());
+            WriteServerHello(default(Span<byte>));
             WriteCertificates();
             WriteServerKeyExchange();
             WriteServerHelloDone();
@@ -54,11 +54,11 @@ namespace Leto.ConnectionStates
         }
 
         private void WriteServerHello(Span<byte> sessionId) =>
-            this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerHelloContent(ref buffer, sessionId), HandshakeType.server_hello);
+            this.WriteHandshakeFrame((ref WritableBuffer buffer) => WriteServerHelloContent(ref buffer), HandshakeType.server_hello);
 
-        private void WriteServerHelloContent(ref WritableBuffer writer, Span<byte> sessionId)
+        private void WriteServerHelloContent(ref WritableBuffer writer)//, Span<byte> sessionId)
         {
-            var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + sessionId.Length;
+            var fixedSize = TlsConstants.RandomLength + sizeof(TlsVersion) + 2 * sizeof(byte) + sizeof(ushort) + 0;// sessionId.Length;
             writer.Ensure(fixedSize);
             var span = new BigEndianAdvancingSpan(writer.Buffer.Span);
             span.Write(TlsVersion.Tls12);
@@ -66,8 +66,8 @@ namespace Leto.ConnectionStates
 
             //We don't support session id's instead resumption is supported through tickets
             //If we are using a ticket the client will want us to respond with the same id
-            span.Write((byte)sessionId.Length);
-            span.CopyFrom(sessionId);
+            span.Write((byte)0);// sessionId.Length);
+            //span.CopyFrom(sessionId);
 
             span.Write(CipherSuite.Code);
             //We don't support compression at the TLS level as it is prone to attacks

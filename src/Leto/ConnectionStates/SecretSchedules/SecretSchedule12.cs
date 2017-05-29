@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using Leto.Hashes;
 using static Leto.BufferExtensions;
@@ -137,10 +137,10 @@ namespace Leto.ConnectionStates.SecretSchedules
             var clientBuffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
             var serverBuffer = _state.SecureConnection.Listener.SecretSchedulePool.GetKeyBuffer();
 
-            material.Slice(0, keySize).CopyTo(clientBuffer.Span);
-            material.Slice(keySize * 2, 4).CopyTo(clientBuffer.Span.Slice(keySize));
-            material.Slice(keySize, keySize).CopyTo(serverBuffer.Span);
-            material.Slice(keySize * 2 + 4, 4).CopyTo(serverBuffer.Span.Slice(keySize));
+            material.Slice(0, keySize).CopyTo(clientBuffer.AsSpan());
+            material.Slice(keySize * 2, 4).CopyTo(clientBuffer.AsSpan().Slice(keySize));
+            material.Slice(keySize, keySize).CopyTo(serverBuffer.AsSpan());
+            material.Slice(keySize * 2 + 4, 4).CopyTo(serverBuffer.AsSpan().Slice(keySize));
             var clientKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, clientBuffer);
             var serverKey = _cryptoProvider.BulkCipherProvider.GetCipher<AeadTls12BulkCipher>(_state.CipherSuite.BulkCipherType, serverBuffer);
             return (clientKey, serverKey);

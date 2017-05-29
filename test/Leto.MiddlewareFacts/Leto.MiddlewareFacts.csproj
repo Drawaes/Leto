@@ -2,26 +2,19 @@
   
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Leto.MiddlewareFacts</AssemblyName>
     <PackageId>Leto.MiddlewareFacts</PackageId>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <ItemGroup>
-  <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="1.1.0" />
-  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0-preview-20170210-02" />
-  <PackageReference Include="System.Net.Http" Version="4.3.1" />
-  <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0-rc2-build1249" />
+  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170517-02" />
+  <PackageReference Include="System.Net.Http" Version="4.3.2" />
+  <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta2-build1317" />
   <PackageReference Include="OpenCover" Version="4.6.519" />
-  <PackageReference Include="xunit" Version="2.3.0-beta1-build3642" />
-  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.1.1" />
-  <PackageReference Include="Microsoft.AspNetCore.Http" Version="1.1.0" />
-  <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="1.1.0" />
+  <PackageReference Include="xunit" Version="2.3.0-beta2-build3683" />
+  <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0-preview1-final" />
   <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta1-build3642" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Leto.WindowsAuthentication\Leto.WindowsAuthentication.csproj" />
   </ItemGroup>
 </Project>

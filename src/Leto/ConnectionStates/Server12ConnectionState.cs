@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO.Pipelines;
 using Leto.Handshake;
 using Leto.RecordLayer;
@@ -71,8 +71,6 @@ namespace Leto.ConnectionStates
                 case ExtensionType.pre_shared_key:
                 case ExtensionType.key_share:
                     break;
-                default:
-                    throw new NotImplementedException();
             }
         }
 

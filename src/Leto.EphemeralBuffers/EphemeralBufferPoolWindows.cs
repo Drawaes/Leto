@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using static Leto.EphemeralBuffers.Interop.Kernel32;
 
@@ -68,7 +68,7 @@ namespace Leto.EphemeralBuffers
 
         protected override void FreeMemory(IntPtr pointer, uint amountToAllocate)
         {
-            if (!VirtualFree(pointer, (UIntPtr)0, 0x8000))
+            if(!VirtualFree(pointer, (UIntPtr)0, 0x8000))
             {
                 var error = (ExceptionHelper.WinErrors)Marshal.GetLastWin32Error();
                 ExceptionHelper.UnableToFreeMemory(error);

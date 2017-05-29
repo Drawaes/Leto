@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Binary;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -71,17 +71,23 @@ namespace CommonFacts
                 writer.Write(messageToSend);
                 await writer.FlushAsync();
                 var result = await connection.ClientPipeline.Input.ReadAsync();
-                var returnMessage = new Span<byte>(result.Buffer.ToArray());
-                var header = returnMessage.Read<Leto.RecordLayer.RecordHeader>();
-                               
-                Assert.Equal(Leto.RecordLayer.RecordType.Alert, header.RecordType);
-
-                var exception = new Leto.Alerts.AlertException(returnMessage.Slice(Marshal.SizeOf<Leto.RecordLayer.RecordHeader>()));
+                var exception = CheckForAlert(result.Buffer);
                 connection.ClientPipeline.Input.Advance(result.Buffer.End);
                 var closeConnection = await secureConnection;
                 closeConnection.Dispose();
                 throw exception;
             }
+        }
+
+        private static Leto.Alerts.AlertException CheckForAlert(ReadableBuffer result)
+        {
+            var returnMessage = new Span<byte>(result.ToArray());
+            var header = returnMessage.Read<Leto.RecordLayer.RecordHeader>();
+
+            Assert.Equal(Leto.RecordLayer.RecordType.Alert, header.RecordType);
+
+            var exception = new Leto.Alerts.AlertException(returnMessage.Slice(Marshal.SizeOf<Leto.RecordLayer.RecordHeader>()));
+            return exception;
         }
     }
 }

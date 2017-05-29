@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Binary;
 using System.Buffers;
 using System.Collections.Generic;
@@ -39,9 +39,9 @@ namespace Leto.OpenSsl11.Sessions
         private IBulkCipherKey GenerateKey(OwnedBuffer<byte> buffer)
         {
             //We use the crypto random function to fill the key buffer initially
-            _cryptoProvider.FillWithRandom(buffer.Span);
+            _cryptoProvider.FillWithRandom(buffer.AsSpan());
             //We use the Hkdf expand method to make it harder to exploit any weakness in the random number generator
-            _cryptoProvider.HashProvider.HkdfExpandLabel(HashType.SHA512, buffer.Span, _ticketLabel, new ReadOnlySpan<byte>(), buffer.Span);
+            _cryptoProvider.HashProvider.HkdfExpandLabel(HashType.SHA512, buffer.AsSpan(), _ticketLabel, new ReadOnlySpan<byte>(), buffer.AsSpan());
             return _cryptoProvider.BulkCipherProvider.GetCipherKey(_cipherType, buffer);
         }
 

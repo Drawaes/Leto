@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -110,12 +110,19 @@ namespace Leto.OpenSslFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var instance = new OpenSsl11.OpenSslFiniteFieldKeyExchange(group);
                 instance.GenerateKeys(privKey, publicKey);
-                instance.SetPeerKey(new Internal.BigEndianAdvancingSpan(reader.Buffer.ToSpan()), null, Certificates.SignatureScheme.none);
+                SetPeerKey(reader, instance);
                 var buffer = new byte[instance.KeyExchangeSize];
                 var size = instance.DeriveSecret(buffer);
-                var derived = buffer.Slice(0, size);
-                Assert.Equal<byte>(secret, derived.ToArray());
+                TestSecret(secret, buffer, size);
             }
         }
+
+        private static void TestSecret(byte[] secret, byte[] buffer, int size)
+        {
+            var derived = buffer.Slice(0, size);
+            Assert.Equal<byte>(secret, derived.ToArray());
+        }
+
+        private static void SetPeerKey(ReadResult reader, OpenSsl11.OpenSslFiniteFieldKeyExchange instance) => instance.SetPeerKey(new Internal.BigEndianAdvancingSpan(reader.Buffer.ToSpan()), null, Certificates.SignatureScheme.none);
     }
 }

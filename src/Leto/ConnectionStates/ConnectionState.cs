@@ -1,4 +1,4 @@
-﻿using Leto.BulkCiphers;
+using Leto.BulkCiphers;
 using Leto.Certificates;
 using Leto.CipherSuites;
 using Leto.Handshake;
@@ -47,34 +47,33 @@ namespace Leto.ConnectionStates
 
         protected void ParseExtensions(ref ClientHelloParser clientHello)
         {
-            foreach (var (extensionType, buffer) in clientHello.Extensions)
+            var extSpan = new BigEndianAdvancingSpan(clientHello.ExtensionsSpan);
+            while (extSpan.Length > 0)
             {
-                switch (extensionType)
+                var extType = extSpan.Read<ExtensionType>();
+                var extBuffer = extSpan.ReadVector<ushort>();
+                switch (extType)
                 {
                     case ExtensionType.application_layer_protocol_negotiation:
-                        _negotiatedAlpn = SecureConnection.Listener.AlpnProvider.ProcessExtension(buffer);
-                        break;
-                    case ExtensionType.renegotiation_info:
-                        SecureConnection.Listener.SecureRenegotiationProvider.ProcessExtension(buffer);
-                        _secureRenegotiation = true;
+                        _negotiatedAlpn = SecureConnection.Listener.AlpnProvider.ProcessExtension(extBuffer);
                         break;
                     case ExtensionType.server_name:
-                        _hostName = SecureConnection.Listener.HostNameProvider.ProcessHostNameExtension(buffer);
+                        _hostName = SecureConnection.Listener.HostNameProvider.ProcessHostNameExtension(extBuffer);
                         break;
                     case ExtensionType.signature_algorithms:
                         if (_certificate == null)
                         {
-                            (_certificate, _signatureScheme) = SecureConnection.Listener.CertificateList.GetCertificate(buffer);
+                            (_certificate, _signatureScheme) = SecureConnection.Listener.CertificateList.GetCertificate(extBuffer);
                         }
                         else
                         {
-                            _signatureScheme = _certificate.SelectAlgorithm(buffer);
+                            _signatureScheme = _certificate.SelectAlgorithm(extBuffer);
                         }
                         break;
                     case ExtensionType.supported_versions:
                         break;
                     default:
-                        HandleExtension(extensionType, buffer);
+                        HandleExtension(extType, extBuffer);
                         break;
                 }
             }
@@ -84,42 +83,17 @@ namespace Leto.ConnectionStates
 
         protected virtual void Dispose(bool disposing)
         {
-            try
-            {
-                HandshakeHash?.Dispose();
-                HandshakeHash = null;
-                _writeKey?.Dispose();
-                _writeKey = null;
-                _readKey?.Dispose();
-                _readKey = null;
-                GC.SuppressFinalize(this);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception disposing key {ex}");
-                throw;
-            }
+            HandshakeHash?.Dispose();
+            HandshakeHash = null;
+            _writeKey?.Dispose();
+            _writeKey = null;
+            _readKey?.Dispose();
+            _readKey = null;
+            GC.SuppressFinalize(this);
         }
 
         protected TlsVersion GetVersion(ref ClientHelloParser helloParser)
         {
-            if (helloParser.Extensions == null)
-            {
-                return MatchVersionOrThrow(helloParser.TlsVersion);
-            }
-            var (ext, extBuffer) = helloParser.Extensions.SingleOrDefault((ex) => ex.Item1 == ExtensionType.supported_versions);
-            if (extBuffer.Length > 0)
-            {
-                var versionVector = extBuffer.ReadVector<byte>();
-                while (versionVector.Length > 0)
-                {
-                    var foundVersion = versionVector.Read<TlsVersion>();
-                    if (MatchVersion(foundVersion))
-                    {
-                        return foundVersion;
-                    }
-                }
-            }
             return MatchVersionOrThrow(helloParser.TlsVersion);
         }
 

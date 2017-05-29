@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,9 +54,14 @@ namespace CommonFacts
                 var reader = await pipe.Reader.ReadAsync();
                 var buffer = reader.Buffer;
                 cipher.Decrypt(ref buffer, RecordType.Handshake, TlsVersion.Tls12);
-                var readerSpan = buffer.ToSpan();
-                Assert.Equal(s_clientFinishedDecrypted, readerSpan.ToArray());
+                AssertResult(buffer);
             }
+        }
+
+        private static void AssertResult(ReadableBuffer buffer)
+        {
+            var readerSpan = buffer.ToSpan();
+            Assert.Equal(s_clientFinishedDecrypted, readerSpan.ToArray());
         }
 
         private static AeadBulkCipher SetIVAndKey(IBulkCipherKeyProvider provider)

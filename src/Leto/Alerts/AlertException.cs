@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using Leto.Internal;
 
@@ -11,6 +12,12 @@ namespace Leto.Alerts
         {
             Level = alertLevel;
             Description = description;
+        }
+
+        public AlertException(ReadableBuffer buffer)
+            :this(buffer.ToSpan())
+        {
+
         }
 
         public AlertException(Span<byte> alertSpan)

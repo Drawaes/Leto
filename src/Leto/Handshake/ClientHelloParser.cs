@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;
@@ -14,8 +14,8 @@ namespace Leto.Handshake
         private Span<byte> _sessionId;
         private BigEndianAdvancingSpan _cipherSuite;
         private Span<byte> _compressionMethods;
-        private List<(ExtensionType, BigEndianAdvancingSpan)> _extensions;
         private Span<byte> _originalMessage;
+        private Span<byte> _extensionSpan;
 
         public ClientHelloParser(ReadableBuffer buffer)
         {
@@ -27,25 +27,16 @@ namespace Leto.Handshake
             _sessionId = span.ReadVector<byte>().ToSpan();
             _cipherSuite = span.ReadVector<ushort>();
             _compressionMethods = span.ReadVector<byte>().ToSpan();
+            
             if (span.Length == 0)
             {
-                _extensions = null;
                 return;
             }
-            _extensions = new List<(ExtensionType, BigEndianAdvancingSpan)>();
-            var extensionSpan = span.ReadVector<ushort>();
+
+            _extensionSpan = span.ReadVector<ushort>().ToSpan();
             if (span.Length > 0)
             {
                 ThrowBytesLeftOver();
-            }
-            while (extensionSpan.Length > 0)
-            {
-                var type = extensionSpan.Read<ExtensionType>();
-                var extSpan = extensionSpan.ReadVector<ushort>();
-                if (Enum.IsDefined(typeof(ExtensionType), type))
-                {
-                    _extensions.Add((type, extSpan));
-                }
             }
         }
 
@@ -54,9 +45,10 @@ namespace Leto.Handshake
 
         public TlsVersion TlsVersion => _tlsVersion;
         public Span<byte> ClientRandom => _clientRandom;
-        public List<(ExtensionType, BigEndianAdvancingSpan)> Extensions => _extensions;
         public BigEndianAdvancingSpan CipherSuites => _cipherSuite;
         public Span<byte> OriginalMessage => _originalMessage;
         public Span<byte> SessionId => _sessionId;
+        public Span<byte> ExtensionsSpan => _extensionSpan;
+
     }
 }

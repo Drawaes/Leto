@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -34,32 +34,46 @@ namespace Leto.EphemeralBuffers
 
         public override int Length => _length;
 
-        public unsafe override Span<byte> Span => new Span<byte>((void*)PoolPointer, _length);
+        public override bool IsDisposed => _disposed;
+
+        public override bool IsRetained => false;
 
         internal void Lease() => _disposed = false;
 
         protected unsafe override void Dispose(bool disposing)
         {
             _disposed = true;
-            base.Dispose(disposing);
-            //Run the dispose logic before we return to the pool to stop a race
             if (System.Threading.Volatile.Read(ref _pool._isDisposed) == 0)
             {
                 Unsafe.InitBlock((void*)(_pool.Pointer + _offset), 0, (uint)Length);
                 _pool.Return(this);
             }
         }
+                
+        public unsafe override Span<byte> AsSpan(int index, int length)
+        {
+            return new Span<byte>((void*)(_pool.Pointer + _offset + index),length);
+        }
 
-        protected override bool TryGetArrayInternal(out ArraySegment<byte> buffer)
+        public override BufferHandle Pin(int index = 0)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool TryGetArray(out ArraySegment<byte> buffer)
         {
             buffer = default(ArraySegment<byte>);
             return false;
         }
 
-        protected override unsafe bool TryGetPointerInternal(out void* pointer)
+        public override void Retain()
         {
-            pointer = (void*)(_pool.Pointer + _offset);
-            return true;
+            throw new NotImplementedException();
+        }
+
+        public override void Release()
+        {
+            throw new NotImplementedException();
         }
     }
 }
