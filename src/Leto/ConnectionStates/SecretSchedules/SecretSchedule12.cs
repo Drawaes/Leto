@@ -67,9 +67,9 @@ namespace Leto.ConnectionStates.SecretSchedules
             _state.KeyExchange = null;
         }
 
-        public bool ReadSessionTicket(Span<byte> buffer)
+        public bool ReadSessionTicket(Internal.BigEndianAdvancingSpan buffer)
         {
-            var advanceBuffer = Sessions.ProcessSessionTicket(new Internal.BigEndianAdvancingSpan(buffer));
+            var advanceBuffer = Sessions.ProcessSessionTicket(buffer);
             if (advanceBuffer.Length == 0)
             {
                 return false;

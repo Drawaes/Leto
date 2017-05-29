@@ -45,42 +45,6 @@ namespace Leto.ConnectionStates
         public bool HandshakeComplete => _state == HandshakeState.HandshakeCompleted;
         internal RecordHandler RecordHandler => SecureConnection.RecordHandler;
 
-        protected void ParseExtensions(ref ClientHelloParser clientHello)
-        {
-            var extSpan = new BigEndianAdvancingSpan(clientHello.ExtensionsSpan);
-            while (extSpan.Length > 0)
-            {
-                var extType = extSpan.Read<ExtensionType>();
-                var extBuffer = extSpan.ReadVector<ushort>();
-                switch (extType)
-                {
-                    case ExtensionType.application_layer_protocol_negotiation:
-                        _negotiatedAlpn = SecureConnection.Listener.AlpnProvider.ProcessExtension(extBuffer);
-                        break;
-                    case ExtensionType.server_name:
-                        _hostName = SecureConnection.Listener.HostNameProvider.ProcessHostNameExtension(extBuffer);
-                        break;
-                    case ExtensionType.signature_algorithms:
-                        if (_certificate == null)
-                        {
-                            (_certificate, _signatureScheme) = SecureConnection.Listener.CertificateList.GetCertificate(extBuffer);
-                        }
-                        else
-                        {
-                            _signatureScheme = _certificate.SelectAlgorithm(extBuffer);
-                        }
-                        break;
-                    case ExtensionType.supported_versions:
-                        break;
-                    default:
-                        HandleExtension(extType, extBuffer);
-                        break;
-                }
-            }
-        }
-
-        protected abstract void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer);
-
         protected virtual void Dispose(bool disposing)
         {
             HandshakeHash?.Dispose();

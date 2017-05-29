@@ -45,7 +45,22 @@ namespace Leto.ConnectionStates
             HandshakeHash.HashData(clientHello.OriginalMessage);
             _certificate = SecureConnection.Listener.CertificateList.GetCertificate(null, CipherSuite.CertificateType.Value);
             _secretSchedule.SetClientRandom(clientHello.ClientRandom);
-            ParseExtensions(ref clientHello);
+            _negotiatedAlpn = clientHello.NegotiatedAlpn;
+            _hostName = clientHello.HostName;
+            KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, clientHello.SupportedGroups);
+            if (_certificate == null)
+            {
+                (_certificate, _signatureScheme) = SecureConnection.Listener.CertificateList.GetCertificate(clientHello.SignatureAlgos);
+            }
+            else
+            {
+                _signatureScheme = _certificate.SelectAlgorithm(clientHello.SignatureAlgos);
+            }
+            if(clientHello.SessionTicket.Length > 0)
+            {
+                ProcessSessionTicket(clientHello.SessionTicket);
+            }
+            
             if (_abbreviatedHandshake)
             {
                 SendFirstFlightAbbreviated(clientHello);
@@ -57,22 +72,6 @@ namespace Leto.ConnectionStates
             return true;
         }
 
-        protected override void HandleExtension(ExtensionType extensionType, BigEndianAdvancingSpan buffer)
-        {
-            switch (extensionType)
-            {
-                case ExtensionType.supported_groups:
-                    KeyExchange = _cryptoProvider.KeyExchangeProvider.GetKeyExchange(CipherSuite.KeyExchange, buffer);
-                    break;
-                case ExtensionType.SessionTicket:
-                    ProcessSessionTicket(buffer.ToSpan());
-                    break;
-                case ExtensionType.psk_key_exchange_modes:
-                case ExtensionType.pre_shared_key:
-                case ExtensionType.key_share:
-                    break;
-            }
-        }
 
         private void WriteChangeCipherSpec()
         {
@@ -85,7 +84,7 @@ namespace Leto.ConnectionStates
         private void WriteCertificates() => this.WriteHandshakeFrame((ref WritableBuffer buffer) =>
                 CertificateWriter.WriteCertificates(buffer, _certificate), HandshakeType.certificate);
 
-        private void ProcessSessionTicket(Span<byte> buffer)
+        private void ProcessSessionTicket(BigEndianAdvancingSpan buffer)
         {
             if (SecureConnection.Listener.SessionProvider == null)
             {
@@ -125,7 +124,7 @@ namespace Leto.ConnectionStates
                     switch (messageType)
                     {
                         case HandshakeType.client_hello when _state == HandshakeState.WaitingForClientHello:
-                            var helloParser = new ClientHelloParser(messageBuffer);
+                            var helloParser = new ClientHelloParser(messageBuffer, SecureConnection);
                             var version = GetVersion(ref helloParser);
                             if(version != TlsVersion.Tls12)
                             {
