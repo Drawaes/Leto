@@ -1,1 +1,1 @@
-openssl s_client -connect localhost:443 -cipher ECDHE-RSA-AES128-GCM-SHA256 -debug -state -msg -tls1_2 -msgfile messages.txt -alpn "UnknownProtocol"
+openssl s_client -connect localhost:443 -cipher ECDHE-ECDSA-AES256-GCM-SHA384 -debug -state -msg -tls1_2 -msgfile messages.txt 

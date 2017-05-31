@@ -1,1 +1,0 @@
- openssl s_client -tls1_3 -msg -debug -connect localhost:443

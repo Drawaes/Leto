@@ -21,9 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7904A9D2-4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{68DDD23B-403A-40D7-B508-FDFBDFE4A03B}"
 	ProjectSection(SolutionItems) = preProject
-		data\secp384r1-key.pem = data\secp384r1-key.pem
-		data\secp384r1.pem = data\secp384r1.pem
-		data\server.pem = data\server.pem
+		data\certificate.pfx = data\certificate.pfx
 		data\TestCert.pfx = data\TestCert.pfx
 	EndProjectSection
 EndProject

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Leto.Hashes;
@@ -115,6 +115,12 @@ namespace Leto.Certificates
             if (_certificateType == CertificateType.rsa)
             {
                 var result = _rsaPrivateKey.SignData(message.ToArray(), GetHashName(scheme), GetPaddingMode(scheme));
+                result.CopyTo(output);
+                return result.Length;
+            }
+            else if(_certificateType == CertificateType.ecdsa)
+            {
+                var result = _ecdsaPrivateKey.SignData(message.ToArray(), GetHashName(scheme));
                 result.CopyTo(output);
                 return result.Length;
             }

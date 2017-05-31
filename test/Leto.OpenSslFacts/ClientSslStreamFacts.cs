@@ -1,4 +1,4 @@
-﻿using Leto.OpenSsl11;
+using Leto.OpenSsl11;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
@@ -37,6 +37,18 @@ namespace Leto.OpenSslFacts
             }
         }
 
+
+        [Fact]
+        public async Task HandshakeCompletesWithEcdsa()
+        {
+            using (var factory = new PipeFactory())
+            using (var listener = new OpenSslSecurePipeListener(Data.Certificates.ECDSACertificate, factory))
+            {
+                listener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384) });
+                await FullConnectionSSlStreamFacts.SmallMessageFact(factory, listener);
+            }
+        }
+
         [Fact]
         public async Task EphemeralSessionProvider()
         {
@@ -59,16 +71,18 @@ namespace Leto.OpenSslFacts
             }
         }
 
-        //[Fact]
+        [Fact]
         public void SocketTest()
         {
             var readData = string.Empty;
             var wait = new System.Threading.ManualResetEvent(false);
             using (var factory = new PipeFactory())
             using (var listener = new System.IO.Pipelines.Networking.Sockets.SocketListener())
-            using (var secureListener = new OpenSslSecurePipeListener(Data.Certificates.RSACertificate))
+            using (var secureListener = new OpenSslSecurePipeListener(Data.Certificates.ECDSACertificate))
             {
+                
                 secureListener.CryptoProvider = new TestingCryptoProvider();
+                secureListener.CryptoProvider.CipherSuites.SetCipherSuites(new CipherSuites.CipherSuite[] { CipherSuites.PredefinedCipherSuites.GetSuiteByName(CipherSuites.PredefinedCipherSuites.PredefinedSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384) });
                 listener.OnConnection(async (conn) =>
                 {
                     var pipe = await secureListener.CreateConnection(conn);

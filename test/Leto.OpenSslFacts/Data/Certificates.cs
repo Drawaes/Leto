@@ -1,4 +1,4 @@
-﻿using Leto.Certificates;
+using Leto.Certificates;
 using Microsoft.DotNet.PlatformAbstractions;
 using System;
 using System.Collections.Generic;
@@ -11,5 +11,6 @@ namespace Leto.OpenSslFacts.Data
     public static class Certificates
     {
         public static ICertificate RSACertificate = new ManagedCertificate(new X509Certificate2(Path.Combine(ApplicationEnvironment.ApplicationBasePath, @"Data/TestCert.pfx"), "Test123t"), null);
+        public static ICertificate ECDSACertificate = new ManagedCertificate(new X509Certificate2(Path.Combine(ApplicationEnvironment.ApplicationBasePath, @"Data/Certificate.pfx"), "Test1234t"), null);
     }
 }
