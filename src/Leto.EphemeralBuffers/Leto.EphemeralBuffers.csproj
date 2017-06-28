@@ -5,7 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170527-2" />
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170627-8" />
   </ItemGroup>
 
 </Project>
