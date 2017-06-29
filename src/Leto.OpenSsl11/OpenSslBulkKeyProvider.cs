@@ -41,7 +41,7 @@ namespace Leto.OpenSsl11
             return (keySize, ivSize);
         }
 
-        public IBulkCipherKey GetCipherKey(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage)
+        public ISymmetricalCipher GetCipherKey(BulkCipherType cipherType, OwnedBuffer<byte> keyStorage)
         {
             var (keySize, ivSize, bulkCipher) = GetCipher(cipherType);
             var key = new OpenSslBulkCipherKey(bulkCipher, keyStorage, keySize, ivSize, 16);

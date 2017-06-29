@@ -10,6 +10,5 @@
     <Copyright>Tim Seaward</Copyright>
     <Authors>Tim Seaward</Authors>
     <PackageProjectUrl>https://github.com/Drawaes/Leto</PackageProjectUrl>
-    <DebugType>Full</DebugType>
   </PropertyGroup>
 </Project>

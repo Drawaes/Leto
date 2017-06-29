@@ -1,4 +1,4 @@
-﻿using Leto.BulkCiphers;
+using Leto.BulkCiphers;
 using Leto.Internal;
 using System;
 using System.Buffers;
@@ -6,7 +6,7 @@ using static Leto.OpenSsl11.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {
-    public sealed class OpenSslBulkCipherKey : IBulkCipherKey
+    public sealed class OpenSslBulkCipherKey : ISymmetricalCipher
     {
         private EVP_CIPHER_CTX _ctx;
         private Buffer<byte> _key;

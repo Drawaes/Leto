@@ -8,7 +8,7 @@ namespace Leto.BulkCiphers
     {
         protected const int AdditionalInfoHeaderSize = 13;
         protected ulong _sequenceNumber;
-        protected IBulkCipherKey _key;
+        protected ISymmetricalCipher _key;
 
         public AeadBulkCipher()
         {
@@ -19,7 +19,7 @@ namespace Leto.BulkCiphers
         public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion);
-        public void SetKey(IBulkCipherKey key) => _key = key;
+        public void SetKey(ISymmetricalCipher key) => _key = key;
         public virtual void IncrementSequence() => _sequenceNumber++;
         
         protected void WriteTag(ref WritableBuffer writer)

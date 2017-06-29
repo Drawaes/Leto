@@ -176,7 +176,7 @@ namespace Leto.Certificates
                 case SignatureScheme.rsa_pss_sha512:
                     return RSASignaturePadding.Pss;
                 default:
-                    throw new NotImplementedException();
+                    throw new NotSupportedException();
             }
         }
     }

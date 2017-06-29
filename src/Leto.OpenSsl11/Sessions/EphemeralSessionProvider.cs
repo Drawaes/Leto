@@ -17,7 +17,7 @@ namespace Leto.OpenSsl11.Sessions
         private TimeSpan _maxTicketAge = TimeSpan.FromDays(1);
         private static readonly byte[] _ticketLabel = Encoding.ASCII.GetBytes("Ephemeral Ticket Generation");
         private ICryptoProvider _cryptoProvider;
-        private IBulkCipherKey _key;
+        private ISymmetricalCipher _key;
         private BulkCipherType _cipherType;
         private Guid _keyGuid;
         private long _nounceCounter;
@@ -36,7 +36,7 @@ namespace Leto.OpenSsl11.Sessions
         /// Here we generate the key from random data, then we will use the TLS 1.3 Expand function to ensure that
         /// if there is a weakness in our randoms it is harder to reverse
         /// </summary>
-        private IBulkCipherKey GenerateKey(OwnedBuffer<byte> buffer)
+        private ISymmetricalCipher GenerateKey(OwnedBuffer<byte> buffer)
         {
             //We use the crypto random function to fill the key buffer initially
             _cryptoProvider.FillWithRandom(buffer.AsSpan());

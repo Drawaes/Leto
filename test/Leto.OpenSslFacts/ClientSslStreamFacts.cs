@@ -96,16 +96,16 @@ namespace Leto.OpenSslFacts
                 });
                 listener.Start(new IPEndPoint(IPAddress.Any, 443));
 
-                var process = new Process();
-                process.StartInfo.WorkingDirectory = @"..\..\..\..\..\external\nss\";
-                process.StartInfo.FileName = @"..\..\..\..\..\external\nss\RunTest.bat";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.Start();
-                var output = process.StandardOutput.ReadToEnd();
-                var out2 = process.StandardError.ReadToEnd();
+                //var process = new Process();
+                //process.StartInfo.WorkingDirectory = @"..\..\..\..\..\external\nss\";
+                //process.StartInfo.FileName = @"..\..\..\..\..\external\nss\RunTest.bat";
+                //process.StartInfo.RedirectStandardOutput = true;
+                //process.StartInfo.RedirectStandardError = true;
+                //process.Start();
+                //var output = process.StandardOutput.ReadToEnd();
+                //var out2 = process.StandardError.ReadToEnd();
                 wait.WaitOne();
-                process.Kill();
+                //process.Kill();
                 Assert.Equal("", readData);
             }
         }

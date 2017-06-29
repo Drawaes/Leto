@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Buffers;
 
 namespace Leto.BulkCiphers
 {
-    public interface IBulkCipherKey : IDisposable
+    public interface ISymmetricalCipher : IDisposable
     {
         Buffer<byte> IV { get; }
         int TagSize { get; }
