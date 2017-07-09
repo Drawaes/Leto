@@ -1,0 +1,88 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO.Pipelines;
+using System.Text;
+using System.Text.Formatting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
+using Microsoft.Extensions.Primitives;
+
+namespace SocketServer
+{
+    public class ResponseHeaderDictionary : IHeaderDictionary
+    {
+        private static readonly DateHeaderValueManager _dateHeaderValueManager = new DateHeaderValueManager();
+        private static readonly byte[] _serverHeaderBytes = Encoding.UTF8.GetBytes("\r\nServer: Pipelines");
+        private static readonly byte[] _chunkedHeaderBytes = Encoding.UTF8.GetBytes("\r\nTransfer-Encoding: chunked");
+
+        private static readonly byte[] _headersStartBytes = Encoding.UTF8.GetBytes("\r\n");
+        private static readonly byte[] _headersSeperatorBytes = Encoding.UTF8.GetBytes(": ");
+        private static readonly byte[] _headersEndBytes = Encoding.UTF8.GetBytes("\r\n\r\n");
+
+        private readonly HeaderDictionary _headers = new HeaderDictionary();
+
+        public StringValues this[string key]
+        {
+            get => _headers[key];
+
+            set => _headers[key] = value;
+        }
+
+        public int Count => _headers.Count;
+
+        public bool IsReadOnly => false;
+
+        public ICollection<string> Keys => _headers.Keys;
+
+        public ICollection<StringValues> Values => _headers.Values;
+
+        public long? ContentLength { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public void Add(KeyValuePair<string, StringValues> item) => _headers.Add(item);
+
+        public void Add(string key, StringValues value) => _headers.Add(key, value);
+
+        public void Clear() => _headers.Clear();
+
+        public bool Contains(KeyValuePair<string, StringValues> item) => _headers.Contains(item);
+
+        public bool ContainsKey(string key) => _headers.ContainsKey(key);
+
+        public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) => _headers.CopyTo(array, arrayIndex);
+
+        public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator() => _headers.GetEnumerator();
+
+        public bool Remove(KeyValuePair<string, StringValues> item) => _headers.Remove(item);
+
+        public bool Remove(string key) => _headers.Remove(key);
+
+        public bool TryGetValue(string key, out StringValues value) => _headers.TryGetValue(key, out value);
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void CopyTo(bool chunk, WritableBuffer buffer)
+        {
+            foreach (var header in _headers)
+            {
+                buffer.Write(_headersStartBytes);
+                buffer.Append(header.Key, SymbolTable.InvariantUtf8);
+                buffer.Write(_headersSeperatorBytes);
+                buffer.Append(header.Value.ToString(), SymbolTable.InvariantUtf8);
+            }
+
+            if (chunk)
+            {
+                buffer.Write(_chunkedHeaderBytes);
+            }
+
+            buffer.Write(_serverHeaderBytes);
+            var date = _dateHeaderValueManager.GetDateHeaderValues().Bytes;
+            buffer.Write(date);
+
+            buffer.Write(_headersEndBytes);
+        }
+
+        public void Reset() => _headers.Clear();
+    }
+}
