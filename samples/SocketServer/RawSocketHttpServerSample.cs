@@ -11,6 +11,12 @@ namespace SocketServer
 {
     public class RawSocketHttpServerSample : RawHttpServerSampleBase
     {
+        public RawSocketHttpServerSample(string filename)
+            :base(filename)
+        {
+
+        }
+
         public SocketListener Listener { get; private set; }
 
         private PipeFactory _factory = new PipeFactory();

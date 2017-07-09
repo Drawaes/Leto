@@ -11,6 +11,16 @@ namespace SocketServer
 {
     public abstract class RawHttpServerSampleBase //: ISample
     {
+        private byte[] _outputContent;
+        private string _contentLength;
+
+        public RawHttpServerSampleBase(string filename)
+        {
+            _outputContent = File.ReadAllBytes(filename);
+            _contentLength = $"\r\nContent-Length: {_outputContent.Length}";
+        }
+
+
         public async Task Run(IPAddress address)
         {
             Console.WriteLine($"Listening on port 5000");
@@ -67,10 +77,10 @@ namespace SocketServer
                     var output = connection.Output.Alloc();
                     var formatter = new OutputFormatter<WritableBuffer>(output, SymbolTable.InvariantUtf8);
                     formatter.Append("HTTP/1.1 200 OK");
-                    formatter.Append("\r\nContent-Length: 13");
+                    formatter.Append(_contentLength);
                     formatter.Append("\r\nContent-Type: text/plain");
                     formatter.Append("\r\n\r\n");
-                    formatter.Append("Hello, World!");
+                    output.Write(_outputContent);
                     await output.FlushAsync();
 
                     httpParser.Reset();

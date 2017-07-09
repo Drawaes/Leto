@@ -11,6 +11,12 @@ namespace SocketServer
 {
     public class RawSocketLeto : RawHttpServerSampleBase
     {
+        public RawSocketLeto(string filename)
+            :base(filename)
+        {
+
+        }
+
         public SocketListener Listener { get; private set; }
 
         private Leto.OpenSsl11.OpenSslSecurePipeListener _secure;

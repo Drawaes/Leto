@@ -12,6 +12,12 @@ namespace SocketServer
 {
     public class RawSocketSslStream : RawHttpServerSampleBase
     {
+        public RawSocketSslStream(string filename)
+            :base(filename)
+        {
+
+        }
+
         public SocketListener Listener { get; private set; }
 
         private PipeFactory _factory = new PipeFactory();

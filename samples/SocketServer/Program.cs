@@ -12,21 +12,21 @@ namespace SocketServer
         {
             if(args[1] == "s")
             {
-                var server = new RawSocketSslStream();
+                var server = new RawSocketSslStream(args[2]);
                 var ignore = server.Run(IPAddress.Parse(args[0]));
                 Console.WriteLine("Started");
                 Console.ReadLine();
             }
             if(args[1] == "l")
             {
-                var server = new RawSocketLeto();
+                var server = new RawSocketLeto(args[2]);
                 server.Run(IPAddress.Parse(args[0])).Wait();
                 Console.WriteLine("Started");
                 Console.ReadLine();
             }
             else
             {
-                var server = new RawSocketHttpServerSample();
+                var server = new RawSocketHttpServerSample(args[2]);
                 var ignore = server.Run(IPAddress.Parse(args[0]));
                 Console.WriteLine("Started");
                 Console.ReadLine();
