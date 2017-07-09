@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170618-03" />
-    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170627-8" />
+    <PackageReference Include="System.Buffers" Version="4.4.0-preview2-25405-01" />
+    <PackageReference Include="System.Buffers.Experimental" Version="0.1.0-e170708-1" />
+    <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170708-1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0-preview2-25319-04" />
     <PackageReference Include="xunit" Version="2.3.0-beta3-build3705" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta1-build3642" />

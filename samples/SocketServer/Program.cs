@@ -20,7 +20,7 @@ namespace SocketServer
             if(args[1] == "l")
             {
                 var server = new RawSocketLeto();
-                var ignore = server.Run(IPAddress.Parse(args[0]));
+                server.Run(IPAddress.Parse(args[0])).Wait();
                 Console.WriteLine("Started");
                 Console.ReadLine();
             }

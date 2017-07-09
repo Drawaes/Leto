@@ -2,7 +2,7 @@
   "profiles": {
     "SocketServer": {
       "commandName": "Project",
-      "commandLineArgs": "127.0.0.1 l"
+      "commandLineArgs": "192.168.1.70 l"
     }
   }
 }

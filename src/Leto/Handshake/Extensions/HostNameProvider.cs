@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text.Encoders;
 using Leto.Internal;
 
 namespace Leto.Handshake.Extensions
@@ -17,8 +17,9 @@ namespace Leto.Handshake.Extensions
             {
                 Alerts.AlertException.ThrowDecode("Unknown host type");
             }
+            
             buffer = buffer.ReadVector<ushort>();
-            return buffer.ToSpan().DecodeAscii();
+            return string.Empty;// Ascii.ToUtf16String(buffer.ToSpan());
         }
     }
 }

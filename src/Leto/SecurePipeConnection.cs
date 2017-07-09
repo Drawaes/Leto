@@ -48,6 +48,11 @@ namespace Leto
                 {
                     var result = await _connection.Input.ReadAsync();
                     var buffer = result.Buffer;
+                    if (buffer.IsEmpty && result.IsCompleted)
+                    {
+                        _connection.Input.Advance(buffer.End);
+                        return;
+                    }
                     try
                     {
                         while (RecordHandler.ReadRecord(ref buffer, out ReadableBuffer messageBuffer) == RecordState.Record)
@@ -135,7 +140,14 @@ namespace Leto
                     }
                     finally
                     {
-                        _inputPipe.Reader.Advance(buffer.Start, buffer.End);
+                        if (buffer.Length == 0)
+                        {
+                            _inputPipe.Reader.Advance(buffer.End);
+                        }
+                        else
+                        {
+                            _inputPipe.Reader.Advance(buffer.Start, buffer.End);
+                        }
                     }
                 }
             }
