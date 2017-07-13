@@ -20,21 +20,14 @@ namespace SocketServer
         private readonly IHttpApplication<TContext> _application;
 
         public RequestHeaderDictionary RequestHeaders => _parser.RequestHeaders;
-        public ResponseHeaderDictionary ResponseHeaders { get; } = new ResponseHeaderDictionary();
-
+        
         public ReadableBuffer HttpVersion => _parser.HttpVersion;
         public ReadableBuffer Path => _parser.Path;
         public ReadableBuffer Method => _parser.Method;
 
         // TODO: Check the http version
-        public bool KeepAlive => true; //RequestHeaders.ContainsKey("Connection") && string.Equals(RequestHeaders["Connection"], "keep-alive");
-
-        private bool HasContentLength => ResponseHeaders.ContainsKey("Content-Length");
-        private bool HasTransferEncoding => ResponseHeaders.ContainsKey("Transfer-Encoding");
-
-        private HttpRequestStream<TContext> _requestBody;
-        private HttpResponseStream<TContext> _responseBody;
-
+        public bool KeepAlive => true;
+        
         private bool _autoChunk;
 
         private HttpRequestParser _parser = new HttpRequestParser();
@@ -44,8 +37,6 @@ namespace SocketServer
             _application = application;
             _input = input;
             _output = output;
-            _requestBody = new HttpRequestStream<TContext>(this);
-            _responseBody = new HttpResponseStream<TContext>(this);
         }
 
         public IPipeReader Input => _input;
@@ -157,10 +148,9 @@ namespace SocketServer
 
         private void Reset()
         {
-            RequestBody = _requestBody;
-            ResponseBody = _responseBody;
+            //RequestBody = _requestBody;
+            //ResponseBody = _responseBody;
             _parser.Reset();
-            ResponseHeaders.Reset();
             HasStarted = false;
             StatusCode = 200;
             _autoChunk = false;
@@ -207,9 +197,7 @@ namespace SocketServer
             var status = ReasonPhrases.ToStatusBytes(StatusCode);
             buffer.Write(status);
 
-            _autoChunk = !HasContentLength && !HasTransferEncoding && KeepAlive;
-
-            ResponseHeaders.CopyTo(_autoChunk, buffer);
+            _autoChunk = false;
         }
 
         private void WriteEndResponse(WritableBuffer buffer) => buffer.Write(_chunkedEndBytes);

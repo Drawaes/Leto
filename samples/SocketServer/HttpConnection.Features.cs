@@ -42,7 +42,7 @@ namespace SocketServer
 
         Stream IHttpRequestFeature.Body
         {
-            get => _requestBody;
+            get => throw new NotImplementedException();// _requestBody;
 
             set
             {
@@ -52,7 +52,7 @@ namespace SocketServer
 
         Stream IHttpResponseFeature.Body
         {
-            get => _responseBody;
+            get => throw new NotImplementedException();// _responseBody;
 
             set
             {
@@ -62,7 +62,7 @@ namespace SocketServer
 
         IHeaderDictionary IHttpResponseFeature.Headers
         {
-            get => ResponseHeaders;
+            get => throw new NotSupportedException();
 
             set => throw new NotSupportedException();
         }

@@ -65,6 +65,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SSLStreamVsLetoBenchmarks", "benchmark\SSLStreamVsLetoBenchmarks\SSLStreamVsLetoBenchmarks.csproj", "{70D2B55D-09A3-4DD2-8057-AF7F8DF01E8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawAESTest", "samples\RawAESTest\RawAESTest.csproj", "{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{70D2B55D-09A3-4DD2-8057-AF7F8DF01E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70D2B55D-09A3-4DD2-8057-AF7F8DF01E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70D2B55D-09A3-4DD2-8057-AF7F8DF01E8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -117,6 +123,7 @@ Global
 		{C92CE01B-58C8-44E1-A700-AEF5D156AB08} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 		{B7AD79B6-AF5A-4B3F-BAFB-6E49F166D741} = {7904A9D2-4EC4-4AFF-93B0-63AAF355F5F4}
 		{70D2B55D-09A3-4DD2-8057-AF7F8DF01E8B} = {8FA6C9AC-88E3-440A-8306-72DBFF03B96B}
+		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {846D1A1C-D5A6-4BAC-8BA8-1067771410C6}

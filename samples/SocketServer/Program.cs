@@ -3,6 +3,7 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Text;
 using System.Buffers;
+using System.Runtime;
 
 namespace SocketServer
 {
@@ -10,6 +11,8 @@ namespace SocketServer
     {
         static void Main(string[] args)
         {
+            Console.WriteLine($"Is server GC {GCSettings.IsServerGC}");
+
             if(args[1] == "s")
             {
                 var server = new RawSocketSslStream(args[2]);

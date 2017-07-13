@@ -79,6 +79,7 @@ namespace SocketServer
                     formatter.Append("HTTP/1.1 200 OK");
                     formatter.Append(_contentLength);
                     formatter.Append("\r\nContent-Type: text/plain");
+                    formatter.Append("\r\nConnection: keep-alive");
                     formatter.Append("\r\n\r\n");
                     output.Write(_outputContent);
                     await output.FlushAsync();
