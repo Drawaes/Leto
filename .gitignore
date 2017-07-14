@@ -252,3 +252,9 @@ paket-files/
 .idea/
 *.sln.iml
 script/messages.txt
+/samples/GoECDHE/debug
+/samples/GoECDHE/GoECDHE.exe
+/samples/GoEncrypt/debug
+/samples/GoEncrypt/GoEncrypt.exe
+/samples/GoHash/debug
+/samples/GoHash/GoHash.exe
