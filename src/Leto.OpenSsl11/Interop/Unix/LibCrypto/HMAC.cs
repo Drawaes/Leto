@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Leto.OpenSsl11.Interop
@@ -14,7 +14,7 @@ namespace Leto.OpenSsl11.Interop
             fixed(void* dataPtr = &data.DangerousGetPinnableReference())
             fixed(void* outputPtr = &output.DangerousGetPinnableReference())
             {
-                int outputLength = output.Length;
+                var outputLength = output.Length;
                 var result = HMAC(evp, keyPtr, key.Length, dataPtr, data.Length, outputPtr, ref outputLength);
                 ThrowOnNullPointer(result);
                 return outputLength;

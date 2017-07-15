@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -12,7 +12,7 @@ namespace Leto.OpenSsl11.Interop
 
         internal unsafe static int EC_POINT_point2oct(EC_GROUP group, EC_POINT point, EC_POINT_CONVERSION form, Span<byte> output)
         {
-            IntPtr size = EC_POINT_point2oct(group, point, form, null, IntPtr.Zero, IntPtr.Zero);
+            var size = EC_POINT_point2oct(group, point, form, null, IntPtr.Zero, IntPtr.Zero);
             if(size.ToInt32() > output.Length)
             {
                 ExceptionHelper.ThrowException(new ArgumentOutOfRangeException(nameof(output)));

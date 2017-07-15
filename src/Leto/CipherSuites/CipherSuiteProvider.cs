@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Leto.Internal;
 using static Leto.BufferExtensions;
@@ -44,9 +44,6 @@ namespace Leto.CipherSuites
             return null;
         }
 
-        public void SetCipherSuites(CipherSuite[] cipherSuites)
-        {
-            _cipherSuites = cipherSuites;
-        }
+        public void SetCipherSuites(CipherSuite[] cipherSuites) => _cipherSuites = cipherSuites;
     }
 }

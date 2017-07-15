@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Leto.OpenSsl11.Interop
@@ -12,7 +12,7 @@ namespace Leto.OpenSsl11.Interop
         {
             fixed(void* ptr = &output.DangerousGetPinnableReference())
             {
-                int size = output.Length;
+                var size = output.Length;
                 var result = EVP_DigestFinal_ex(ctx, ptr, ref size);
                 ThrowOnErrorReturnCode(result);
                 return size;

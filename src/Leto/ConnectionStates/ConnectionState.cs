@@ -56,10 +56,7 @@ namespace Leto.ConnectionStates
             GC.SuppressFinalize(this);
         }
 
-        protected TlsVersion GetVersion(ref ClientHelloParser helloParser)
-        {
-            return MatchVersionOrThrow(helloParser.TlsVersion);
-        }
+        protected TlsVersion GetVersion(ref ClientHelloParser helloParser) => MatchVersionOrThrow(helloParser.TlsVersion);
 
         private TlsVersion MatchVersionOrThrow(TlsVersion tlsVersion)
         {
