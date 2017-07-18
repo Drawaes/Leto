@@ -19,12 +19,11 @@ namespace SocketServer
             _outputContent = File.ReadAllBytes(filename);
             _contentLength = $"\r\nContent-Length: {_outputContent.Length}";
         }
-
-
+        
         public async Task Run(IPAddress address)
         {
             Console.WriteLine($"Listening on port 5000");
-            await Start(new IPEndPoint(address, 443));
+            await Start(new IPEndPoint(address, 5000));
             Console.ReadLine();
             await Stop();
         }
@@ -93,6 +92,7 @@ namespace SocketServer
                     connection.Input.Advance(consumed, examined);
                 }
             }
+            connection.Dispose();
         }
     }
 }

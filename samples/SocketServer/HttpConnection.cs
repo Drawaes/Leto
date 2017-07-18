@@ -42,12 +42,7 @@ namespace SocketServer
         public IPipeReader Input => _input;
 
         public IPipeWriter Output => _output;
-
-        public HttpRequestStream<TContext> RequestBody { get; set; }
-
-        public HttpResponseStream<TContext> ResponseBody { get; set; }
-
-
+        
         public async Task ProcessAllRequests()
         {
             Reset();

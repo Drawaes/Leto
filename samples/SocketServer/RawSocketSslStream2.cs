@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Leto.OpenSsl11;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace SocketServer
 {
@@ -50,19 +51,22 @@ namespace SocketServer
             }
             var returnConnection = new SslStreamConnection()
             {
+                InternalStream = sslStream,
                 Input = _factory.CreateReader(sslStream),
-                Output = _factory.CreateWriter(sslStream)
+                Output = _factory.CreateWriter(sslStream),
             };
             return returnConnection;
         }
 
         private class SslStreamConnection : IPipeConnection
         {
+            internal Stream InternalStream;
+
             public IPipeReader Input { get; set; }
 
             public IPipeWriter Output { get; set; }
 
-            public void Dispose() { }
+            public void Dispose() => InternalStream.Dispose();
         }
 
         protected override Task Stop()
