@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AspnetBench": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\code\\allfiles.txt"
+    }
+  }
+}

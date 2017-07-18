@@ -1,0 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+using static Leto.Interop.LibCrypto;
+
+namespace Leto.Interop
+{
+    public partial class OpenSsl
+    {
+        [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SSL_set0_wbio(SSL ssl, BIO wbio);
+    }
+}

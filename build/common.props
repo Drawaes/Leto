@@ -1,5 +1,4 @@
 <Project>
-  <Import Project="dependencies.props" />
   <Import Project="..\version.props" />
 
   <PropertyGroup>
@@ -9,9 +8,5 @@
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
     <DebugType>full</DebugType>
   </PropertyGroup>
- 
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework' AND '$(OutputType)'=='library'">
-    <PackageReference Include="NETStandard.Library" Version="$(NetStandardImplicitPackageVersion)" />
-  </ItemGroup>
-
+   
 </Project>

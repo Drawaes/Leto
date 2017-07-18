@@ -26,6 +26,7 @@ namespace SocketServer
             var certificate = new X509Certificate2("../TLSCerts/server.pfx", "test");
             var newCert = new Leto.Certificates.ManagedCertificate(certificate, null);
             _secure = new Leto.OpenSsl11.OpenSslSecurePipeListener(newCert);
+            _secure.UseFasterEphemeralSessionProvider(20);
 
             Listener = new SocketListener();
             Listener.OnConnection(async connection => { await CreateConnection(connection); });

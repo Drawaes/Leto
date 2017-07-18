@@ -5,7 +5,7 @@ using System.IO.Pipelines.Networking.Sockets;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using Leto.OpenSsl11;
 using System.Threading.Tasks;
 
 namespace SocketServer

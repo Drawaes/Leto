@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Leto.Handshake.Extensions;
@@ -25,6 +25,12 @@ namespace Leto.OpenSsl11
         public void UseEphemeralSessionProvider()
         {
             var provider = new Sessions.EphemeralSessionProvider(CryptoProvider, BulkCiphers.BulkCipherType.AES_256_GCM, SecretSchedulePool);
+            UseSessionProvider(provider);
+        }
+
+        public void UseFasterEphemeralSessionProvider(int numberOfKeys)
+        {
+            var provider = new Sessions.EphemeralSessionProviderFaster(numberOfKeys, CryptoProvider, BulkCiphers.BulkCipherType.AES_256_GCM, SecretSchedulePool);
             UseSessionProvider(provider);
         }
     }

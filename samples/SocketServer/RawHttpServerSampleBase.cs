@@ -24,7 +24,7 @@ namespace SocketServer
         public async Task Run(IPAddress address)
         {
             Console.WriteLine($"Listening on port 5000");
-            await Start(new IPEndPoint(address, 5000));
+            await Start(new IPEndPoint(address, 443));
             Console.ReadLine();
             await Stop();
         }
@@ -35,6 +35,7 @@ namespace SocketServer
 
         protected async Task ProcessConnection(IPipeConnection connection)
         {
+            if (connection == null) return;
             var httpParser = new HttpRequestParser();
             while (true)
             {

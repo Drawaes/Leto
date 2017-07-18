@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26621.2
+VisualStudioVersion = 15.0.26711.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6C9F168D-895E-4FB3-A7C7-61EB03C7B97D}"
 	ProjectSection(SolutionItems) = preProject
@@ -31,7 +31,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{837E39A4-9D4D-4D2F-A268-52194AD39AAE}"
 	ProjectSection(SolutionItems) = preProject
 		build\common.props = build\common.props
-		build\dependencies.props = build\dependencies.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto", "src\Leto\Leto.csproj", "{FC7CAA09-281A-4DB0-8787-0438DBF9AFEB}"
@@ -67,9 +66,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SSLStreamVsLetoBenchmarks",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RawAESTest", "samples\RawAESTest\RawAESTest.csproj", "{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawECDHE", "samples\RawECDHE\RawECDHE.csproj", "{3BDDCA82-B31E-4082-AE3E-1D3ED2B3116B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RawECDHE", "samples\RawECDHE\RawECDHE.csproj", "{3BDDCA82-B31E-4082-AE3E-1D3ED2B3116B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RawHashFunctions", "samples\RawHashFunctions\RawHashFunctions.csproj", "{6DEA7B1F-7EE4-40E0-8B92-3F4BE53396CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.SslStream2", "src\Leto.SslStream2\Leto.SslStream2.csproj", "{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.Interop", "src\Leto.Interop\Leto.Interop.csproj", "{777BBEFC-9669-4591-91A0-CB5F1446F919}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.KestrelAdapter", "src\Leto.KestrelAdapter\Leto.KestrelAdapter.csproj", "{3BF1084F-52D4-420E-A334-BD4B9701F470}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspnetBench", "samples\AspnetBench\AspnetBench.csproj", "{D109986D-A1B6-41F5-A327-777A5AA23D7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -121,6 +128,22 @@ Global
 		{6DEA7B1F-7EE4-40E0-8B92-3F4BE53396CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DEA7B1F-7EE4-40E0-8B92-3F4BE53396CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DEA7B1F-7EE4-40E0-8B92-3F4BE53396CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{777BBEFC-9669-4591-91A0-CB5F1446F919}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{777BBEFC-9669-4591-91A0-CB5F1446F919}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{777BBEFC-9669-4591-91A0-CB5F1446F919}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{777BBEFC-9669-4591-91A0-CB5F1446F919}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BF1084F-52D4-420E-A334-BD4B9701F470}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BF1084F-52D4-420E-A334-BD4B9701F470}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BF1084F-52D4-420E-A334-BD4B9701F470}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BF1084F-52D4-420E-A334-BD4B9701F470}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +161,10 @@ Global
 		{CDD4F4F3-70D4-4B81-B5B8-4F6AA31A7C41} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{3BDDCA82-B31E-4082-AE3E-1D3ED2B3116B} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 		{6DEA7B1F-7EE4-40E0-8B92-3F4BE53396CF} = {1994D85B-082B-4716-982D-E14EC4518CDB}
+		{B8C3C3E4-5DAD-483A-A16F-B35F920D3A6B} = {9E09D9AE-D033-4226-9A46-2344877FF699}
+		{777BBEFC-9669-4591-91A0-CB5F1446F919} = {9E09D9AE-D033-4226-9A46-2344877FF699}
+		{3BF1084F-52D4-420E-A334-BD4B9701F470} = {9E09D9AE-D033-4226-9A46-2344877FF699}
+		{D109986D-A1B6-41F5-A327-777A5AA23D7F} = {1994D85B-082B-4716-982D-E14EC4518CDB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {846D1A1C-D5A6-4BAC-8BA8-1067771410C6}
