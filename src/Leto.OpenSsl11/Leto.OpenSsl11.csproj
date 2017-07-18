@@ -9,11 +9,16 @@
   </PropertyGroup>
   <ItemGroup>
  
+    <ProjectReference Include="..\Leto.Interop\Leto.Interop.csproj" />
+ 
     <ProjectReference Include="..\Leto\Leto.csproj" />
     <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
     <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170715-1" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0-preview2-25405-01" />
     <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170715-1" />
     <PackageReference Include="System.IO.Pipelines.Extensions" Version="0.1.0-e170715-1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interop\Unix\LibCrypto\" />
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class LibCrypto
+    public static partial class LibCrypto
     {
         public struct BIO_METHOD
         {

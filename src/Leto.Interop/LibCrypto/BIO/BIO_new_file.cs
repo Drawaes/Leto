@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class LibCrypto
+    public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private extern static BIO BIO_new_file(string filename, string mode);

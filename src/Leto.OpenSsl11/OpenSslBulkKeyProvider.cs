@@ -1,7 +1,7 @@
-﻿using Leto.BulkCiphers;
+using Leto.BulkCiphers;
 using System;
 using System.Buffers;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {

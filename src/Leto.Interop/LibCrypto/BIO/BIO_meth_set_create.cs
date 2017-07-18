@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public unsafe partial class LibCrypto
+    public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "BIO_meth_set_create")]
         private static extern int Internal_BIO_meth_set_create(BIO_METHOD biom, CreateDelegate method);

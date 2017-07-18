@@ -5,8 +5,9 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class LibCrypto
+    public static partial class LibCrypto
     {
+        [StructLayout(LayoutKind.Sequential)]
         public struct PKCS12
         {
             private IntPtr _ptr;

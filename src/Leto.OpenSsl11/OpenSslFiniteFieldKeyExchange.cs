@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
@@ -7,7 +7,7 @@ using Leto.Hashes;
 using Leto.Internal;
 using Leto.KeyExchanges;
 using Leto.OpenSsl11.Internal;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {
@@ -64,7 +64,7 @@ namespace Leto.OpenSsl11
 
         public unsafe void GenerateKeys(byte[] privateKey, byte[] publicKey)
         {
-            if (_localKey.IsAllocated)
+            if (_localKey.IsValid)
             {
                 return;
             }

@@ -1,7 +1,7 @@
-﻿using Leto.KeyExchanges;
+using Leto.KeyExchanges;
 using System;
 using Leto.Hashes;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 using Leto.Certificates;
 using System.Buffers;
 using Leto.Internal;

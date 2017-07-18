@@ -16,11 +16,10 @@ namespace Leto.KestrelAdapter
 
         private readonly HttpsConnectionAdapterOptions _options;
         private readonly ILogger _logger;
+        private readonly SslStream2.SslStream2Factory _factory;
 
         public HttpsConnectionAdapter(HttpsConnectionAdapterOptions options)
-            : this(options, loggerFactory: null)
-        {
-        }
+            : this(options, loggerFactory: null) => _factory = new SslStream2.SslStream2Factory(_options.ServerCertificate, _options.Password);
 
         public HttpsConnectionAdapter(HttpsConnectionAdapterOptions options, ILoggerFactory loggerFactory)
         {
@@ -40,21 +39,13 @@ namespace Leto.KestrelAdapter
 
         public bool IsHttps => true;
 
-        public Task<IAdaptedConnection> OnConnectionAsync(ConnectionAdapterContext context)
-        {
-            // Don't trust SslStream not to block.
-            return Task.Run(() => InnerOnConnectionAsync(context));
-        }
-
-        private async Task<IAdaptedConnection> InnerOnConnectionAsync(ConnectionAdapterContext context)
-        {
-            SslStream2.SslStreamPOC sslStream;
-
-            sslStream = new SslStream2.SslStreamPOC(context.ConnectionStream);
+        public async Task<IAdaptedConnection> OnConnectionAsync(ConnectionAdapterContext context)
+        { 
+            var sslStream = _factory.GetStream(context.ConnectionStream);
 
             try
             {
-                await sslStream.AuthenticateAsServerAsync(_options.ServerCertificate, _options.Password);
+                await sslStream.AuthenticateAsServerAsync();
             }
             catch (IOException ex)
             {
@@ -91,17 +82,11 @@ namespace Leto.KestrelAdapter
         {
             private readonly SslStream2.SslStreamPOC _sslStream;
 
-            public HttpsAdaptedConnection(SslStream2.SslStreamPOC sslStream)
-            {
-                _sslStream = sslStream;
-            }
+            public HttpsAdaptedConnection(SslStream2.SslStreamPOC sslStream) => _sslStream = sslStream;
 
             public Stream ConnectionStream => _sslStream;
 
-            public void Dispose()
-            {
-                _sslStream.Dispose();
-            }
+            public void Dispose() => _sslStream.Dispose();
         }
 
         private class ClosedAdaptedConnection : IAdaptedConnection

@@ -1,6 +1,6 @@
-﻿using Leto.Hashes;
+using Leto.Hashes;
 using System;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {

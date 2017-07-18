@@ -1,11 +1,11 @@
-﻿using Leto.KeyExchanges;
+using Leto.KeyExchanges;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using static Leto.BufferExtensions;
 using Leto.CipherSuites;
 using Leto.Certificates;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 using Leto.Hashes;
 using Leto.BulkCiphers;
 

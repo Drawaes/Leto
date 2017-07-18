@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public unsafe partial class LibCrypto
+    public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, EntryPoint = "BIO_meth_set_write")]
         private static extern int Internal_BIO_meth_set_write(BIO_METHOD biom, WriteDelegate method);
@@ -17,6 +17,6 @@ namespace Leto.Interop
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int WriteDelegate(BIO bio, void* buf, int num);
+        public unsafe delegate int WriteDelegate(BIO bio, void* buf, int num);
     }
 }

@@ -6,7 +6,7 @@ using static Leto.Interop.LibCrypto;
 
 namespace Leto.Interop
 {
-    public partial class LibCrypto
+    public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private extern static int PKCS12_parse(PKCS12 p12, string pass, out EVP_PKEY pkey,out X509 cert, IntPtr ca);

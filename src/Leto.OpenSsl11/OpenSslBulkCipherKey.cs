@@ -2,7 +2,7 @@ using Leto.BulkCiphers;
 using Leto.Internal;
 using System;
 using System.Buffers;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 
 namespace Leto.OpenSsl11
 {
@@ -28,10 +28,18 @@ namespace Leto.OpenSsl11
         public Buffer<byte> IV => _iv;
         public int TagSize => _tagSize;
 
-        public void Init(KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, mode);
+        public void Init(Leto.BulkCiphers.KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, (Leto.Interop.LibCrypto.KeyMode)mode);
         public int Update(Span<byte> input, Span<byte> output) => EVP_CipherUpdate(_ctx, output, input);
         public int Update(Span<byte> inputAndOutput) => EVP_CipherUpdate(_ctx, inputAndOutput);
-        public void AddAdditionalInfo(ref AdditionalInfo addInfo) => EVP_CipherUpdate(_ctx, ref addInfo);
+        public unsafe void AddAdditionalInfo(ref AdditionalInfo addInfo)
+        {
+            fixed (void* ptr = &addInfo)
+            {
+                var s = new Span<byte>(ptr, sizeof(AdditionalInfo));
+                var output = new Span<byte>();
+                EVP_CipherUpdate(_ctx, output, s);
+            }
+        }
 
         public void GetTag(Span<byte> span)
         {

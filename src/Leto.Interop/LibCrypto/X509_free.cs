@@ -6,7 +6,7 @@ using static Leto.Interop.LibCrypto;
 
 namespace Leto.Interop
 {
-    public partial class LibCrypto
+    public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
         private extern static void X509_free(X509 a);
