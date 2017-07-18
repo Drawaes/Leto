@@ -24,7 +24,7 @@ namespace SocketServer
             {
                 Console.WriteLine("Started SslStream2");
                 var server = new RawSocketSslStream2(args[2]);
-                var ignore = server.Run(IPAddress.Parse(args[0]));
+                server.Run(IPAddress.Parse(args[0])).Wait();
                 Console.ReadLine();
             }
             if (args[1] == "l")

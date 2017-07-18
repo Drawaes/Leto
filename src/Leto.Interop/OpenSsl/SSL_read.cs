@@ -12,8 +12,9 @@ namespace Leto.Interop
 
         public unsafe static int SSL_read(SSL ssl, byte[] buffer, int offset, int length)
         {
-            fixed(void* ptr = &buffer[offset])
+            fixed(byte* basePtr = buffer)
             {
+                var ptr = basePtr + offset;
                 var result = SSL_read(ssl, ptr, length);
                 return result;
             }

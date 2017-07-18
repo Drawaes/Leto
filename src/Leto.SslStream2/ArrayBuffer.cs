@@ -23,6 +23,10 @@ namespace Leto.SslStream2
             Interlocked.Increment(ref _bufferRented);
             Console.WriteLine($"Buffers Rented {_bufferRented}");
             _internalArray = _pool.Rent(_bufferSize);
+            if(_internalArray == null)
+            {
+                throw new ArgumentNullException(nameof(_internalArray));
+            }
             _pinned = GCHandle.Alloc(_internalArray, GCHandleType.Pinned);
         }
 

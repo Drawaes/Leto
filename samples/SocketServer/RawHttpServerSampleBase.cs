@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SocketServer
 {
-    public abstract class RawHttpServerSampleBase //: ISample
+    public abstract class RawHttpServerSampleBase
     {
         private byte[] _outputContent;
         private string _contentLength;

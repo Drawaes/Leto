@@ -33,17 +33,22 @@ namespace Leto.SslStream2.Interop
 
         public void Dispose() => _methodPointer.Free();
 
-        public BIO New()
+        public BIO New(GCHandle handle)
         {
             var bio = BIO_new(_methodPointer);
             BIO_set_init(bio, 1);
+            BIO_set_data(bio, handle);
             return bio;
         }
                 
         protected abstract int Write(BIO bio, ReadOnlySpan<byte> input);
         protected abstract int Read(BIO bio, Span<byte> output);
         protected virtual int Create(BIO bio) => 1;
-        protected virtual int Destroy(BIO bio) => 1;
+        protected virtual int Destroy(BIO bio)
+        {
+            BIO_reset_data(bio);
+            return 1;
+        }
         
         private long Control(BIO bio, BIO_ctrl cmd, long param, void* ptr)
         {

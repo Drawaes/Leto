@@ -13,6 +13,9 @@ namespace Leto.Interop
         public static unsafe GCHandle BIO_get_data(BIO bio)
         {
             var ptr = Internal_BIO_get_data(bio);
+
+            if (ptr == IntPtr.Zero) return default(GCHandle);
+
             return GCHandle.FromIntPtr(ptr);
         }
     }
