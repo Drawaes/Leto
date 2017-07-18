@@ -48,13 +48,7 @@ namespace SocketServer
             ip = ip ?? IPAddress.Parse(address.Host);
             port = address.Port;
         }
-
-        private static async Task ProcessClient<TContext>(IHttpApplication<TContext> application, IPipeConnection pipeConnection)
-        {
-            var connection = new HttpConnection<TContext>(application, pipeConnection.Input, pipeConnection.Output);
-            await connection.ProcessAllRequests();
-        }
-
+        
         public virtual void Dispose()
         {
         }
