@@ -33,7 +33,8 @@ namespace SslStream3.Internal
             {
                 return 0;
             }
-            return SSL_read(_ssl, buffer, offset, length);
+            var span = new Span<byte>(buffer, offset, length);
+            return SSL_read(_ssl, span);
         }
 
         public int Write(SslBuffer output, byte[] buffer, int offset, int length)
@@ -42,7 +43,8 @@ namespace SslStream3.Internal
             try
             {
                 BIO_set_data(_outputBio, oHandle);
-                return SSL_write(_ssl, buffer, offset, length);
+                var span = new Span<byte>(buffer, offset, length);
+                return SSL_write(_ssl, span);
             }
             finally
             {
@@ -57,7 +59,8 @@ namespace SslStream3.Internal
             try
             {
                 BIO_set_data(_inputBio, iHandle);
-                return SSL_read(_ssl, buffer, offset, length);
+                var span = new Span<byte>(buffer, offset, length);
+                return SSL_read(_ssl, span);
             }
             finally
             {

@@ -97,23 +97,24 @@ namespace Leto.SslStream2
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int length, System.Threading.CancellationToken token)
         {
-            var bytes = SSL_read(_ssl, buffer, offset, length);
-            if (bytes < 1)
-            {
-                var error = SSL_get_error(_ssl, bytes);
-                if (_bytesToReadFrame == 0 && _inputBuffer.BytesAvailable < 5)
-                {
-                    await ReadMinBytes(5);
-                    if (_inputBuffer.BytesAvailable == 0) return 0;
-                }
-                if (_bytesToReadFrame == 0)
-                {
-                    _bytesToReadFrame = _inputBuffer.Array[_inputBuffer.StartOfBytes + 4] | (_inputBuffer.Array[_inputBuffer.StartOfBytes + 3] << 8);
-                    _bytesToReadFrame += 5;
-                }
-                await ReadMinBytes(_bytesToReadFrame);
-            }
-            return SSL_read(_ssl, buffer, offset, length);
+            //var bytes = SSL_read(_ssl, buffer, offset, length);
+            //if (bytes < 1)
+            //{
+            //    var error = SSL_get_error(_ssl, bytes);
+            //    if (_bytesToReadFrame == 0 && _inputBuffer.BytesAvailable < 5)
+            //    {
+            //        await ReadMinBytes(5);
+            //        if (_inputBuffer.BytesAvailable == 0) return 0;
+            //    }
+            //    if (_bytesToReadFrame == 0)
+            //    {
+            //        _bytesToReadFrame = _inputBuffer.Array[_inputBuffer.StartOfBytes + 4] | (_inputBuffer.Array[_inputBuffer.StartOfBytes + 3] << 8);
+            //        _bytesToReadFrame += 5;
+            //    }
+            //    await ReadMinBytes(_bytesToReadFrame);
+            //}
+            //return SSL_read(_ssl, buffer, offset, length);
+            throw new NotImplementedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();

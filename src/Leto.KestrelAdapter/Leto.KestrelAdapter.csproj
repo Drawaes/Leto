@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Leto.SslStream2\Leto.SslStream2.csproj" />
+    <ProjectReference Include="..\SslStream3\SslStream3.csproj" />
   </ItemGroup>
 
 </Project>

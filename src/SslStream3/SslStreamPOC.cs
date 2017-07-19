@@ -41,7 +41,7 @@ namespace SslStream3
                 var bytesRead = await ReadMinBytes(5, _inputBuffer);
                 if(bytesRead ==0)
                 {
-                    throw new System.Net.Sockets.SocketException();
+                    throw new SocketException();
                 }
 
                 while (true)

@@ -10,12 +10,11 @@ namespace Leto.Interop
         [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl)]
         private static extern unsafe int SSL_read(SSL ssl, void* buf, int num);
 
-        public unsafe static int SSL_read(SSL ssl, byte[] buffer, int offset, int length)
+        public unsafe static int SSL_read(SSL ssl, Span<byte> input)
         {
-            fixed(byte* basePtr = buffer)
+            fixed(void* ptr = &input.DangerousGetPinnableReference())
             {
-                var ptr = basePtr + offset;
-                var result = SSL_read(ssl, ptr, length);
+                var result = SSL_read(ssl, ptr, input.Length);
                 return result;
             }
         }

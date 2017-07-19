@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Adapter.Internal;
 using Microsoft.Extensions.Logging;
+using SslStream3;
 
 namespace Leto.KestrelAdapter
 {
@@ -16,10 +17,10 @@ namespace Leto.KestrelAdapter
 
         private readonly HttpsConnectionAdapterOptions _options;
         private readonly ILogger _logger;
-        private readonly SslStream2.SslStream2Factory _factory;
+        private readonly SslStream3Factory _factory;
 
         public HttpsConnectionAdapter(HttpsConnectionAdapterOptions options)
-            : this(options, loggerFactory: null) => _factory = new SslStream2.SslStream2Factory(_options.ServerCertificate, _options.Password);
+            : this(options, loggerFactory: null) => _factory = new SslStream3Factory(_options.ServerCertificate, _options.Password);
 
         public HttpsConnectionAdapter(HttpsConnectionAdapterOptions options, ILoggerFactory loggerFactory)
         {
@@ -80,9 +81,9 @@ namespace Leto.KestrelAdapter
 
         private class HttpsAdaptedConnection : IAdaptedConnection
         {
-            private readonly SslStream2.SslStreamPOC _sslStream;
+            private readonly SslStreamPOC _sslStream;
 
-            public HttpsAdaptedConnection(SslStream2.SslStreamPOC sslStream) => _sslStream = sslStream;
+            public HttpsAdaptedConnection(SslStreamPOC sslStream) => _sslStream = sslStream;
 
             public Stream ConnectionStream => _sslStream;
 

@@ -41,15 +41,13 @@ namespace SocketServer
             {
                 await sslStream.AuthenticateAsServerAsync();
             }
-            catch(Exception ex)
+            catch
             {
                 sslStream.Dispose();
-
                 return null;
             }
             var returnConnection = new SslStreamConnection()
             {
-                InternalStream = sslStream,
                 Input = _factory.CreateReader(sslStream),
                 Output = _factory.CreateWriter(sslStream),
             };
@@ -58,13 +56,11 @@ namespace SocketServer
 
         private class SslStreamConnection : IPipeConnection
         {
-            internal Stream InternalStream;
-
             public IPipeReader Input { get; set; }
 
             public IPipeWriter Output { get; set; }
 
-            public void Dispose() { } // => InternalStream.Dispose();
+            public void Dispose() { }
         }
 
         protected override Task Stop()
