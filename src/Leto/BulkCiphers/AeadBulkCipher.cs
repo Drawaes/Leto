@@ -1,4 +1,4 @@
-﻿using Leto.RecordLayer;
+using Leto.RecordLayer;
 using System;
 using System.IO.Pipelines;
 
@@ -15,13 +15,13 @@ namespace Leto.BulkCiphers
         }
 
         public int Overhead => _key.TagSize;
-        
+
         public abstract void Decrypt(ref ReadableBuffer messageBuffer, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, ReadableBuffer plainText, RecordType recordType, TlsVersion tlsVersion);
         public abstract void Encrypt(ref WritableBuffer writer, Span<byte> plainText, RecordType recordType, TlsVersion tlsVersion);
         public void SetKey(ISymmetricalCipher key) => _key = key;
         public virtual void IncrementSequence() => _sequenceNumber++;
-        
+
         protected void WriteTag(ref WritableBuffer writer)
         {
             writer.Ensure(_key.TagSize);
@@ -51,20 +51,12 @@ namespace Leto.BulkCiphers
             }
             IncrementSequence();
         }
-                
+
         public void Dispose()
         {
-            try
-            {
-                _key?.Dispose();
-                _key = null;
-                GC.SuppressFinalize(this);
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Exception disposing key {ex}");
-                throw;
-            }
+            _key?.Dispose();
+            _key = null;
+            GC.SuppressFinalize(this);
         }
 
         ~AeadBulkCipher() => Dispose();

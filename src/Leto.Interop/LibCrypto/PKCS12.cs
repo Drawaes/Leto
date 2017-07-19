@@ -7,18 +7,20 @@ namespace Leto.Interop
 {
     public static partial class LibCrypto
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct PKCS12
+        public class PKCS12 : SafeHandle
         {
-            private IntPtr _ptr;
-
-            public bool IsValid => _ptr != IntPtr.Zero;
-
-            public void Free()
+            private PKCS12() : base(IntPtr.Zero, true)
             {
-                if (!IsValid) return;
-                PKCS12_free(this);
-                _ptr = IntPtr.Zero;
+            }
+
+            public override bool IsInvalid => handle == IntPtr.Zero;
+
+            protected override bool ReleaseHandle()
+            {
+                if (IsInvalid) return false;
+
+                PKCS12_free(handle);
+                return true;
             }
         }
     }

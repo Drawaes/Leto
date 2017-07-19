@@ -10,4 +10,8 @@
     <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Leto.Interop\Leto.Interop.csproj" />
+  </ItemGroup>
+
 </Project>

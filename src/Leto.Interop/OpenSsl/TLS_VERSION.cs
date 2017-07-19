@@ -7,7 +7,11 @@ namespace Leto.Interop
 {
     public static partial class OpenSsl
     {
-        [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void SSL_free(IntPtr ssl);
+        public enum TLS_VERSION
+        {
+            TLS1_1_VERSION = 0x0302,
+            TLS1_2_VERSION = 0x0303,
+            TLS1_3_VERSION = 0x0304
+        }
     }
 }

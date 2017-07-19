@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class OpenSsl
+    public static partial class OpenSsl
     {
         public struct SSL_METHOD
         {

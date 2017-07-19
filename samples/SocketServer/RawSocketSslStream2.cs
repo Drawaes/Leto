@@ -8,7 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using Leto.OpenSsl11;
 using System.Threading.Tasks;
 using System.IO;
-using Leto.SslStream2;
+using SslStream3;
 
 namespace SocketServer
 {
@@ -22,11 +22,11 @@ namespace SocketServer
         public SocketListener Listener { get; private set; }
 
         private PipeFactory _factory = new PipeFactory();
-        private SslStream2Factory _streamFactory;
+        private SslStream3Factory _streamFactory;
 
         protected override Task Start(IPEndPoint ipEndpoint)
         {
-            _streamFactory = new SslStream2Factory("../TLSCerts/server.pfx", "test");
+            _streamFactory = new SslStream3Factory("../TLSCerts/server.pfx", "test");
             Listener = new SocketListener();
             Listener.OnConnection(async connection => { await ProcessConnection(await CreateSslStream(connection)); });
 
@@ -39,13 +39,10 @@ namespace SocketServer
             var sslStream = _streamFactory.GetStream(connection.GetStream());
             try
             {
-                Console.WriteLine($"Trying to connect on {sslStream.ConnectionId}");
                 await sslStream.AuthenticateAsServerAsync();
-                Console.WriteLine($"Connected on {sslStream.ConnectionId}");
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"Failed to connect on {sslStream.ConnectionId} - error {ex}");
                 sslStream.Dispose();
 
                 return null;
@@ -67,7 +64,7 @@ namespace SocketServer
 
             public IPipeWriter Output { get; set; }
 
-            public void Dispose() => InternalStream.Dispose();
+            public void Dispose() { } // => InternalStream.Dispose();
         }
 
         protected override Task Stop()

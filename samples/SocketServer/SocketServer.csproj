@@ -18,8 +18,8 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\src\Leto.OpenSsl11\Leto.OpenSsl11.csproj" />
-    <ProjectReference Include="..\..\src\Leto.SslStream2\Leto.SslStream2.csproj" />
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
+    <ProjectReference Include="..\..\src\SslStream3\SslStream3.csproj" />
     <ProjectReference Include="..\..\test\CommonFacts\CommonFacts.csproj" />
     <ProjectReference Include="..\..\test\Leto.OpenSslFacts\Leto.OpenSslFacts.csproj" />
   </ItemGroup>

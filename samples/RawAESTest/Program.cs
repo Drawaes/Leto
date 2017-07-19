@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 using static Leto.Windows.Interop.BCrypt;
 
 namespace RawAESTest
@@ -41,7 +41,7 @@ namespace RawAESTest
         private static byte[] GetTagForData(byte[] input, byte[] output, byte[] key, byte[] iv)
         {
             var ctx = EVP_CIPHER_CTX_new();
-            EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, OpenSsl.LibCrypto.KeyMode.Encryption);
+            EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, Leto.Interop.LibCrypto.KeyMode.Encrypt);
 
             var count = EVP_CipherUpdate(ctx, input, output);
             EVP_CipherFinal_ex(ctx);
@@ -153,7 +153,7 @@ namespace RawAESTest
             for (var loop = 0; loop < totalLoops; loop++)
             {
                 var ctx = EVP_CIPHER_CTX_new();
-                EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, RawAESTest.OpenSsl.LibCrypto.KeyMode.Encryption);
+                EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, Leto.Interop.LibCrypto.KeyMode.Encrypt);
 
                 var count = EVP_CipherUpdate(ctx, input, output);
                 total += count;
@@ -176,7 +176,7 @@ namespace RawAESTest
             for (var loop = 0; loop < totalLoops; loop++)
             {
                 var ctx = EVP_CIPHER_CTX_new();
-                EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, OpenSsl.LibCrypto.KeyMode.Decryption);
+                EVP_CipherInit_ex(ctx, EVP_aes_128_gcm, key, iv, Leto.Interop.LibCrypto.KeyMode.Decrypt);
                 var count = EVP_CipherUpdate(ctx, output, input);
                 total += count;
                 EVP_CIPHER_CTX_SetTag(ctx, tag);

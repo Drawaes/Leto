@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class OpenSsl
+    public static partial class OpenSsl
     {
         [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl)]
         public static extern SslErrorCodes SSL_get_error(SSL ssl, int code);

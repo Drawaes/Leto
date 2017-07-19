@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using Leto.Interop;
 using Leto.SslStream2.Interop;
@@ -13,6 +14,21 @@ namespace Leto.SslStream2
             :base("SslStreamInputBio")
         {
 
+        }
+
+        public BIO New(GCHandle handle)
+        {
+            var bio = New();
+            BIO_set_data(bio, handle);
+            return bio;
+        }
+
+        protected override int Create(BIO bio) => 1;
+
+        protected override int Destroy(BIO bio)
+        {
+            BIO_reset_data(bio);
+            return 1;
         }
 
         protected override int Read(BIO bio, Span<byte> output)

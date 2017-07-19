@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="OpenSsl\" />
+    <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
+    <ProjectReference Include="..\..\src\Leto.Interop\Leto.Interop.csproj" />
   </ItemGroup>
 
 </Project>

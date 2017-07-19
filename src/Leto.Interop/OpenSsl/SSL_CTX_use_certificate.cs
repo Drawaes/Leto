@@ -7,7 +7,7 @@ using static Leto.Interop.LibCrypto;
 
 namespace Leto.Interop
 {
-    public partial class OpenSsl
+    public static partial class OpenSsl
     {
         [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl, EntryPoint = nameof(SSL_CTX_use_certificate))]
         private unsafe extern static int Internal_SSL_CTX_use_certificate(SSL_CTX ctx, X509 cert);

@@ -5,14 +5,24 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class OpenSsl
+    public static partial class OpenSsl
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SSL_CTX
+        public class SSL_CTX:SafeHandle
         {
-            private IntPtr _ptr;
+            private SSL_CTX() : base(IntPtr.Zero, true)
+            {
+            }
 
-            public bool IsValid => _ptr != IntPtr.Zero;
+            public override bool IsInvalid => handle == IntPtr.Zero;
+
+            protected override bool ReleaseHandle()
+            {
+                if (IsInvalid) return false;
+
+                SSL_CTX_free(handle);
+
+                return true;
+            }
         }
     }
 }

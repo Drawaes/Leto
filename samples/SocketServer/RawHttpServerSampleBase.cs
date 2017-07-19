@@ -92,7 +92,6 @@ namespace SocketServer
                     connection.Input.Advance(consumed, examined);
                 }
             }
-            connection.Dispose();
         }
     }
 }

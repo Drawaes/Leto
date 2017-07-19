@@ -168,9 +168,8 @@ namespace Leto.SslStream2
 
         protected override void Dispose(bool disposing)
         {
-            _ssl.Free();
-            _ssl = new SSL();
-
+            _ssl?.Dispose();
+            
             _inputBuffer?.Dispose();
             _inputBuffer = null;
             _outputBuffer?.Dispose();

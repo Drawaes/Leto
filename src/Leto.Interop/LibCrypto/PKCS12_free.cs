@@ -9,6 +9,6 @@ namespace Leto.Interop
     public static partial class LibCrypto
     {
         [DllImport(Libraries.LibCrypto, CallingConvention = CallingConvention.Cdecl)]
-        private extern static void PKCS12_free(PKCS12 p12);
+        private extern static void PKCS12_free(IntPtr p12);
     }
 }

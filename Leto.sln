@@ -78,6 +78,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leto.KestrelAdapter", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspnetBench", "samples\AspnetBench\AspnetBench.csproj", "{D109986D-A1B6-41F5-A327-777A5AA23D7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslStream3", "src\SslStream3\SslStream3.csproj", "{0C655E20-3934-45D8-803D-231BD422A1DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -144,6 +146,10 @@ Global
 		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D109986D-A1B6-41F5-A327-777A5AA23D7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C655E20-3934-45D8-803D-231BD422A1DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C655E20-3934-45D8-803D-231BD422A1DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C655E20-3934-45D8-803D-231BD422A1DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C655E20-3934-45D8-803D-231BD422A1DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -165,6 +171,7 @@ Global
 		{777BBEFC-9669-4591-91A0-CB5F1446F919} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 		{3BF1084F-52D4-420E-A334-BD4B9701F470} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 		{D109986D-A1B6-41F5-A327-777A5AA23D7F} = {1994D85B-082B-4716-982D-E14EC4518CDB}
+		{0C655E20-3934-45D8-803D-231BD422A1DA} = {9E09D9AE-D033-4226-9A46-2344877FF699}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {846D1A1C-D5A6-4BAC-8BA8-1067771410C6}

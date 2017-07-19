@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Leto.OpenSsl11.Interop.LibCrypto;
+using static Leto.Interop.LibCrypto;
 
 namespace RawECDHE
 {

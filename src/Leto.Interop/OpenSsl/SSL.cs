@@ -5,20 +5,20 @@ using System.Text;
 
 namespace Leto.Interop
 {
-    public partial class OpenSsl
+    public static partial class OpenSsl
     {
-        public struct SSL
+        public class SSL :SafeHandle
         {
-            private IntPtr _ptr;
-
-            public bool IsValid => _ptr != IntPtr.Zero;
-
-
-            public void Free()
+            private SSL() : base(IntPtr.Zero, true)
             {
-                if (!IsValid) return;
-                SSL_free(this);
-                _ptr = IntPtr.Zero;
+            }
+
+            public override bool IsInvalid => handle == IntPtr.Zero;
+
+            protected override bool ReleaseHandle()
+            {
+                SSL_free(handle);
+                return true;
             }
         }
     }

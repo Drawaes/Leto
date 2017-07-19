@@ -9,7 +9,10 @@ namespace Leto.Interop
 {
     public static partial class OpenSsl
     {
-        [DllImport(Libraries.LibSsl, CallingConvention = CallingConvention.Cdecl)]
-        public extern static void SSL_set_accept_state(SSL ssl);
+        public unsafe static void SSL_CTX_set_max_proto_version(SSL_CTX ctx, TLS_VERSION version)
+        {
+            var result = SSL_CTX_ctrl(ctx, SSL_CTRL.SSL_CTRL_SET_MAX_PROTO_VERSION, (int)version, null);
+            ThrowOnErrorReturnCode(result);
+        }
     }
 }
