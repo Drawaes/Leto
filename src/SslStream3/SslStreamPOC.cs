@@ -82,6 +82,10 @@ namespace SslStream3
 
         public async override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            if(offset + count > buffer.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Write async failed because count was larger than the end of the buffer");
+            }
             using (var output = SslBuffer.GetBuffer())
             {
                 while (count > 0)
@@ -95,30 +99,40 @@ namespace SslStream3
             }
         }
 
-        public async override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            if (offset + count > buffer.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Read async failed because count was larger than the end of the buffer");
+            }
+
             //go for sync first?
             var bytesRead = _state.Read(buffer, offset, count);
-            if (bytesRead > 0) return bytesRead;
+            if (bytesRead > 0) return Task.FromResult(bytesRead);
 
-            //need to go async, first get a buffer if we don't have one
-            var inputBuffer = _inputBuffer ?? SslBuffer.GetBuffer();
-            _inputBuffer = null;
+            return AsyncInner();
 
-            bytesRead = await ReadFrame(inputBuffer);
-            if (bytesRead == 0) return 0;
-
-            bytesRead = _state.Read(inputBuffer, buffer, offset, count);
-
-            if (inputBuffer.BytesAvailable > 0)
+            async Task<int> AsyncInner()
             {
-                _inputBuffer = inputBuffer;
+                //need to go async, first get a buffer if we don't have one
+                var inputBuffer = _inputBuffer ?? SslBuffer.GetBuffer();
+                _inputBuffer = null;
+
+                bytesRead = await ReadFrame(inputBuffer);
+                if (bytesRead == 0) return 0;
+
+                bytesRead = _state.Read(inputBuffer, buffer, offset, count);
+
+                if (inputBuffer.BytesAvailable > 0)
+                {
+                    _inputBuffer = inputBuffer;
+                }
+                else
+                {
+                    inputBuffer.Dispose();
+                }
+                return bytesRead;
             }
-            else
-            {
-                inputBuffer.Dispose();
-            }
-            return bytesRead;
         }
 
         private async Task<int> ReadFrame(SslBuffer inputBuffer)
