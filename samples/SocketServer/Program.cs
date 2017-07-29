@@ -27,6 +27,13 @@ namespace SocketServer
                 server.Run(IPAddress.Parse(args[0])).Wait();
                 Console.ReadLine();
             }
+            if (args[1] == "sl")
+            {
+                Console.WriteLine("Started SslStream Legacy OpenSsl");
+                var server = new RawSocketOpenSslLegacy(args[2]);
+                server.Run(IPAddress.Parse(args[0])).Wait();
+                Console.ReadLine();
+            }
             if (args[1] == "l")
             {
                 Console.WriteLine("Started Leto");

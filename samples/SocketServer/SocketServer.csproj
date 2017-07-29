@@ -17,6 +17,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\src\LegacyOpenSsl\LegacyOpenSsl.csproj" />
     <ProjectReference Include="..\..\src\Leto.OpenSsl11\Leto.OpenSsl11.csproj" />
     <ProjectReference Include="..\..\src\Leto\Leto.csproj" />
     <ProjectReference Include="..\..\src\SslStream3\SslStream3.csproj" />
