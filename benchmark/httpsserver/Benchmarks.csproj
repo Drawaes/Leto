@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="wwwroot/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.0-preview1-26799" />
+    <PackageReference Include="RedHatX.AspNetCore.Server.Kestrel.Transport.Linux" Version="2.0.0-170818-133" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Middleware\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+</Project>

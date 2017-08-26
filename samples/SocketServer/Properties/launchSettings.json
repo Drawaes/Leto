@@ -2,7 +2,7 @@
   "profiles": {
     "SocketServer": {
       "commandName": "Project",
-      "commandLineArgs": "127.0.0.1 sl c:\\code\\16KB.txt"
+      "commandLineArgs": "127.0.0.1 s c:\\code\\16KB.txt"
     }
   }
 }
