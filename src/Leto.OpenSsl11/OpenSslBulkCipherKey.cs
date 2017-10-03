@@ -9,13 +9,13 @@ namespace Leto.OpenSsl11
     public sealed class OpenSslBulkCipherKey : ISymmetricalCipher
     {
         private EVP_CIPHER_CTX _ctx;
-        private Buffer<byte> _key;
-        private Buffer<byte> _iv;
+        private Memory<byte> _key;
+        private Memory<byte> _iv;
         private readonly EVP_BulkCipher_Type _type;
         private readonly int _tagSize;
-        private OwnedBuffer<byte> _keyStore;
+        private OwnedMemory<byte> _keyStore;
 
-        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, OwnedBuffer<byte> keyStore, int keySize, int ivSize, int tagSize)
+        internal OpenSslBulkCipherKey(EVP_BulkCipher_Type type, OwnedMemory<byte> keyStore, int keySize, int ivSize, int tagSize)
         {
             _tagSize = tagSize;
             _keyStore = keyStore;
@@ -25,7 +25,7 @@ namespace Leto.OpenSsl11
             _ctx = EVP_CIPHER_CTX_new();
         }
 
-        public Buffer<byte> IV => _iv;
+        public Memory<byte> IV => _iv;
         public int TagSize => _tagSize;
 
         public void Init(Leto.BulkCiphers.KeyMode mode) => EVP_CipherInit_ex(_ctx, _type, _key.Span, _iv.Span, (Leto.Interop.LibCrypto.KeyMode)mode);

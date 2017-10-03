@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -12,7 +12,6 @@
     <ProjectReference Include="..\Leto.Interop\Leto.Interop.csproj" />
  
     <ProjectReference Include="..\Leto\Leto.csproj" />
-    <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
     <PackageReference Include="System.Buffers.Primitives" Version="0.1.0-e170715-1" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0-preview2-25405-01" />
     <PackageReference Include="System.IO.Pipelines" Version="0.1.0-e170715-1" />
