@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Leto.EphemeralBuffers
 {
-    public abstract class EphemeralBufferPool : BufferPool
+    public abstract class EphemeralBufferPool : MemoryPool<byte>
     {
         private IntPtr _pointer;
         private readonly int _bufferCount;
@@ -60,7 +60,7 @@ namespace Leto.EphemeralBuffers
         protected abstract IntPtr AllocateMemory(uint amountToAllocate);
         protected abstract void FreeMemory(IntPtr pointer, uint amountToAllocate);
 
-        public override OwnedBuffer<byte> Rent(int minimumBufferSize)
+        public override OwnedMemory<byte> Rent(int minimumBufferSize)
         {
             if (minimumBufferSize > _bufferSize)
             {

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Leto.EphemeralBuffers
 {
-    public class EphemeralOwnedBuffer : OwnedBuffer<byte>
+    public class EphemeralOwnedBuffer : OwnedMemory<byte>
     {
         private EphemeralBufferPool _pool;
         private int _offset;
@@ -36,7 +36,7 @@ namespace Leto.EphemeralBuffers
 
         public override bool IsDisposed => _disposed;
 
-        public override bool IsRetained => false;
+        protected override bool IsRetained => false;
 
         internal void Lease() => _disposed = false;
 
@@ -49,11 +49,8 @@ namespace Leto.EphemeralBuffers
                 _pool.Return(this);
             }
         }
-                
-        public unsafe override Span<byte> AsSpan(int index, int length)
-        {
-            return new Span<byte>((void*)(_pool.Pointer + _offset + index),length);
-        }
+
+        public unsafe override Span<byte> Span => new Span<byte>((void*)(_pool.Pointer + _offset), _length);
 
         public override BufferHandle Pin(int index = 0)
         {
@@ -71,7 +68,7 @@ namespace Leto.EphemeralBuffers
             throw new NotImplementedException();
         }
 
-        public override void Release()
+        public override bool Release()
         {
             throw new NotImplementedException();
         }
